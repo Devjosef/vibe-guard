@@ -1,0 +1,59 @@
+{
+  "name": "vibe-guard",
+  "version": "1.0.0",
+  "description": "🛡️ Vibe-Guard Security Scanner - Catch security issues before they catch you!",
+  "main": "dist/index.js",
+  "bin": {
+    "vibe-guard": "./dist/bin/vibe-guard.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/bin/vibe-guard.ts",
+    "start": "node dist/bin/vibe-guard.js",
+    "test": "npm run build && node dist/bin/vibe-guard.js .",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "package": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64,node18-linux-x64,node18-win-x64 --out-path binaries",
+    "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64 --out-path binaries",
+    "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-linux-x64 --out-path binaries",
+    "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-win-x64 --out-path binaries",
+    "dist": "npm run clean && npm run build && npm run package"
+  },
+  "keywords": [
+    "security",
+    "scanner",
+    "vulnerability",
+    "cli",
+    "typescript",
+    "javascript",
+    "secrets",
+    "authentication"
+  ],
+  "author": "Vibe-Guard Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "glob": "^10.3.10",
+    "cli-table3": "^0.6.3",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/glob": "^8.1.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0",
+    "pkg": "^5.8.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "pkg": {
+    "scripts": [
+      "dist/**/*.js"
+    ],
+    "assets": [
+      "package.json"
+    ],
+    "outputPath": "binaries"
+  }
+} 
