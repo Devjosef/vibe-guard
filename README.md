@@ -1,10 +1,10 @@
-# 🛡️ Vibe-Guard Security Scanner
+#  Vibe-Guard Security Scanner
 
 **Catches the security mistakes we all make when coding fast**
 
 Zero dependencies • Instant setup • Works everywhere • 10 essential security rules
 
-## 🚀 Quick Start (Choose Your Adventure)
+##  Quick Start (Choose Your Adventure)
 
 ### Option 1: One-Line Install (Recommended)
 ```bash
