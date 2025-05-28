@@ -17,7 +17,10 @@
     "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64 --out-path binaries",
     "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-linux-x64 --out-path binaries",
     "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-win-x64 --out-path binaries",
-    "dist": "npm run clean && npm run build && npm run package"
+    "dist": "npm run clean && npm run build && npm run package",
+    "maintenance:check": "node scripts/maintenance.js check",
+    "maintenance:update": "node scripts/maintenance.js update",
+    "maintenance:full": "node scripts/maintenance.js full"
   },
   "keywords": [
     "security",
