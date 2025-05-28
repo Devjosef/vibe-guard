@@ -13,7 +13,7 @@
     "test": "npm run build && node dist/bin/vibe-guard.js .",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "package": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64,node18-linux-x64,node18-win-x64 --out-path binaries",
+    "package": "npm run clean && npm run build && npm run package",
     "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64 --out-path binaries",
     "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-linux-x64 --out-path binaries",
     "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-win-x64 --out-path binaries",
@@ -29,8 +29,21 @@
     "secrets",
     "authentication"
   ],
-  "author": "Vibe-Guard Team",
+  "author": "Devjosef <dev.josef1@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Devjosef/vibe-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Devjosef/vibe-guard/issues"
+  },
+  "homepage": "https://github.com/Devjosef/vibe-guard#readme",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "commander": "^11.1.0",
     "glob": "^10.3.10",
