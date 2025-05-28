@@ -10,7 +10,9 @@
     "build": "tsc",
     "dev": "ts-node src/bin/vibe-guard.ts",
     "start": "node dist/bin/vibe-guard.js",
-    "test": "npm run build && node dist/bin/vibe-guard.js .",
+    "test": "npm run build && jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
     "package": "npm run clean && npm run build && npm run package",
@@ -48,17 +50,20 @@
     "LICENSE"
   ],
   "dependencies": {
-    "commander": "^11.1.0",
-    "glob": "^10.3.10",
+    "chalk": "^4.1.2",
     "cli-table3": "^0.6.3",
-    "chalk": "^4.1.2"
+    "commander": "^14.0.0",
+    "glob": "^11.0.2"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
     "@types/glob": "^8.1.0",
-    "typescript": "^5.3.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.23",
+    "jest": "^29.7.0",
+    "pkg": "^5.8.1",
+    "ts-jest": "^29.3.4",
     "ts-node": "^10.9.0",
-    "pkg": "^5.8.1"
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -72,4 +77,4 @@
     ],
     "outputPath": "binaries"
   }
-} 
+}

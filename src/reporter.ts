@@ -97,13 +97,20 @@ export class Reporter {
   }
 
   private truncateFilePath(filePath: string, maxLength: number = 35): string {
-    if (filePath.length <= maxLength) {
-      return filePath;
+    // Normalize all slashes to '/'
+    let sanitizedPath = filePath.replace(/\\+/g, '/').replace(/\\/g, '/').replace(/\/+/g, '/');
+    // Remove '..' and multiple slashes
+    sanitizedPath = sanitizedPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+    // Remove leading slashes
+    sanitizedPath = sanitizedPath.replace(/^\/+/, '');
+    
+    if (sanitizedPath.length <= maxLength) {
+      return sanitizedPath;
     }
     
-    const parts = filePath.split('/');
+    const parts = sanitizedPath.split('/');
     if (parts.length <= 2) {
-      return filePath;
+      return sanitizedPath;
     }
     
     // Show first and last parts with ... in between
@@ -116,7 +123,7 @@ export class Reporter {
     }
     
     // If still too long, just truncate from the beginning
-    return '...' + filePath.slice(-(maxLength - 3));
+    return '...' + sanitizedPath.slice(-(maxLength - 3));
   }
 
   formatIssueDetails(issue: SecurityIssue): string {

@@ -137,3 +137,6 @@ dist
 
 # Private strategy documents (local only)
 MONETIZATION_STRATEGY.md
+
+# Maintenance guide (local only)
+scripts/MAINTENANCE.md
