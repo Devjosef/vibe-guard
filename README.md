@@ -15,37 +15,60 @@ curl -L https://get-vibe-guard.sh | bash
 vibe-guard scan .
 ```
 
-### Option 2: Download Binary Directly
+### Option 2: Package Managers
 ```bash
-# macOS
-curl -L https://github.com/user/vibe-guard/releases/latest/download/vibe-guard-macos -o vibe-guard
+# Homebrew (macOS/Linux)
+brew install vibe-guard
+
+# Chocolatey (Windows)
+choco install vibe-guard
+
+# RPM (RHEL/CentOS)
+rpm -i https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.rpm
+
+# DEB (Ubuntu/Debian)
+curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.deb -o vibe-guard.deb
+sudo dpkg -i vibe-guard.deb
+```
+
+### Option 3: Download Binary Directly
+```bash
+# macOS (Intel & Apple Silicon)
+curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
-# Linux
-curl -L https://github.com/user/vibe-guard/releases/latest/download/vibe-guard-linux -o vibe-guard
+# Linux (x64 & ARM64)
+curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-linux-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
 # Windows
-# Download vibe-guard-win.exe from releases page
+# Download vibe-guard-windows-x64.exe from releases page
 ```
 
-### Option 3: NPM (for Node.js users)
+### Option 4: NPM (for Node.js users)
 ```bash
+# Latest version (1.0.1)
 npx vibe-guard scan .
 # or
 npm install -g vibe-guard
 vibe-guard scan .
 ```
 
-### Option 4: Docker (for CI/CD)
+### Option 5: Docker (for CI/CD)
 ```bash
+# Pull the latest image
+docker pull vibe-guard/vibe-guard:latest
+
 # Scan current directory
-docker run --rm -v $(pwd):/code vibe-guard scan /code
+docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code
 
 # Scan specific file
-docker run --rm -v $(pwd):/code vibe-guard scan /code/app.js
+docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code/app.js
+
+# Use specific version
+docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
 ```
 
 ##  Why You'll Actually Use This
@@ -55,6 +78,8 @@ docker run --rm -v $(pwd):/code vibe-guard scan /code/app.js
 - **Won't Spam You**: Smart enough to know test code from real issues
 - **Made by Developers**: We know what actually breaks in production
 - **Works Everywhere**: macOS, Linux, Windows, Docker, CI/CD - you name it
+- **ARM64 Support**: Native support for Apple Silicon and ARM64 Linux
+- **Package Manager Ready**: Install via Homebrew, Chocolatey, RPM, or DEB
 
 ##  What It Catches (All 10 Rules)
 
@@ -145,7 +170,7 @@ Want to contribute or build from source?
 
 ```bash
 # Clone and build
-git clone https://github.com/user/vibe-guard.git
+git clone https://github.com/Devjosef/vibe-guard.git
 cd vibe-guard
 npm install
 npm run build
@@ -179,6 +204,7 @@ src/
 | Languages | All major ones | Limited |
 | CI/CD Ready | ✅ Yes | ⚠️ Complex |
 | Actually explains fixes | ✅ Yes | ❌ Cryptic |
+| ARM64 Support | ✅ Yes | ❌ Limited |
 
 ## 🤝 Contributing
 

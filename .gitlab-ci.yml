@@ -1,0 +1,133 @@
+# Base Docker image for all jobs
+image: docker:20.10.16
+
+# Docker-in-Docker service for building Docker images
+services:
+  - docker:20.10.16-dind
+
+# Global variables for Docker configuration
+variables:
+  # TLS certificates directory for secure Docker communication
+  DOCKER_TLS_CERTDIR: "/certs"
+  # Use overlay2 storage driver for better performance
+  DOCKER_DRIVER: overlay2
+  # Docker daemon connection settings
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_VERIFY: 1
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  # Enable BuildKit for faster builds
+  DOCKER_BUILDKIT: 1
+
+# Default settings for all jobs
+default:
+  # Set timeout to prevent hanging jobs
+  timeout: 10m
+  # Retry failed jobs in case of system issues
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+# Define pipeline stages in order of execution
+stages:
+  - test      # Run tests first
+  - security  # Security scanning
+  - build     # Build Docker images
+  - deploy    # Deploy to production
+
+# Cache configuration for faster builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}  # Cache per branch
+  paths:
+    - .docker-cache/         # Cache Docker layers
+
+# Script to run before each job
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+# Test stage: Verify the application works
+test:
+  stage: test
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker run --rm $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA vibe-guard --version
+    - docker run --rm $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA vibe-guard scan --help
+  artifacts:
+    paths:
+      - test-results/    # Save test results
+    expire_in: 1 week    # Keep artifacts for 1 week
+
+# Security scanning stage
+security:
+  stage: security
+  script:
+    - docker run --rm $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA vibe-guard scan .
+  artifacts:
+    paths:
+      - security-report.json  # Save security report
+    expire_in: 1 week
+  allow_failure: true  # Don't fail pipeline on security issues
+
+# Build stage: Create and push Docker images
+build:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main    # Only run on main branch
+    - tags    # And when tags are pushed
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .docker-cache/
+
+# Deploy stage: Deploy to production
+deploy:
+  stage: deploy
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker-compose up -d
+  environment:
+    name: production
+  only:
+    - main
+    - tags
+  when: manual  # Require manual approval for deployment
+
+# Template for multi-architecture builds
+.build-arch:
+  stage: build
+  script:
+    # Set up QEMU for cross-platform builds
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --use
+    # Build and push for specific architecture
+    - docker buildx build --platform $ARCH 
+      -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA-$ARCH 
+      -t $CI_REGISTRY_IMAGE:latest-$ARCH 
+      --push .
+  only:
+    - main
+    - tags
+
+# AMD64 (x86_64) architecture build
+build-amd64:
+  extends: .build-arch
+  variables:
+    ARCH: linux/amd64
+
+# ARM64 architecture build
+build-arm64:
+  extends: .build-arch
+  variables:
+    ARCH: linux/arm64
+
+# ARMv7 architecture build
+build-armv7:
+  extends: .build-arch
+  variables:
+    ARCH: linux/arm/v7 

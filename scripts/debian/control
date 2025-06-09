@@ -1,0 +1,28 @@
+# Debian package control file for Vibe-Guard
+# This file defines the package metadata and dependencies
+
+# Source package information
+Source: vibe-guard
+Section: devel          # Package category
+Priority: optional      # Installation priority
+Maintainer: Josef <devjosef@github.com>  # Primary maintainer
+Uploaders: Vibe-Guard Team <team@vibe-guard.dev>  # Open source team
+Build-Depends: debhelper (>= 11)  # Required for building the package
+
+# Binary package information
+Package: vibe-guard
+Architecture: amd64 arm64  # Supported architectures
+Depends: ${shlibs:Depends}, ${misc:Depends}  # Runtime dependencies
+
+# Package description
+Description: Security scanner for developers who code fast
+ Vibe-Guard is a security scanner designed for developers who code fast.
+ It helps identify security vulnerabilities in your codebase.
+ .
+ Features:
+  * Fast security scanning
+  * Multiple vulnerability checks
+  * Easy integration with CI/CD
+  * Cross-platform support
+  .
+ This is an open source project maintained by Joseff and the Vibe-Guard community. 

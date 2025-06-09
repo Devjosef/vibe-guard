@@ -1,8 +1,9 @@
 {
   "name": "vibe-guard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "🛡️ Vibe-Guard Security Scanner - Catch security issues before they catch you!",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "vibe-guard": "./dist/bin/vibe-guard.js"
   },
@@ -15,14 +16,18 @@
     "test:coverage": "jest --coverage",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "package": "npm run clean && npm run build && npm run package",
-    "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64 --out-path binaries",
-    "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-linux-x64 --out-path binaries",
+    "package": "npm run clean && npm run build && npm run package:all",
+    "package:all": "npm run package:macos && npm run package:linux && npm run package:windows",
+    "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-macos-x64,node18-macos-arm64 --out-path binaries",
+    "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-linux-x64,node18-linux-arm64 --out-path binaries",
     "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --targets node18-win-x64 --out-path binaries",
-    "dist": "npm run clean && npm run build && npm run package",
+    "dist": "npm run clean && npm run build && npm run package:all",
     "maintenance:check": "node scripts/maintenance.js check",
     "maintenance:update": "node scripts/maintenance.js update",
-    "maintenance:full": "node scripts/maintenance.js full"
+    "maintenance:full": "node scripts/maintenance.js full",
+    "preversion": "npm test",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "security",
@@ -32,9 +37,17 @@
     "typescript",
     "javascript",
     "secrets",
-    "authentication"
+    "authentication",
+    "security-scanner",
+    "code-security",
+    "vulnerability-detection",
+    "security-audit",
+    "code-analysis"
   ],
-  "author": "Devjosef <dev.josef1@gmail.com>",
+  "author": "Josef <devjosef@github.com>",
+  "maintainers": [
+    "Josef <devjosef@github.com>"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -47,7 +60,8 @@
   "files": [
     "dist/**/*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "chalk": "^4.1.2",
@@ -76,5 +90,12 @@
       "package.json"
     ],
     "outputPath": "binaries"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Devjosef"
   }
 }

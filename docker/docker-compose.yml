@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  vibe-guard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        VERSION: ${VERSION:-1.0.0}
+    image: vibe-guard:${VERSION:-1.0.0}
+    container_name: vibe-guard
+    volumes:
+      - ../:/code
+      - vibe-guard-config:/home/vibe-guard/.config
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "vibe-guard", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    volumes:
+  vibe-guard-config:
+    name: vibe-guard-config
+    driver: local 

@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1.4
+FROM --platform=$TARGETPLATFORM alpine:3.19
+
+# Set build arguments
+ARG TARGETPLATFORM
+ARG VERSION=1.0.0
+
+# Install minimal runtime dependencies
+RUN apk add --no-cache ca-certificates curl
+
+# Create non-root user
+RUN addgroup -g 1001 -S vibe-guard && \
+    adduser -S vibe-guard -u 1001
+
+# Copy the platform-specific binary
+COPY binaries/vibe-guard-linux /usr/local/bin/vibe-guard
+
+# Make it executable
+RUN chmod +x /usr/local/bin/vibe-guard
+
+# Switch to non-root user
+USER vibe-guard
+
+# Set working directory for scanning
+WORKDIR /code
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD vibe-guard --version && \
+    vibe-guard scan --help && \
+    curl -f http://localhost:${PORT:-3000}/health || exit 1
+
+# Set the entrypoint
+ENTRYPOINT ["vibe-guard"]
+
+# Default command
+CMD ["--help"]
+
+# Labels
+LABEL org.opencontainers.image.title="Vibe-Guard Security Scanner"
+LABEL org.opencontainers.image.description="🛡️ Security scanner for developers who code fast"
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.source="https://github.com/Devjosef/vibe-guard"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.authors="Vibe-Guard Team"
+LABEL org.opencontainers.image.vendor="Vibe-Guard"
+LABEL org.opencontainers.image.architecture=${TARGETPLATFORM} 

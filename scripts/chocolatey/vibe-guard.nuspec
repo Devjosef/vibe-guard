@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chocolatey package specification for Vibe-Guard -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- Basic package information -->
+    <id>vibe-guard</id>
+    <version>1.0.0</version>
+    <title>Vibe-Guard</title>
+    <authors>Josef</authors>
+    <owners>devjosef</owners>
+    <projectSourceUrl>https://github.com/Devjosef/vibe-guard</projectSourceUrl>
+
+    <!-- Project URLs and documentation -->
+    <projectUrl>https://github.com/Devjosef/vibe-guard</projectUrl>
+    <packageSourceUrl>https://github.com/Devjosef/vibe-guard</packageSourceUrl>
+    <docsUrl>https://github.com/Devjosef/vibe-guard/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/Devjosef/vibe-guard/issues</bugTrackerUrl>
+
+    <!-- Package metadata -->
+    <tags>security scanner development</tags>
+    <summary>🛡️ Security scanner for developers who code fast</summary>
+    <description>Vibe-Guard is a security scanner designed for developers who code fast. It helps identify security vulnerabilities in your codebase.
+
+This is an open source project maintained by Josef and the Vibe-Guard community.</description>
+    <releaseNotes>Initial release</releaseNotes>
+
+    <!-- Legal information -->
+    <licenseUrl>https://github.com/Devjosef/vibe-guard/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+
+    <!-- Visual elements -->
+    <iconUrl>https://raw.githubusercontent.com/Devjosef/vibe-guard/main/assets/icon.png</iconUrl>
+  </metadata>
+
+  <!-- Package files -->
+  <files>
+    <!-- Include all files from the tools directory -->
+    <file src="tools\**" target="tools" />
+  </files>
+</package> 
