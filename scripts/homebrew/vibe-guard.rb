@@ -4,7 +4,7 @@ class VibeGuard < Formula
   # Basic package information
   desc "🛡️ Security scanner for developers who code fast"
   homepage "https://github.com/Devjosef/vibe-guard"
-  version "1.0.0"
+  version "1.0.1"
   license "MIT"
   head "https://github.com/Devjosef/vibe-guard.git", branch: "main"
 
@@ -12,22 +12,22 @@ class VibeGuard < Formula
   if OS.mac?
     # macOS ARM64 (Apple Silicon) specific configuration
     if Hardware::CPU.arm?
-      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-darwin-arm64.tar.gz"
-      sha256 "YOUR_SHA256_HERE" # Replace with actual SHA256 after release
+      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-macos-arm64"
+      sha256 "0b80a08ad3d8ec69c2ab1da72c5d6f3ce64948b67a3f39dbc614a4b701ef7289"
     # macOS Intel specific configuration
     else
-      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-darwin-amd64.tar.gz"
-      sha256 "YOUR_SHA256_HERE" # Replace with actual SHA256 after release
+      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-macos-x64"
+      sha256 "39c1adfed38916a9562da383793865c2a30e3f44ce265bbbd30e2d0ba8647429"
     end
   elsif OS.linux?
     # Linux ARM64 specific configuration
     if Hardware::CPU.arm?
-      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-linux-arm64.tar.gz"
-      sha256 "YOUR_SHA256_HERE" # Replace with actual SHA256 after release
+      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-linux-arm64"
+      sha256 "ee8bc14609e77716b7006f49fc30b1f75f0dbaddd884693cf3a7c7594a038f1d"
     # Linux AMD64 specific configuration
     else
-      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-linux-amd64.tar.gz"
-      sha256 "YOUR_SHA256_HERE" # Replace with actual SHA256 after release
+      url "https://github.com/Devjosef/vibe-guard/releases/download/v#{version}/vibe-guard-linux-x64"
+      sha256 "c455f9f9e95b4a0d0dda36a2573beae6ea9dc18d5394ea4da040dbf542250868"
     end
   end
 

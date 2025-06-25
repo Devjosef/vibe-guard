@@ -3,7 +3,7 @@
 
 # Basic package information
 Name:           vibe-guard
-Version:        1.0.0
+Version:        1.0.1
 Release:        1%{?dist}  # Distribution-specific release number
 Summary:        Security scanner for developers who code fast
 Vendor:         Vibe-Guard
@@ -12,7 +12,7 @@ Packager:       Josef <devjosef@github.com>
 # License and source information
 License:        MIT
 URL:            https://github.com/Devjosef/vibe-guard
-Source0:        https://github.com/Devjosef/vibe-guard/releases/download/v%{version}/vibe-guard-linux-%{arch}.tar.gz
+Source0:        https://github.com/Devjosef/vibe-guard/releases/download/v%{version}/vibe-guard-linux-%{arch}
 
 # Build and runtime dependencies
 BuildRequires:  systemd-rpm-macros  # Required for systemd integration
@@ -46,5 +46,7 @@ install -m 755 vibe-guard %{buildroot}%{_bindir}/
 
 # Changelog
 %changelog
+* %(date "+%a %b %d %Y") Josef <devjosef@github.com> - 1.0.1-1
+- Version 1.0.1: Enhanced build process, improved package metadata, and ARM64 support
 * %(date "+%a %b %d %Y") Josef <devjosef@github.com> - 1.0.0-1
 - Initial release 

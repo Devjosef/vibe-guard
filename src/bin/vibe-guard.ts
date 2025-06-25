@@ -4,13 +4,14 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import VibeGuard from '../index';
 import { ScanOptions } from '../types';
+import { VERSION } from '../types/version';
 
 const program = new Command();
 
 program
   .name('vibe-guard')
   .description('🛡️  Vibe-Guard Security Scanner - Catch security issues before they catch you!')
-  .version('1.0.0');
+  .version(VERSION);
 
 // Scan command (main functionality)
 program
@@ -113,8 +114,8 @@ program
   .command('version')
   .description('Show version information')
   .action(() => {
-    const vibeGuard = new VibeGuard();
     console.log(chalk.blue.bold('🛡️  Vibe-Guard Security Scanner'));
+    const vibeGuard = new VibeGuard();
     console.log(`Version: ${vibeGuard.getVersion()}`);
     console.log('Built for developers who code fast and need security that keeps up! 🚀');
     console.log(chalk.gray('TypeScript-powered, zero-dependency security scanning'));

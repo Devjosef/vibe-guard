@@ -8,6 +8,7 @@
     "vibe-guard": "./dist/bin/vibe-guard.js"
   },
   "scripts": {
+    "prebuild": "node scripts/update-version.js",
     "build": "tsc",
     "dev": "ts-node src/bin/vibe-guard.ts",
     "start": "node dist/bin/vibe-guard.js",
@@ -67,7 +68,8 @@
     "chalk": "^4.1.2",
     "cli-table3": "^0.6.3",
     "commander": "^14.0.0",
-    "glob": "^11.0.2"
+    "glob": "^8.1.0",
+    "vibe-guard": "^1.0.1"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",

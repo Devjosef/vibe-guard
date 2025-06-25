@@ -7,8 +7,8 @@ $ErrorActionPreference = 'Stop'
 # Package configuration
 $packageName = 'vibe-guard'
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url = 'https://github.com/Devjosef/vibe-guard/releases/download/v1.0.0/vibe-guard-windows-amd64.zip'
-$checksum = 'YOUR_SHA256_HERE' # Replace with actual SHA256 after release
+$url = 'https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-windows-x64.exe'
+$checksum = 'c20fcee47fab199c98d1242a452435558c9270290c9f26c4f7eb389d24167356'
 $checksumType = 'sha256'
 
 # Package installation arguments

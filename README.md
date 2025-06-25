@@ -6,40 +6,25 @@ Zero dependencies • Instant setup • Works everywhere • 10 essential securi
 
 ##  Quick Start (Choose Your Style)
 
-### Option 1: One-Line Install (Recommended)
+### Option 1: Download Binary Directly (Recommended)
 ```bash
-# macOS/Linux - installs to /usr/local/bin
-curl -L https://get-vibe-guard.sh | bash
-
-# Then use anywhere:
-vibe-guard scan .
-```
-
-### Option 2: Package Managers
-```bash
-# Homebrew (macOS/Linux)
-brew install vibe-guard
-
-# Chocolatey (Windows)
-choco install vibe-guard
-
-# RPM (RHEL/CentOS)
-rpm -i https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.rpm
-
-# DEB (Ubuntu/Debian)
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.deb -o vibe-guard.deb
-sudo dpkg -i vibe-guard.deb
-```
-
-### Option 3: Download Binary Directly
-```bash
-# macOS (Intel & Apple Silicon)
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64 -o vibe-guard
+# macOS (Intel)
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-macos-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
-# Linux (x64 & ARM64)
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-linux-x64 -o vibe-guard
+# macOS (Apple Silicon)
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-macos-arm64 -o vibe-guard
+chmod +x vibe-guard
+./vibe-guard scan .
+
+# Linux (x64)
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+chmod +x vibe-guard
+./vibe-guard scan .
+
+# Linux (ARM64)
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-arm64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
@@ -47,16 +32,24 @@ chmod +x vibe-guard
 # Download vibe-guard-windows-x64.exe from releases page
 ```
 
-### Option 4: NPM (for Node.js users)
+### Option 2: Package Managers
 ```bash
-# Latest version (1.0.1)
-npx vibe-guard scan .
-# or
-npm install -g vibe-guard
-vibe-guard scan .
+# Homebrew (macOS/Linux) - Personal Tap
+brew tap Devjosef/vibe-guard
+brew install vibe-guard
+
+# Chocolatey (Windows) - Ready for submission
+# choco install vibe-guard
+
+# RPM (RHEL/CentOS) - Ready for submission
+# rpm -i https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.rpm
+
+# DEB (Ubuntu/Debian) - Ready for submission
+# curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.deb -o vibe-guard.deb
+# sudo dpkg -i vibe-guard.deb
 ```
 
-### Option 5: Docker (for CI/CD)
+### Option 3: Docker (for CI/CD)
 ```bash
 # Pull the latest image
 docker pull vibe-guard/vibe-guard:latest
@@ -71,6 +64,15 @@ docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code/app.js
 docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
 ```
 
+### Option 4: NPM (for Node.js users)
+```bash
+# Latest version (1.0.1)
+npx vibe-guard scan .
+# or
+npm install -g vibe-guard
+vibe-guard scan .
+```
+
 ##  Why You'll Actually Use This
 
 - **Zero Setup**: Download and run, no Node.js or dependencies required
@@ -79,7 +81,7 @@ docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
 - **Made by Developers**: We know what actually breaks in production
 - **Works Everywhere**: macOS, Linux, Windows, Docker, CI/CD - you name it
 - **ARM64 Support**: Native support for Apple Silicon and ARM64 Linux
-- **Package Manager Ready**: Install via Homebrew, Chocolatey, RPM, or DEB
+- **Cross-Platform**: Single binary for each platform, no dependencies
 
 ##  What It Catches (All 10 Rules)
 
@@ -125,22 +127,24 @@ vibe-guard --version
 ```yaml
 - name: Security Scan
   run: |
-    curl -L https://get-vibe-guard.sh | bash
-    vibe-guard scan .
+    curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+    chmod +x vibe-guard
+    ./vibe-guard scan .
 ```
 
 ### GitLab CI
 ```yaml
 security_scan:
   script:
-    - curl -L https://get-vibe-guard.sh | bash
-    - vibe-guard scan .
+    - curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+    - chmod +x vibe-guard
+    - ./vibe-guard scan .
 ```
 
 ### Docker in CI
 ```yaml
 - name: Security Scan
-  run: docker run --rm -v $(pwd):/code vibe-guard scan /code
+  run: docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
 ```
 
 ## Who This Is For

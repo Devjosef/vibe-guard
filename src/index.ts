@@ -13,6 +13,7 @@ import { UnvalidatedInputRule } from './rules/unvalidated-input';
 import { DirectoryTraversalRule } from './rules/directory-traversal';
 import { InsecureDependenciesRule } from './rules/insecure-dependencies';
 import { MissingSecurityHeadersRule } from './rules/missing-security-headers';
+import { VERSION } from './types/version';
 
 export class VibeGuard {
   private scanner: FileScanner;
@@ -79,13 +80,7 @@ export class VibeGuard {
   }
 
   getVersion(): string {
-    try {
-      const packagePath = path.join(__dirname, '..', 'package.json');
-      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-      return packageJson.version || '1.0.0';
-    } catch {
-      return '1.0.0';
-    }
+    return VERSION;
   }
 }
 
