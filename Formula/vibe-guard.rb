@@ -1,7 +1,4 @@
-# Homebrew formula for Vibe-Guard
-# This formula handles installation of Vibe-Guard on macOS and Linux systems
 class VibeGuard < Formula
-  # Basic package information
   desc "Security scanner for developers who code fast"
   homepage "https://github.com/Devjosef/vibe-guard"
   url "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v1.0.1.tar.gz"
@@ -11,8 +8,6 @@ class VibeGuard < Formula
 
   depends_on "node" => :build
 
-  # Installation method
-  # This method is called during installation to place the binary in the correct location
   def install
     system "npm", "install"
     system "npm", "run", "build"
@@ -21,8 +16,6 @@ class VibeGuard < Formula
     bin.install "vibe-guard"
   end
 
-  # Test method
-  # This method is called during installation to verify the installation
   test do
     # Test that the binary works and can show help
     assert_match "Usage: vibe-guard", shell_output("#{bin}/vibe-guard --help", 0)
