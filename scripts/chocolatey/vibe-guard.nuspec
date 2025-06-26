@@ -27,9 +27,6 @@ This is an open source project maintained by Josef and the Vibe-Guard community.
     <!-- Legal information -->
     <licenseUrl>https://github.com/Devjosef/vibe-guard/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-
-    <!-- Visual elements -->
-    <iconUrl>https://raw.githubusercontent.com/Devjosef/vibe-guard/main/assets/icon.png</iconUrl>
   </metadata>
 
   <!-- Package files -->

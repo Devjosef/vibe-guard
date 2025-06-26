@@ -13,6 +13,34 @@ program
   .description('🛡️  Vibe-Guard Security Scanner - Catch security issues before they catch you!')
   .version(VERSION);
 
+// Shared scan handler
+async function handleScan(target: string, options: any) {
+  try {
+    console.log(chalk.blue.bold('🛡️  Starting Vibe-Guard Security Scan...\n'));
+    // Debug logging
+    console.log('DEBUG: Format option:', options.format);
+    console.log('DEBUG: All options:', JSON.stringify(options, null, 2));
+    const scanOptions: ScanOptions = {
+      target,
+      format: options.format as 'table' | 'json',
+      verbose: options.verbose,
+      exclude: options.exclude,
+      include: options.include
+    };
+    const vibeGuard = new VibeGuard();
+    const output = await vibeGuard.scanAndFormat(scanOptions);
+    console.log(output);
+    // Exit with error code if issues found
+    const result = await vibeGuard.scan(scanOptions);
+    if (result.issuesFound > 0) {
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error(chalk.red.bold('❌ Error:'), error instanceof Error ? error.message : 'Unknown error');
+    process.exit(1);
+  }
+}
+
 // Scan command (main functionality)
 program
   .command('scan')
@@ -22,71 +50,20 @@ program
   .option('-v, --verbose', 'Verbose output', false)
   .option('--exclude <patterns...>', 'Exclude patterns')
   .option('--include <patterns...>', 'Include patterns')
-  .action(async (target: string, options: any) => {
-    try {
-      console.log(chalk.blue.bold('🛡️  Starting Vibe-Guard Security Scan...\n'));
-      
-      const scanOptions: ScanOptions = {
-        target,
-        format: options.format as 'table' | 'json',
-        verbose: options.verbose,
-        exclude: options.exclude,
-        include: options.include
-      };
+  .action(handleScan);
 
-      const vibeGuard = new VibeGuard();
-      const output = await vibeGuard.scanAndFormat(scanOptions);
-      
-      console.log(output);
-      
-      // Exit with error code if issues found
-      const result = await vibeGuard.scan(scanOptions);
-      if (result.issuesFound > 0) {
-        process.exit(1);
-      }
-      
-    } catch (error) {
-      console.error(chalk.red.bold('❌ Error:'), error instanceof Error ? error.message : 'Unknown error');
-      process.exit(1);
-    }
-  });
-
-// Default action (scan without explicit 'scan' command for backward compatibility)
+// Default scan command (for backward compatibility)
 program
   .argument('[target]', 'File or directory to scan')
   .option('-f, --format <format>', 'Output format (table, json)', 'table')
   .option('-v, --verbose', 'Verbose output', false)
   .option('--exclude <patterns...>', 'Exclude patterns')
   .option('--include <patterns...>', 'Include patterns')
-  .action(async (target?: string, options?: any) => {
-    // Only run if target is provided and no subcommand was used
-    if (target && !process.argv.includes('scan') && !process.argv.includes('rules') && !process.argv.includes('version')) {
-      try {
-        console.log(chalk.blue.bold('🛡️  Starting Vibe-Guard Security Scan...\n'));
-        
-        const scanOptions: ScanOptions = {
-          target,
-          format: options.format as 'table' | 'json',
-          verbose: options.verbose,
-          exclude: options.exclude,
-          include: options.include
-        };
-
-        const vibeGuard = new VibeGuard();
-        const output = await vibeGuard.scanAndFormat(scanOptions);
-        
-        console.log(output);
-        
-        // Exit with error code if issues found
-        const result = await vibeGuard.scan(scanOptions);
-        if (result.issuesFound > 0) {
-          process.exit(1);
-        }
-        
-      } catch (error) {
-        console.error(chalk.red.bold('❌ Error:'), error instanceof Error ? error.message : 'Unknown error');
-        process.exit(1);
-      }
+  .action((target: string | undefined, options: any) => {
+    if (target) {
+      handleScan(target, options);
+    } else {
+      program.help();
     }
   });
 
@@ -96,15 +73,12 @@ program
   .action(() => {
     const vibeGuard = new VibeGuard();
     const rules = vibeGuard.getRules();
-    
     console.log(chalk.blue.bold('🛡️  Available Security Rules:\n'));
-    
     rules.forEach(rule => {
       const severityColor = rule.severity === 'critical' ? chalk.red.bold :
                            rule.severity === 'high' ? chalk.red :
                            rule.severity === 'medium' ? chalk.yellow :
                            chalk.blue;
-      
       console.log(`${chalk.bold(rule.name)} ${severityColor(`[${rule.severity.toUpperCase()}]`)}`);
       console.log(`  ${chalk.gray(rule.description)}\n`);
     });

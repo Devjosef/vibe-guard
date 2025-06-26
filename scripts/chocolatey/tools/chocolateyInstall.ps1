@@ -11,17 +11,18 @@ $url = 'https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-gua
 $checksum = 'c20fcee47fab199c98d1242a452435558c9270290c9f26c4f7eb389d24167356'
 $checksumType = 'sha256'
 
-# Package installation arguments
+# Download and install the executable
 $packageArgs = @{
     packageName    = $packageName
-    unzipLocation  = $toolsDir
+    fileType       = 'exe'
     url            = $url
     checksum       = $checksum
     checksumType   = $checksumType
+    validExitCodes = @(0)
 }
 
-# Install the package using Chocolatey's zip package installer
-Install-ChocolateyZipPackage @packageArgs
+# Install the package using Chocolatey's file installer
+Install-ChocolateyPackage @packageArgs
 
 # Create a shim for the executable
 # This makes the command available system-wide
