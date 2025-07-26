@@ -9,22 +9,22 @@ Zero dependencies • Instant setup • Works everywhere • 20 essential securi
 ### Option 1: Download Binary Directly (Recommended)
 ```bash
 # macOS (Intel)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-macos-x64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-macos-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
 # macOS (Apple Silicon)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-macos-arm64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-macos-arm64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
 # Linux (x64)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
 # Linux (ARM64)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-arm64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-arm64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
@@ -61,12 +61,12 @@ docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code
 docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code/app.js
 
 # Use specific version
-docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
+docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.2 scan /code
 ```
 
 ### Option 4: NPM (for Node.js users)
 ```bash
-# Latest version (1.0.1)
+# Latest version (1.1.2)
 npx vibe-guard scan .
 # or
 npm install -g vibe-guard
@@ -163,7 +163,7 @@ vibe-guard --version
 ```yaml
 - name: Security Scan
   run: |
-    curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+    curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
     chmod +x vibe-guard
     ./vibe-guard scan .
 ```
@@ -172,7 +172,7 @@ vibe-guard --version
 ```yaml
 security_scan:
   script:
-    - curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.0.1/vibe-guard-linux-x64 -o vibe-guard
+    - curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
     - chmod +x vibe-guard
     - ./vibe-guard scan .
 ```
@@ -180,7 +180,7 @@ security_scan:
 ### Docker in CI
 ```yaml
 - name: Security Scan
-  run: docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.0.1 scan /code
+  run: docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.2 scan /code
 ```
 
 ## Who This Is For

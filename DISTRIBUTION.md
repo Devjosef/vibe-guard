@@ -143,7 +143,7 @@ npm run clean && npm run dist
 ## 📈 Release Strategy
 
 ### GitHub Releases
-1. Tag version: `git tag v1.0.1`
+1. Tag version: `git tag v1.1.2`
 2. Build binaries: `npm run package`
 3. Create release with binaries attached
 4. Update installation script URLs
