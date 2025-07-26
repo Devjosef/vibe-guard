@@ -13,6 +13,16 @@ import { UnvalidatedInputRule } from './rules/unvalidated-input';
 import { DirectoryTraversalRule } from './rules/directory-traversal';
 import { InsecureDependenciesRule } from './rules/insecure-dependencies';
 import { MissingSecurityHeadersRule } from './rules/missing-security-headers';
+import { XssDetectionRule } from './rules/xss-detection';
+import { CsrfProtectionRule } from './rules/csrf-protection';
+import { InsecureDeserializationRule } from './rules/insecure-deserialization';
+import { BrokenAccessControlRule } from './rules/broken-access-control';
+import { InsecureFileUploadRule } from './rules/insecure-file-upload';
+import { InsecureRandomGenerationRule } from './rules/insecure-random-generation';
+import { InsecureLoggingRule } from './rules/insecure-logging';
+import { InsecureSessionManagementRule } from './rules/insecure-session-management';
+import { InsecureErrorHandlingRule } from './rules/insecure-error-handling';
+import { InsecureConfigurationRule } from './rules/insecure-configuration';
 import { VERSION } from './types/version';
 
 export class VibeGuard {
@@ -31,7 +41,17 @@ export class VibeGuard {
       new UnvalidatedInputRule(),
       new DirectoryTraversalRule(),
       new InsecureDependenciesRule(),
-      new MissingSecurityHeadersRule()
+      new MissingSecurityHeadersRule(),
+      new XssDetectionRule(),
+      new CsrfProtectionRule(),
+      new InsecureDeserializationRule(),
+      new BrokenAccessControlRule(),
+      new InsecureFileUploadRule(),
+      new InsecureRandomGenerationRule(),
+      new InsecureLoggingRule(),
+      new InsecureSessionManagementRule(),
+      new InsecureErrorHandlingRule(),
+      new InsecureConfigurationRule()
     ];
     this.scanner = new FileScanner();
     this.reporter = new Reporter();
@@ -40,16 +60,29 @@ export class VibeGuard {
   async scan(options: ScanOptions): Promise<ScanResult> {
     const targetPath = path.resolve(options.target);
     
+    console.log('DEBUG: VibeGuard.scan called with target:', targetPath);
+    console.log('DEBUG: Number of rules:', this.rules.length);
+    
     // Verify target exists
     if (!fs.existsSync(targetPath)) {
       throw new Error(`Target path does not exist: ${targetPath}`);
     }
 
     const stats = fs.statSync(targetPath);
+    console.log('DEBUG: Target is file:', stats.isFile());
+    console.log('DEBUG: Target is directory:', stats.isDirectory());
     
     if (stats.isFile()) {
-      return await this.scanner.scanFile(targetPath, this.rules);
+      console.log('DEBUG: Calling scanner.scanFile...');
+      const result = await this.scanner.scanFile(targetPath, this.rules);
+      console.log('DEBUG: scanFile result:', {
+        filesScanned: result.filesScanned,
+        issuesFound: result.issuesFound,
+        summary: result.summary
+      });
+      return result;
     } else if (stats.isDirectory()) {
+      console.log('DEBUG: Calling scanner.scanDirectory...');
       return await this.scanner.scanDirectory(targetPath, this.rules);
     } else {
       throw new Error(`Target path is neither a file nor a directory: ${targetPath}`);

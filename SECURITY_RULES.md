@@ -1,6 +1,6 @@
 # Vibe-Guard Security Rules
 
-## Complete 10-Rule Security Scanner
+## Complete 20-Rule Security Scanner
 
 Vibe-Guard catches the security mistakes we all make when we're moving fast. You know the style - you're in the zone, AI is helping you code, or you're quickly prototyping something, and suddenly you've got API keys in your code or forgot to add auth to that admin endpoint. We've all been there.
 
@@ -65,6 +65,66 @@ Vibe-Guard catches the security mistakes we all make when we're moving fast. You
 - **Headers**: CSP, X-Frame-Options, HSTS, X-Content-Type-Options
 - **Example**: Express app without helmet.js or manual headers
 - **Fix**: Add security headers using helmet.js or manually
+
+### 11. **XSS Detection** (CRITICAL)
+- **Detects**: Cross-site scripting vulnerabilities
+- **Patterns**: Unsafe DOM manipulation, eval with user input, template injection
+- **Example**: `element.innerHTML = req.body.userInput;`
+- **Fix**: Use textContent, sanitize input, or use DOMPurify
+
+### 12. **CSRF Protection** (HIGH)
+- **Detects**: Missing CSRF tokens and unsafe cookie configurations
+- **Patterns**: Forms without CSRF tokens, unsafe SameSite settings
+- **Example**: `<form method="post">` without CSRF token
+- **Fix**: Add CSRF tokens and configure secure cookies
+
+### 13. **Insecure Deserialization** (HIGH)
+- **Detects**: Unsafe deserialization of user input
+- **Patterns**: JSON.parse with user input, pickle usage, PHP unserialize
+- **Example**: `JSON.parse(req.body.data);`
+- **Fix**: Use safe alternatives with validation
+
+### 14. **Broken Access Control** (HIGH)
+- **Detects**: Missing authorization checks and insecure object references
+- **Patterns**: Direct object references, missing ownership checks
+- **Example**: `findById(req.params.id)` without user context
+- **Fix**: Implement proper authorization and ownership validation
+
+### 15. **Insecure File Upload** (HIGH)
+- **Detects**: Missing file validation and dangerous extensions
+- **Patterns**: File uploads without type checking, dangerous extensions
+- **Example**: File upload without validation
+- **Fix**: Implement file type validation and whitelist approach
+
+### 16. **Insecure Random Generation** (MEDIUM)
+- **Detects**: Weak random number generation for security purposes
+- **Patterns**: Math.random(), weak crypto.randomBytes(), predictable seeds
+- **Example**: `Math.random()` for security tokens
+- **Fix**: Use crypto.randomBytes(32) or secure alternatives
+
+### 17. **Insecure Logging** (MEDIUM)
+- **Detects**: Sensitive data exposure in logs and excessive debug info
+- **Patterns**: Password logging, API key logging, stack traces
+- **Example**: `console.log(req.body.password);`
+- **Fix**: Use redaction, masking, or structured logging
+
+### 18. **Insecure Session Management** (HIGH)
+- **Detects**: Weak session configuration and missing security settings
+- **Patterns**: Weak secrets, missing timeouts, insecure cookies
+- **Example**: Session without timeout or secure settings
+- **Fix**: Use strong secrets, proper timeouts, and secure cookies
+
+### 19. **Insecure Error Handling** (MEDIUM)
+- **Detects**: Information disclosure in error messages and stack traces
+- **Patterns**: Stack trace logging, detailed error messages
+- **Example**: `console.log(error.stack);`
+- **Fix**: Use generic error messages and proper error handling
+
+### 20. **Insecure Configuration** (MEDIUM)
+- **Detects**: Debug mode in production, default credentials, weak settings
+- **Patterns**: Debug enabled, default passwords, weak encryption
+- **Example**: `debug: true` in production config
+- **Fix**: Use secure configuration settings for production
 
 ## Detection Capabilities
 

@@ -82,13 +82,19 @@ export class FileScanner {
     const issues: SecurityIssue[] = [];
     let filesScanned = 0;
 
+    console.log('DEBUG: scanFile called with', rules.length, 'rules');
+    console.log('DEBUG: Rule names:', rules.map(r => r.name));
+
     try {
       const fileContent = await this.readFile(filePath);
       if (fileContent) {
         filesScanned = 1;
+        console.log('DEBUG: File content read, length:', fileContent.content.length);
         
         for (const rule of rules) {
+          console.log('DEBUG: Checking rule:', rule.name);
           const ruleIssues = rule.check(fileContent);
+          console.log('DEBUG: Rule', rule.name, 'found', ruleIssues.length, 'issues');
           issues.push(...ruleIssues);
         }
       } else {
@@ -98,6 +104,7 @@ export class FileScanner {
       throw new Error(`Could not scan file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
+    console.log('DEBUG: Total issues found:', issues.length);
     return this.createScanResult(issues, filesScanned);
   }
 

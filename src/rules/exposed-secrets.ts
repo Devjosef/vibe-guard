@@ -41,6 +41,7 @@ export class ExposedSecretsRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
+    // Common false positive patterns
     /example/i,
     /demo/i,
     /placeholder/i,
@@ -59,7 +60,34 @@ export class ExposedSecretsRule extends BaseRule {
     /mock/i,     // Mock values
     /sample/i,   // Sample values
     /dummy/i,    // Dummy values
-    /^(.)\1{7,}$/  // Any character repeated 8+ times
+    /fake/i,     // Fake values
+    /^(.)\1{7,}$/,  // Any character repeated 8+ times
+    /development/i,
+    /dev/i,
+    /staging/i,
+    /localhost/i,
+    /127\.0\.0\.1/i,
+    /console\.log/i,
+    /console\.warn/i,
+    /console\.error/i,
+    /logger\.(?:log|warn|error|info)/i,
+    /print/i,
+    /echo/i,
+    /printf/i,
+    /System\.out\.println/i,
+    /puts/i,
+    /Console\.WriteLine/i,
+    /comment/i,
+    /note/i,
+    /todo/i,
+    /fixme/i,
+    /\/\/.*(?:key|token|secret)/i,
+    /#.*(?:key|token|secret)/i,
+    /\/\*.*(?:key|token|secret).*\*\//i,
+    /<!--.*(?:key|token|secret).*-->/i,
+    /key.*=.*['"`]key['"`]/i,
+    /token.*=.*['"`]token['"`]/i,
+    /secret.*=.*['"`]secret['"`]/i
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {

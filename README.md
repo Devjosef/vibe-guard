@@ -2,7 +2,7 @@
 
 **Catches the security mistakes we all make when we code quickly**
 
-Zero dependencies • Instant setup • Works everywhere • 10 essential security rules
+Zero dependencies • Instant setup • Works everywhere • 20 essential security rules
 
 ##  Quick Start (Choose Your Style)
 
@@ -83,24 +83,33 @@ vibe-guard scan .
 - **ARM64 Support**: Native support for Apple Silicon and ARM64 Linux
 - **Cross-Platform**: Single binary for each platform, no dependencies
 
-##  What It Catches (All 10 Rules)
+##  What It Catches (All 20 Rules)
 
-### 🚨 Critical Issues (The Bad)
-- **Exposed API Keys**: AWS, GitHub, Google, Slack, Stripe tokens in your code
-- **Hardcoded Secrets**: Database passwords, JWT secrets, encryption keys
-- **Database URLs**: MongoDB, PostgreSQL connection strings with credentials
+### 🚨 Critical Issues (7 Rules)
+- **Exposed Secrets**: API keys, tokens, and credentials in your code
+- **Hardcoded Sensitive Data**: Database passwords, JWT secrets, encryption keys
+- **XSS Detection**: Cross-site scripting vulnerabilities in web applications
 
-### ⚠️ High-Risk Issues (The Ugly)
+### ⚠️ High-Risk Issues (12 Rules)
 - **Missing Authentication**: Unprotected admin routes and API endpoints
 - **SQL Injection**: String concatenation in database queries
 - **Directory Traversal**: Unsafe file path operations
 - **Open CORS**: Wildcard origins that let anyone access your API
+- **CSRF Protection**: Missing CSRF tokens in forms and unsafe cookie configurations
+- **Insecure Deserialization**: Unsafe JSON parsing and eval usage
+- **Broken Access Control**: Missing authorization checks
+- **Insecure File Upload**: Unsafe file handling and validation
+- **Insecure Session Management**: Weak session secrets and insecure cookies
 
-### 📋 Medium Issues (The not so Good)
+### 📋 Medium Issues (12 Rules)
 - **Unvalidated Input**: Direct use of user input without checks
 - **Insecure HTTP**: Using HTTP instead of HTTPS
-- **Vulnerable Dependencies**: Outdated packages with known security issues
+- **Insecure Dependencies**: Outdated packages with known security issues
 - **Missing Security Headers**: No helmet.js or manual security headers
+- **Insecure Random Generation**: Using Math.random() for security purposes
+- **Insecure Logging**: Sensitive data exposure in logs
+- **Insecure Error Handling**: Stack trace and information disclosure
+- **Insecure Configuration**: Debug mode and security features disabled
 
 ## Usage Examples
 
@@ -190,7 +199,7 @@ npm test
 ```
 src/
 ├── types/           # TypeScript definitions
-├── rules/           # All 10 security rule implementations
+├── rules/           # All 20 security rule implementations
 ├── bin/             # CLI interface
 ├── scanner.ts       # File scanning engine
 ├── reporter.ts      # Output formatting
@@ -209,13 +218,14 @@ src/
 | CI/CD Ready | ✅ Yes | ⚠️ Complex |
 | Actually explains fixes | ✅ Yes | ❌ Cryptic |
 | ARM64 Support | ✅ Yes | ❌ Limited |
+| Security Rules | 20 comprehensive rules | Varies |
 
 ## 🤝 Contributing
 
 1. **Add Security Rules**: Extend the rule engine with new patterns
 2. **Improve Detection**: Help reduce false positives
 3. **Add Languages**: Support more file types and frameworks
-4. **Better UX**: Improve CLI and output formatting (opportunity for VIM here for enthusiasts)
+4. **Better UX**: Improve CLI and output formatting
 
 See [SECURITY_RULES.md](SECURITY_RULES.md) for detailed rule documentation.
 

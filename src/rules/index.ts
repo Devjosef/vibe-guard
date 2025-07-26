@@ -9,6 +9,16 @@ import { UnvalidatedInputRule } from './unvalidated-input';
 import { DirectoryTraversalRule } from './directory-traversal';
 import { InsecureDependenciesRule } from './insecure-dependencies';
 import { MissingSecurityHeadersRule } from './missing-security-headers';
+import { XssDetectionRule } from './xss-detection';
+import { CsrfProtectionRule } from './csrf-protection';
+import { InsecureDeserializationRule } from './insecure-deserialization';
+import { BrokenAccessControlRule } from './broken-access-control';
+import { InsecureFileUploadRule } from './insecure-file-upload';
+import { InsecureRandomGenerationRule } from './insecure-random-generation';
+import { InsecureLoggingRule } from './insecure-logging';
+import { InsecureSessionManagementRule } from './insecure-session-management';
+import { InsecureErrorHandlingRule } from './insecure-error-handling';
+import { InsecureConfigurationRule } from './insecure-configuration';
 
 export function getAllRules(): BaseRule[] {
   return [
@@ -22,6 +32,16 @@ export function getAllRules(): BaseRule[] {
     new DirectoryTraversalRule(),
     new InsecureDependenciesRule(),
     new MissingSecurityHeadersRule(),
+    new XssDetectionRule(),
+    new CsrfProtectionRule(),
+    new InsecureDeserializationRule(),
+    new BrokenAccessControlRule(),
+    new InsecureFileUploadRule(),
+    new InsecureRandomGenerationRule(),
+    new InsecureLoggingRule(),
+    new InsecureSessionManagementRule(),
+    new InsecureErrorHandlingRule(),
+    new InsecureConfigurationRule(),
   ];
 }
 
@@ -36,7 +56,16 @@ export {
   DirectoryTraversalRule,
   InsecureDependenciesRule,
   MissingSecurityHeadersRule,
-  // Export additional rules here as they are created
+  XssDetectionRule,
+  CsrfProtectionRule,
+  InsecureDeserializationRule,
+  BrokenAccessControlRule,
+  InsecureFileUploadRule,
+  InsecureRandomGenerationRule,
+  InsecureLoggingRule,
+  InsecureSessionManagementRule,
+  InsecureErrorHandlingRule,
+  InsecureConfigurationRule,
 };
 
 export * from '../types'; 

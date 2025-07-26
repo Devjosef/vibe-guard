@@ -23,6 +23,9 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     { pattern: /(?:sendgrid_api_key)\s*[:=]\s*['"`](SG\.[a-zA-Z0-9_\-\.]+)['"`]/gi, type: 'SendGrid API Key' },
     { pattern: /(?:twilio_auth_token)\s*[:=]\s*['"`]([a-zA-Z0-9]{32})['"`]/gi, type: 'Twilio Auth Token' },
     
+    // Generic API keys
+    { pattern: /(?:api_key|apikey)\s*[:=]\s*['"`](sk_[a-zA-Z0-9_]+)['"`]/gi, type: 'API Key' },
+    
     // Generic sensitive patterns
     { pattern: /(?:admin_password|root_password|db_password)\s*[:=]\s*['"`]([^'"`\s]{6,})['"`]/gi, type: 'Admin Password' },
     { pattern: /(?:webhook_secret|signing_secret)\s*[:=]\s*['"`]([^'"`\s]{16,})['"`]/gi, type: 'Webhook Secret' },
@@ -32,6 +35,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
+    // Common false positive patterns
     /example/i,
     /sample/i,
     /demo/i,
@@ -46,7 +50,34 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     /^[1]+$/,    // Only ones
     /test/i,
     /mock/i,
-    /fake/i
+    /fake/i,
+    /dummy/i,
+    /development/i,
+    /dev/i,
+    /staging/i,
+    /localhost/i,
+    /127\.0\.0\.1/i,
+    /console\.log/i,
+    /console\.warn/i,
+    /console\.error/i,
+    /logger\.(?:log|warn|error|info)/i,
+    /print/i,
+    /echo/i,
+    /printf/i,
+    /System\.out\.println/i,
+    /puts/i,
+    /Console\.WriteLine/i,
+    /comment/i,
+    /note/i,
+    /todo/i,
+    /fixme/i,
+    /\/\/.*(?:password|secret|key)/i,
+    /#.*(?:password|secret|key)/i,
+    /\/\*.*(?:password|secret|key).*\*\//i,
+    /<!--.*(?:password|secret|key).*-->/i,
+    /password.*=.*['"`]password['"`]/i,
+    /secret.*=.*['"`]secret['"`]/i,
+    /key.*=.*['"`]key['"`]/i
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {
@@ -100,7 +131,11 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       /\.ts$/i,
       /\.py$/i,
       /\.php$/i,
-      /\.rb$/i
+      /\.rb$/i,
+      /\.jsx$/i,
+      /\.tsx$/i,
+      /\.vue$/i,
+      /\.svelte$/i
     ];
 
     return sensitiveFiles.some(pattern => pattern.test(filePath));

@@ -1,11 +1,11 @@
 {
   "name": "vibe-guard",
-  "version": "1.0.1",
-  "description": "🛡️ Vibe-Guard Security Scanner - Catch security issues before they catch you!",
+  "version": "1.1.1",
+  "description": "🛡️ Vibe-Guard Security Scanner - 20 essential security rules to catch vulnerabilities before they catch you! Zero dependencies, instant setup, works everywhere. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, and more.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "vibe-guard": "./dist/bin/vibe-guard.js"
+    "vibe-guard": "dist/bin/vibe-guard.js"
   },
   "scripts": {
     "prebuild": "node scripts/update-version.js",
@@ -43,7 +43,23 @@
     "code-security",
     "vulnerability-detection",
     "security-audit",
-    "code-analysis"
+    "code-analysis",
+    "xss",
+    "sql-injection",
+    "csrf",
+    "cors",
+    "file-upload",
+    "session-management",
+    "error-handling",
+    "security-headers",
+    "random-generation",
+    "logging",
+    "configuration",
+    "dependencies",
+    "access-control",
+    "deserialization",
+    "directory-traversal",
+    "input-validation"
   ],
   "author": "Josef <devjosef@github.com>",
   "maintainers": [
@@ -52,12 +68,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Devjosef/vibe-guard.git"
+    "url": "git+https://github.com/Devjosef/vibe-guard.git"
   },
   "bugs": {
     "url": "https://github.com/Devjosef/vibe-guard/issues"
   },
   "homepage": "https://github.com/Devjosef/vibe-guard#readme",
+  "readme": "README.md",
   "files": [
     "dist/**/*",
     "README.md",
@@ -68,8 +85,7 @@
     "chalk": "^4.1.2",
     "cli-table3": "^0.6.3",
     "commander": "^14.0.0",
-    "glob": "^8.1.0",
-    "vibe-guard": "^1.0.1"
+    "glob": "^8.1.0"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
@@ -84,6 +100,15 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
   "pkg": {
     "scripts": [
       "dist/**/*.js"
