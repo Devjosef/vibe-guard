@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-01-27
+
+### Added
+- **Scanner Sensitivity Documentation**: Added comprehensive section explaining VibeGuard's intelligent sensitivity design
+- **False Positive Prevention Guide**: Detailed explanation of automatic filtering mechanisms
+- **Detection Characteristics**: Clear expectations for detection rates and performance
+- **Use Case Guidance**: Recommendations for development, production audits, and maximum sensitivity scenarios
+
+### Changed
+- Enhanced README with important sensitivity information
+- Improved user understanding of scanner behavior
+- Better transparency about detection capabilities
+
 ## [1.1.1] - 2025-01-27
 
 ### Changed

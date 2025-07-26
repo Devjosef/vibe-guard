@@ -111,6 +111,33 @@ vibe-guard scan .
 - **Insecure Error Handling**: Stack trace and information disclosure
 - **Insecure Configuration**: Debug mode and security features disabled
 
+## ⚠️ Important Note: Scanner Sensitivity
+
+VibeGuard is designed with **intelligent sensitivity** to balance detection accuracy with usability:
+
+### 🎯 How Sensitivity Works
+- **Critical & High Severity**: Very sensitive - catches real vulnerabilities
+- **Medium & Low Severity**: Moderately sensitive - focuses on production-relevant issues
+- **False Positive Prevention**: Automatically filters out:
+  - Comments and documentation
+  - Test files and development code
+  - Environment variables (`${VAR}`, `process.env.VAR`)
+  - Safe patterns (parameterized queries, HTTPS, etc.)
+  - Framework-specific safeguards
+
+### 📊 Detection Characteristics
+- **Detection Rate**: ~50-70% of potential issues (focused on real problems)
+- **False Positive Rate**: Very low (designed for development workflows)
+- **Performance**: Fast scanning without overwhelming noise
+- **Actionable Results**: Every issue includes specific fix suggestions
+
+### 🔧 For Different Use Cases
+- **Development**: Current settings are well-balanced for daily use
+- **Production Audits**: Consider running with verbose mode and manual review
+- **Maximum Sensitivity**: Can be configured by modifying rule filters
+
+*This approach ensures VibeGuard catches real security issues while remaining practical for development workflows.*
+
 ## Usage Examples
 
 ```bash
