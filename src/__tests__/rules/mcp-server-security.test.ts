@@ -8,13 +8,17 @@ describe('McpServerSecurityRule', () => {
     rule = new McpServerSecurityRule();
   });
 
-  it('detects MCP server vulnerabilities', () => {
+  it('detects insecure MCP configuration', () => {
     const content = `
-      // Example of a real vulnerability
-      mcp_server: public
-      model_context_protocol: vulnerability
-      echo_leak: true
-      # CVE-2025-32711
+      allow: all
+      enable: true
+      permit: everyone
+      auth: none
+      authentication: false
+      cors: "*"
+      origin: "*"
+      token: "test"
+      key: "demo"
     `;
     const fileContent: FileContent = {
       path: 'src/mcp-config.yaml',
@@ -23,18 +27,18 @@ describe('McpServerSecurityRule', () => {
     };
     const issues = rule.check(fileContent);
     expect(issues.length).toBeGreaterThan(0);
-    expect(issues.some(issue => issue.message.includes('EchoLeak Vulnerability'))).toBe(true);
-    expect(issues.some(issue => issue.message.includes('MCP Server Vulnerability'))).toBe(true);
-    expect(issues.some(issue => issue.message.includes('Exposed MCP Server'))).toBe(true);
+    expect(issues.some(issue => issue.message.includes('Insecure MCP configuration'))).toBe(true);
+    expect(issues.some(issue => issue.message.includes('Disabled MCP authentication'))).toBe(true);
+    expect(issues.some(issue => issue.message.includes('Open CORS in MCP'))).toBe(true);
   });
 
   it('ignores false positives in comments and examples', () => {
     const content = `
       # This is just an example
-      # mcp_server: public
-      # echo_leak: true
-      # model_context_protocol: vulnerability
-      # CVE-2025-32711
+      # allow: all
+      # auth: none
+      # cors: "*"
+      # token: "test"
     `;
     const fileContent: FileContent = {
       path: 'docs/mcp-example.md',
@@ -47,9 +51,10 @@ describe('McpServerSecurityRule', () => {
 
   it('ignores dev/test configs', () => {
     const content = `
-      mcp_server: localhost
-      model_context_protocol: test
-      echo_leak: false
+      allow: localhost
+      auth: development
+      cors: "localhost"
+      token: "dev-token"
     `;
     const fileContent: FileContent = {
       path: 'src/mcp-config.dev.yaml',
@@ -60,11 +65,12 @@ describe('McpServerSecurityRule', () => {
     expect(issues.length).toBe(0);
   });
 
-  it('detects insecure MCP configuration', () => {
+  it('detects weak credentials in MCP configuration', () => {
     const content = `
-      mcp_server: no_auth
-      model_context_protocol: insecure
-      encryption: weak
+      token: "123"
+      key: "abc"
+      secret: "xyz"
+      password: "test"
     `;
     const fileContent: FileContent = {
       path: 'src/mcp-config.yaml',
@@ -72,8 +78,6 @@ describe('McpServerSecurityRule', () => {
       lines: content.split('\n')
     };
     const issues = rule.check(fileContent);
-    expect(issues.some(issue => issue.message.includes('MCP Server Without Auth'))).toBe(true);
-    expect(issues.some(issue => issue.message.includes('Insecure MCP Configuration'))).toBe(true);
-    expect(issues.some(issue => issue.message.includes('Weak MCP Encryption'))).toBe(true);
+    expect(issues.some(issue => issue.message.includes('Weak MCP credentials'))).toBe(true);
   });
 });

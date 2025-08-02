@@ -7,16 +7,7 @@ export class BrokenAccessControlRule extends BaseRule {
 
   private readonly accessControlPatterns = [
     // Missing authorization checks in routes - Edge cases
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/admin[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Admin route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/user[^'"`]*\/[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'User-specific route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/api[^'"`]*\/[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'API route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/dashboard[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Dashboard route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/settings[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Settings route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/profile[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Profile route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/account[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Account route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/billing[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Billing route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/payment[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Payment route without authorization' },
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/order[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Order route without authorization' },
+    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/(?:admin|user|api|dashboard|settings|profile|account|billing|payment|order)[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, type: 'Protected route without authorization' },
     
     // Direct object references without ownership checks
     { pattern: /findById\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Direct object reference without ownership check' },

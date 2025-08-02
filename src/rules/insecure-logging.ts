@@ -55,7 +55,6 @@ export class InsecureLoggingRule extends BaseRule {
   private readonly debugLoggingPatterns = [
     // Excessive debug logging
     { pattern: /(?:console\.log|console\.debug|logger\.debug|logging\.debug)\s*\(\s*[^)]*\)/gi, type: 'Debug logging in production code' },
-    { pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, type: 'User input logging' },
     
     // Stack trace logging
     { pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*(?:stack|trace|error\.stack|exception\.stack)[^)]*\)/gi, type: 'Stack trace logging' },

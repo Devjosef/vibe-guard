@@ -13,11 +13,9 @@ program
   .description('🛡️  Vibe-Guard Security Scanner - Catch security issues before they catch you!')
   .version(VERSION);
 
-// Shared scan handler
 async function handleScan(target: string, options: any) {
   try {
     console.log(chalk.blue.bold('🛡️  Starting Vibe-Guard Security Scan...\n'));
-    // Debug logging
     console.log('DEBUG: Format option:', options.format);
     console.log('DEBUG: All options:', JSON.stringify(options, null, 2));
     const scanOptions: ScanOptions = {
@@ -30,7 +28,6 @@ async function handleScan(target: string, options: any) {
     const vibeGuard = new VibeGuard();
     const output = await vibeGuard.scanAndFormat(scanOptions);
     console.log(output);
-    // Exit with error code if issues found
     const result = await vibeGuard.scan(scanOptions);
     if (result.issuesFound > 0) {
       process.exit(1);
@@ -41,7 +38,6 @@ async function handleScan(target: string, options: any) {
   }
 }
 
-// Scan command (main functionality)
 program
   .command('scan')
   .description('Scan files or directories for security issues')
@@ -52,7 +48,6 @@ program
   .option('--include <patterns...>', 'Include patterns')
   .action(handleScan);
 
-// Default scan command (for backward compatibility)
 program
   .argument('[target]', 'File or directory to scan')
   .option('-f, --format <format>', 'Output format (table, json)', 'table')
@@ -95,13 +90,11 @@ program
     console.log(chalk.gray('TypeScript-powered, zero-dependency security scanning'));
   });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error(chalk.red.bold('❌ Unhandled Rejection at:'), promise, chalk.red('reason:'), reason);
   process.exit(1);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error(chalk.red.bold('❌ Uncaught Exception:'), error);
   process.exit(1);

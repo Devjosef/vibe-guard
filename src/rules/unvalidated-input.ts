@@ -7,7 +7,6 @@ export class UnvalidatedInputRule extends BaseRule {
 
   private readonly inputPatterns = [
     // Express.js patterns
-    { pattern: /req\.(?:body|query|params)\.[a-zA-Z_][a-zA-Z0-9_]*(?!\s*\.\s*(?:validate|sanitize|escape|trim|length|match|test))/g, type: 'Express request parameter' },
     { pattern: /req\.(?:body|query|params)(?!\s*\.\s*(?:validate|sanitize|escape))/g, type: 'Express request object' },
     
     // Direct user input usage

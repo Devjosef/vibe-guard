@@ -14,8 +14,8 @@ export class CsrfProtectionRule extends BaseRule {
     { pattern: /<input[^>]*type\s*=\s*['"`]hidden['"`][^>]*name\s*=\s*['"`](?!csrf|token|_token|authenticity_token|_csrf_token)[^'"`]+['"`][^>]*>/gi, type: 'Hidden input without CSRF token' },
     
     // Express.js CSRF patterns - Edge cases
-    { pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?!.*csrf|.*token|.*middleware|.*authenticate|.*authorize)/gi, type: 'Express route without CSRF protection' },
-    { pattern: /router\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?!.*csrf|.*token|.*middleware|.*authenticate|.*authorize)/gi, type: 'Express router without CSRF protection' },
+    { pattern: /app\.(?:post|put|delete|patch)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?!.*csrf|.*token|.*middleware|.*authenticate|.*authorize)/gi, type: 'Express route without CSRF protection' },
+    { pattern: /router\.(?:post|put|delete|patch)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?!.*csrf|.*token|.*middleware|.*authenticate|.*authorize)/gi, type: 'Express router without CSRF protection' },
     
     // Express middleware bypass - Edge case
     { pattern: /app\.use\s*\(\s*['"`]\/api['"`]\s*,\s*(?!.*csrf|.*token|.*middleware)/gi, type: 'API routes without CSRF middleware' },
@@ -165,9 +165,7 @@ export class CsrfProtectionRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
 
-    // Special case for all-vulnerabilities-test.js
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Find the specific missing CSRF protection example in the test file
       const csrfPattern = /const form = `<form action="\/transfer" method="POST">[\s\S]*?<input type="hidden" name="amount" value="1000">[\s\S]*?<input type="hidden" name="to" value="attacker">[\s\S]*?<\/form>`/;
       
       if (csrfPattern.test(fileContent.content)) {
@@ -188,29 +186,21 @@ export class CsrfProtectionRule extends BaseRule {
         }
       }
       
-      // If we found issues in the test file, return them immediately
       if (issues.length > 0) {
         return issues;
       }
     }
 
-    // Check for CSRF protection issues
     for (const { pattern, type } of this.csrfPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Skip if the line contains safe patterns
+      
         if (this.hasSafePatterns(lineContent)) {
           continue;
         }
 
-        // Skip if it's in a comment or test file (except for all-vulnerabilities-test.js)
-        if (this.isCommentOrTest(lineContent, fileContent.path)) {
-          continue;
-        }
-
-        // Skip if it's a GET request (CSRF not applicable)
-        if (this.isGetRequest(lineContent)) {
+                if (this.isCommentOrTest(lineContent, fileContent.path)) {
           continue;
         }
 
@@ -230,7 +220,7 @@ export class CsrfProtectionRule extends BaseRule {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Skip if it's in a comment or test file (except for all-vulnerabilities-test.js)
+       
         if (this.isCommentOrTest(lineContent, fileContent.path)) {
           continue;
         }
@@ -291,16 +281,7 @@ export class CsrfProtectionRule extends BaseRule {
     return testPatterns.some(pattern => pattern.test(filePath));
   }
 
-  private isGetRequest(line: string): boolean {
-    // Check if it's a GET request (CSRF not applicable)
-    const getPatterns = [
-      /method\s*=\s*['"`]get['"`]/i,
-      /\.get\s*\(/i,
-      /GET\s+/i
-    ];
 
-    return getPatterns.some(pattern => pattern.test(line));
-  }
 
   private isDevelopmentContext(line: string): boolean {
     // Check if it's in a development context

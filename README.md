@@ -1,107 +1,81 @@
-#  Vibe-Guard Security Scanner
+# Vibe-Guard Security Scanner
 
-**Catches the security mistakes we all make when we code quickly**
+**The security scanner that actually catches real vulnerabilities without the noise**
 
-Zero dependencies • Instant setup • Works everywhere • 20 essential security rules
+Zero dependencies • Instant setup • Works everywhere • 25 essential security rules
 
-##  Quick Start (Choose Your Style)
+## What Is This Thing?
 
-### Option 1: Download Binary Directly (Recommended)
+Vibe-Guard catches the security mistakes we all make when we're coding fast. You know the drill you're in the zone, AI is helping you code, or you're quickly prototyping something, and suddenly you've got API keys in your code or forgot to add auth to that admin endpoint. We've all been there.
+
+### The Core Philosophy
+
+- **Catch real issues** - Not theoretical vulnerabilities that don't matter
+- **Zero false positives** - If it flags something, it's actually a problem
+- **Fast enough to use daily** - Scans your entire project in seconds
+- **Works everywhere** - macOS, Linux, Windows, Docker, CI/CD
+- **No setup required** - Download and run, that's it
+
+## Quick Start (The "Just Show Me Code" Section)
+
+### Option 1: Download Binary (Recommended)
 ```bash
 # macOS (Intel)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-macos-x64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.3/vibe-guard-macos-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
 # macOS (Apple Silicon)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-macos-arm64 -o vibe-guard
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.3/vibe-guard-macos-arm64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
 
-# Linux (x64)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
+# Linux
+curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.3/vibe-guard-linux-x64 -o vibe-guard
 chmod +x vibe-guard
 ./vibe-guard scan .
-
-# Linux (ARM64)
-curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-arm64 -o vibe-guard
-chmod +x vibe-guard
-./vibe-guard scan .
-
-# Windows
-# Download vibe-guard-windows-x64.exe from releases page
 ```
 
-### Option 2: Package Managers
+### Option 2: NPM
 ```bash
-# Homebrew (macOS/Linux) - Personal Tap
-brew tap Devjosef/vibe-guard
-brew install vibe-guard
-
-# Chocolatey (Windows) - Ready for submission
-# choco install vibe-guard
-
-# RPM (RHEL/CentOS) - Ready for submission
-# rpm -i https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.rpm
-
-# DEB (Ubuntu/Debian) - Ready for submission
-# curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard.deb -o vibe-guard.deb
-# sudo dpkg -i vibe-guard.deb
-```
-
-### Option 3: Docker (for CI/CD)
-```bash
-# Pull the latest image
-docker pull vibe-guard/vibe-guard:latest
-
-# Scan current directory
-docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code
-
-# Scan specific file
-docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:latest scan /code/app.js
-
-# Use specific version
-docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.2 scan /code
-```
-
-### Option 4: NPM (for Node.js users)
-```bash
-# Latest version (1.1.2)
+# One-time use
 npx vibe-guard scan .
-# or
+
+# Global install
 npm install -g vibe-guard
 vibe-guard scan .
 ```
 
-##  Why You'll Actually Use This
+### Option 3: Docker
+```bash
+docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.3 scan /code
+```
 
-- **Zero Setup**: Download and run, no Node.js or dependencies required
-- **Fast Enough to Not Be Annoying**: Scans your entire project in seconds
-- **Won't Spam You**: Smart enough to know test code from real issues
-- **Made by Developers**: We know what actually breaks in production
-- **Works Everywhere**: macOS, Linux, Windows, Docker, CI/CD - you name it
-- **ARM64 Support**: Native support for Apple Silicon and ARM64 Linux
-- **Cross-Platform**: Single binary for each platform, no dependencies
-
-##  What It Catches (All 20 Rules)
+## The 25 Security Rules (What It Actually Catches)
 
 ### 🚨 Critical Issues (7 Rules)
-- **Exposed Secrets**: API keys, tokens, and credentials in your code
-- **Hardcoded Sensitive Data**: Database passwords, JWT secrets, encryption keys
-- **XSS Detection**: Cross-site scripting vulnerabilities in web applications
+These will get you hacked. Fix them immediately.
+
+- **Exposed Secrets**: API keys, tokens, credentials in code
+- **Hardcoded Sensitive Data**: Database passwords, JWT secrets, encryption keys  
+- **XSS Detection**: Cross-site scripting vulnerabilities
 
 ### ⚠️ High-Risk Issues (12 Rules)
+These are serious but won't immediately compromise your app.
+
 - **Missing Authentication**: Unprotected admin routes and API endpoints
 - **SQL Injection**: String concatenation in database queries
 - **Directory Traversal**: Unsafe file path operations
 - **Open CORS**: Wildcard origins that let anyone access your API
-- **CSRF Protection**: Missing CSRF tokens in forms and unsafe cookie configurations
+- **CSRF Protection**: Missing CSRF tokens in forms and unsafe cookies
 - **Insecure Deserialization**: Unsafe JSON parsing and eval usage
 - **Broken Access Control**: Missing authorization checks
 - **Insecure File Upload**: Unsafe file handling and validation
 - **Insecure Session Management**: Weak session secrets and insecure cookies
 
-### 📋 Medium Issues (12 Rules)
+### 📋 Medium Issues (13 Rules)
+These are security best practices that should be addressed.
+
 - **Unvalidated Input**: Direct use of user input without checks
 - **Insecure HTTP**: Using HTTP instead of HTTPS
 - **Insecure Dependencies**: Outdated packages with known security issues
@@ -110,33 +84,11 @@ vibe-guard scan .
 - **Insecure Logging**: Sensitive data exposure in logs
 - **Insecure Error Handling**: Stack trace and information disclosure
 - **Insecure Configuration**: Debug mode and security features disabled
-
-## ⚠️ Important Note: Scanner Sensitivity
-
-VibeGuard is designed with **intelligent sensitivity** to balance detection accuracy with usability:
-
-### 🎯 How Sensitivity Works
-- **Critical & High Severity**: Very sensitive - catches real vulnerabilities
-- **Medium & Low Severity**: Moderately sensitive - focuses on production-relevant issues
-- **False Positive Prevention**: Automatically filters out:
-  - Comments and documentation
-  - Test files and development code
-  - Environment variables (`${VAR}`, `process.env.VAR`)
-  - Safe patterns (parameterized queries, HTTPS, etc.)
-  - Framework-specific safeguards
-
-### 📊 Detection Characteristics
-- **Detection Rate**: ~50-70% of potential issues (focused on real problems)
-- **False Positive Rate**: Very low (designed for development workflows)
-- **Performance**: Fast scanning without overwhelming noise
-- **Actionable Results**: Every issue includes specific fix suggestions
-
-### 🔧 For Different Use Cases
-- **Development**: Current settings are well-balanced for daily use
-- **Production Audits**: Consider running with verbose mode and manual review
-- **Maximum Sensitivity**: Can be configured by modifying rule filters
-
-*This approach ensures VibeGuard catches real security issues while remaining practical for development workflows.*
+- **AI-Generated Code Validation**: Detecting potentially unsafe AI-generated code
+- **AI Data Leakage Prevention**: Preventing sensitive data exposure in AI outputs
+- **Prompt Injection Detection**: Detecting potential prompt injection vulnerabilities
+- **AI Agent Access Control**: Ensuring proper access controls for AI agents
+- **MCP Server Security**: Detecting insecure Model Context Protocol configurations
 
 ## Usage Examples
 
@@ -157,13 +109,13 @@ vibe-guard .
 vibe-guard --version
 ```
 
-## 🔧 CI/CD Integration
+## CI/CD Integration
 
 ### GitHub Actions
 ```yaml
 - name: Security Scan
   run: |
-    curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
+    curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.3/vibe-guard-linux-x64 -o vibe-guard
     chmod +x vibe-guard
     ./vibe-guard scan .
 ```
@@ -172,7 +124,7 @@ vibe-guard --version
 ```yaml
 security_scan:
   script:
-    - curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.2/vibe-guard-linux-x64 -o vibe-guard
+    - curl -L https://github.com/Devjosef/vibe-guard/releases/download/v1.1.3/vibe-guard-linux-x64 -o vibe-guard
     - chmod +x vibe-guard
     - ./vibe-guard scan .
 ```
@@ -180,19 +132,33 @@ security_scan:
 ### Docker in CI
 ```yaml
 - name: Security Scan
-  run: docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.2 scan /code
+  run: docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.3 scan /code
 ```
 
-## Who This Is For
+## Scanner Sensitivity (How It Works)
 
-- **When you're coding with AI** - ChatGPT and Copilot are amazing, but they sometimes miss security basics
-- **Rapid prototyping** - Building something quick? Don't let security be an afterthought
-- **No-code/Low-code folks** - Generated code can have issues, this catches them
-- **Your CI/CD pipeline** - Catch problems before they hit production
-- **Code reviews** - Run this before you submit that PR
-- **Learning security** - Get real-time feedback on what can or is going wrong (and how to fix it)
+Vibe-Guard is designed with **intelligent sensitivity** to balance detection accuracy with usability:
 
-## 🌍 Language Support
+### Detection Characteristics
+- **Detection Rate**: ~50-70% of potential issues (focused on real problems)
+- **False Positive Rate**: Very low (designed for development workflows)
+- **Performance**: Optimized scanning with streamlined detection patterns
+- **Actionable Results**: Every issue includes specific fix suggestions
+
+### Automatic Filtering
+Vibe-Guard automatically filters out:
+- Comments and documentation
+- Test files and development code
+- Environment variables (`${VAR}`, `process.env.VAR`)
+- Safe patterns (parameterized queries, HTTPS, etc.)
+- Framework-specific safeguards
+
+### Use Cases
+- **Development**: Current settings are well-balanced for daily use
+- **Production Audits**: Consider running with verbose mode and manual review
+- **Maximum Sensitivity**: Can be configured by modifying rule filters
+
+## Language Support
 
 Works with all the languages you actually use:
 - **JavaScript/TypeScript**: .js, .jsx, .ts, .tsx
@@ -204,7 +170,7 @@ Works with all the languages you actually use:
 - **C#**: .cs
 - **Config files**: .json, .yaml, .yml, .env
 
-## 🏗️ Development
+## Development
 
 Want to contribute or build from source?
 
@@ -226,12 +192,29 @@ npm test
 ```
 src/
 ├── types/           # TypeScript definitions
-├── rules/           # All 20 security rule implementations
+├── rules/           # All 25 security rule implementations
 ├── bin/             # CLI interface
 ├── scanner.ts       # File scanning engine
 ├── reporter.ts      # Output formatting
 └── index.ts         # Main application
 ```
+
+## Why Choose Vibe-Guard?
+
+### What You Get
+- **Zero Setup**: Download and run, no dependencies
+- **Fast Scanning**: Optimized patterns for speed
+- **Real Issues**: Focused on actual vulnerabilities
+- **Cross-Platform**: Works everywhere
+- **CI/CD Ready**: Integrates seamlessly
+- **Clear Fixes**: Every issue comes with specific solutions
+
+### What You Don't Get
+- Complex configuration files
+- False positive spam
+- Framework lock-in
+- Slow scanning that kills your workflow
+- Cryptic error messages
 
 ## Comparison
 
@@ -245,9 +228,18 @@ src/
 | CI/CD Ready | ✅ Yes | ⚠️ Complex |
 | Actually explains fixes | ✅ Yes | ❌ Cryptic |
 | ARM64 Support | ✅ Yes | ❌ Limited |
-| Security Rules | 20 comprehensive rules | Varies |
+| Security Rules | 25 comprehensive rules | Varies |
 
-## 🤝 Contributing
+## Who This Is For
+
+- **When you're coding with AI** - ChatGPT and Copilot are amazing, but they sometimes miss security basics
+- **Rapid prototyping** - Building something quick? Don't let security be an afterthought
+- **No-code/Low-code folks** - Generated code can have issues, this catches them
+- **Your CI/CD pipeline** - Catch problems before they hit production
+- **Code reviews** - Run this before you submit that PR
+- **Learning security** - Get real-time feedback on what can or is going wrong (and how to fix it)
+
+## Contributing
 
 1. **Add Security Rules**: Extend the rule engine with new patterns
 2. **Improve Detection**: Help reduce false positives
@@ -256,12 +248,12 @@ src/
 
 See [SECURITY_RULES.md](SECURITY_RULES.md) for detailed rule documentation.
 
-## 📄 License
+## License
 
 MIT License - Use it anywhere, anytime!
 
 ---
 
-**Built with ❤️ by developers who got tired of slow, and complex security tools.**
+**Built with love by developers who got tired of slow, complex security tools.**
 
 *Security shouldn't slow you down, but security holes definitely will.* 

@@ -38,6 +38,8 @@ To add a new security rule:
 1. Create a new file in `src/rules/` (e.g., `my-new-rule.ts`)
 2. Extend the `BaseRule` class:
 
+**Important**: Follow the optimized pattern approach - avoid redundant or overlapping patterns. Use specific, targeted patterns rather than broad ones that require filtering.
+
 ```typescript
 import { BaseRule, FileContent, SecurityIssue } from '../types';
 
@@ -49,39 +51,51 @@ export class MyNewRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Your detection logic here
-    const pattern = /your-regex-pattern/gi;
-    const matches = this.findMatches(fileContent.content, pattern);
+    // Use specific, targeted patterns rather than broad ones
+    const patterns = [
+      { pattern: /specific-pattern-1/gi, type: 'Specific Issue 1' },
+      { pattern: /specific-pattern-2/gi, type: 'Specific Issue 2' }
+    ];
     
-    for (const { match, line, column, lineContent } of matches) {
-      // Skip false positives
-      if (this.isFalsePositive(match[0])) {
-        continue;
-      }
+    for (const { pattern, type } of patterns) {
+      const matches = this.findMatches(fileContent.content, pattern);
+      
+      for (const { line, column, lineContent } of matches) {
+        // Skip comments and test files
+        if (this.isCommentOrTest(lineContent, fileContent.path)) {
+          continue;
+        }
 
-      issues.push(this.createIssue(
-        fileContent.path,
-        line,
-        column,
-        lineContent,
-        'Issue description',
-        'How to fix this issue'
-      ));
+        issues.push(this.createIssue(
+          fileContent.path,
+          line,
+          column,
+          lineContent,
+          type,
+          'How to fix this issue'
+        ));
+      }
     }
     
     return issues;
   }
 
-  private isFalsePositive(text: string): boolean {
-    // Add your false positive detection logic
-    const falsePositivePatterns = [
-      /test/i,
-      /example/i,
-      /demo/i,
-      /placeholder/i
+  private isCommentOrTest(line: string, filePath: string): boolean {
+    // Check if line is a comment
+    const commentPatterns = [
+      /^\s*\/\//,  // JavaScript comment
+      /^\s*#/,     // Python/Shell comment
+      /^\s*--/,    // SQL comment
+      /^\s*<!--/,  // HTML comment
     ];
-    
-    return falsePositivePatterns.some(pattern => pattern.test(text));
+
+    if (commentPatterns.some(pattern => pattern.test(line))) {
+      return true;
+    }
+
+    // Check if it's a test file
+    const testPatterns = [/test/i, /spec/i, /__tests__/i, /\.test\./i, /\.spec\./i];
+    return testPatterns.some(pattern => pattern.test(filePath));
   }
 }
 ```
@@ -94,246 +108,243 @@ export class MyNewRule extends BaseRule {
 4. Test your rule with various code samples
 5. Update the README and SECURITY_RULES.md with your new rule
 
+## Performance Optimization Guidelines
+
+When adding or modifying security rules, follow these optimization principles:
+
+### Pattern Design Best Practices
+- **Avoid Redundant Patterns**: Don't create overlapping patterns that catch the same issues
+- **Use Specific Patterns**: Target specific vulnerabilities rather than broad patterns that require filtering
+- **Consolidate Similar Patterns**: Group related patterns into single, efficient regex
+- **Eliminate "Catch All" Patterns**: Avoid patterns that match everything then filter out false positives
+
+### Examples of Good vs Bad Patterns
+
+**❌ Bad - Redundant Patterns:**
+```typescript
+// Multiple overlapping patterns
+{ pattern: /req\.body\.password/gi, type: 'Password in body' },
+{ pattern: /req\.body\.[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Any body field' }
+```
+
+**✅ Good - Consolidated Pattern:**
+```typescript
+// Single, specific pattern
+{ pattern: /req\.body\.[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Request body field' }
+```
+
+**❌ Bad - Catch All Then Filter:**
+```typescript
+// Broad pattern with filtering
+{ pattern: /(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'User input' }
+// Then filter out false positives...
+```
+
+**✅ Good - Specific Patterns:**
+```typescript
+// Specific patterns for different use cases
+{ pattern: /req\.body\.[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Request body field' },
+{ pattern: /req\.query\.[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Query parameter' }
+```
+
 ## Code Style
 
 - Use TypeScript with strict typing
 - Use meaningful variable names
-- Add comments for complex logic
-- Follow the existing code style
-- Use async/await instead of promises where possible
-- Prefer `const` over `let`, avoid `var`
-- Handle edge cases gracefully (binary files, large files, encoding issues)
+- Write clear, concise comments
+- Follow the existing code structure
+- Use consistent formatting
 
-## Edge Case Handling
-
-Vibe-Guard includes robust edge case handling. When adding new rules, consider:
-
-### File Processing Edge Cases
-
-**Binary Files** - Automatically skipped
+### TypeScript Guidelines
 ```typescript
-// The scanner handles this automatically
-// Your rules won't see binary files
-```
+// ✅ Good
+export class MyRule extends BaseRule {
+  readonly name = 'my-rule';
+  readonly description = 'Clear description';
+  readonly severity = 'medium' as const;
 
-**Large Files** - Files >5MB are automatically skipped
-```typescript
-// No need to handle in your rules
-// Scanner prevents memory issues
-```
+  check(fileContent: FileContent): SecurityIssue[] {
+    // Implementation
+  }
+}
 
-**Encoding Issues** - Handled gracefully
-```typescript
-// Scanner handles UTF-8 decoding errors
-// Your rules get clean text content
-```
-
-### False Positive Prevention
-
-**Test Files & Development Code**
-```typescript
-// Should NOT trigger - it's in a test file
-const mockApiKey = "sk_test_fake_key_for_testing";
-
-// Should NOT trigger - obvious placeholder
-const API_KEY = "your-api-key-here";
-const PASSWORD = "password123"; // in example code
-```
-
-**Environment Variables & Templates**
-```typescript
-// Should NOT trigger - using env vars correctly
-const apiKey = process.env.API_KEY;
-const dbUrl = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@localhost`;
-
-// Should NOT trigger - template variables
-const config = "database_url: ${DATABASE_URL}";
-const windowsVar = "%API_KEY%";
-const templateVar = "{{SECRET_KEY}}";
-```
-
-**Development/Local Contexts**
-```typescript
-// Should NOT trigger - localhost development
-app.use(cors({ origin: 'http://localhost:3000' }));
-fetch('http://localhost:8080/api/data');
-
-// Should NOT trigger - development environment
-if (process.env.NODE_ENV === 'development') {
-  // Less strict security for dev
+// ❌ Bad
+export class MyRule extends BaseRule {
+  name = 'my-rule'; // Missing readonly
+  description = 'Description'; // Missing readonly
+  severity = 'medium'; // Missing as const
 }
 ```
 
-**Repeated Characters & Simple Patterns**
+### Naming Conventions
+- **Files**: kebab-case (e.g., `my-new-rule.ts`)
+- **Classes**: PascalCase (e.g., `MyNewRule`)
+- **Variables**: camelCase (e.g., `myVariable`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`)
+
+## Testing Guidelines
+
+### Writing Tests
+Every rule should have comprehensive tests:
+
 ```typescript
-// Should NOT trigger - obvious test values
-const testKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-const zeroKey = "00000000000000000000000000000000";
-const simplePattern = "123456789012345678901234567890";
-```
+// src/__tests__/rules/my-new-rule.test.ts
+import { MyNewRule } from '../../rules/my-new-rule';
 
-### Complex Patterns to Handle
+describe('MyNewRule', () => {
+  const rule = new MyNewRule();
 
-**Multi-line Secrets**
-```typescript
-// Should trigger - real secret split across lines
-const privateKey = `-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA7...
------END RSA PRIVATE KEY-----`;
-```
+  it('detects specific vulnerability', () => {
+    const content = `
+      // Vulnerable code here
+      const badCode = "something bad";
+    `;
 
-**Base64 Encoded Secrets**
-```typescript
-// Should trigger - base64 encoded real secrets
-const secret = "c2VjcmV0LWFwaS1rZXktMTIzNDU2Nzg5MA=="; // real secret encoded
+    const issues = rule.check({ content, path: 'test.js', lines: content.split('\n') });
+    
+    expect(issues).toHaveLength(1);
+    expect(issues[0].type).toBe('Specific Issue 1');
+  });
 
-// Should NOT trigger - test base64
-const testSecret = "dGVzdC1zZWNyZXQ="; // "test-secret" encoded
-```
+  it('ignores safe code', () => {
+    const content = `
+      // Safe code here
+      const goodCode = "something good";
+    `;
 
-**Context-Dependent Issues**
-```typescript
-// Should trigger in production files, not in test files
-const query = "SELECT * FROM users WHERE id = " + userId;
+    const issues = rule.check({ content, path: 'test.js', lines: content.split('\n') });
+    
+    expect(issues).toHaveLength(0);
+  });
 
-// Should consider validation context
-app.post('/upload', (req, res) => {
-  // This is bad without validation
-  fs.writeFile(req.body.filename, data);
-  
-  // This might be OK with proper validation nearby
-  if (isValidFilename(req.body.filename)) {
-    fs.writeFile(req.body.filename, data);
-  }
+  it('ignores comments and test files', () => {
+    const content = `
+      // This is a comment with bad code
+      // const badCode = "something bad";
+    `;
+
+    const issues = rule.check({ content, path: 'test.js', lines: content.split('\n') });
+    
+    expect(issues).toHaveLength(0);
+  });
 });
 ```
 
-**Import Statements** - Automatically handled
-```typescript
-// Should NOT trigger directory traversal
-import { BaseRule } from '../types';
-const utils = require('../utils');
-export { something } from '../helpers';
+### Test Coverage
+- Test positive cases (vulnerabilities detected)
+- Test negative cases (safe code ignored)
+- Test edge cases (comments, test files, etc.)
+- Test different file types and languages
+
+## Documentation Guidelines
+
+### Updating README.md
+When adding a new rule:
+1. Add it to the appropriate severity section
+2. Update the rule count
+3. Provide a brief description
+
+### Updating SECURITY_RULES.md
+For each new rule, add:
+1. **What it catches**: Brief description
+2. **Why it matters**: Security impact
+3. **Code examples**: Bad vs good code
+4. **Patterns detected**: What the rule looks for
+5. **Fix**: How to resolve the issue
+
+### Example Documentation
+```markdown
+### 26. My New Rule (MEDIUM)
+**What it catches**: Description of the vulnerability
+**Why it matters**: Security impact explanation
+
+```javascript
+// ❌ Bad - Will be flagged
+const badCode = "vulnerable pattern";
+
+// ✅ Good - Won't be flagged
+const goodCode = "safe pattern";
 ```
 
-### Language-Specific Quirks
+**Patterns detected**:
+- Pattern 1: Description
+- Pattern 2: Description
 
-**JavaScript/TypeScript**
-- Template literals vs string concatenation
-- Dynamic imports and requires
-- Async/await vs Promise patterns
-- Variable naming patterns (avoid matching variable names)
-
-**Python**
-- f-strings vs % formatting vs .format()
-- Different import styles
-- Virtual environment paths
-
-**Configuration Files**
-- YAML vs JSON vs TOML different syntax
-- Comments in different formats
-- Environment variable substitution
-
-### Performance Considerations
-
-**Regex Efficiency**
-```typescript
-// Good - specific, efficient regex
-/sk_live_[a-zA-Z0-9]{24}/g
-
-// Bad - overly broad, slow regex
-/.*secret.*password.*/gi
-
-// Good - negative lookbehind for context
-/(?<!import\s+['"`][^'"`]*)\.\.\//g
-
-// Bad - will match import statements
-/\.\.\//g
+**Fix**: How to fix the issue
 ```
 
-**Pattern Specificity**
-```typescript
-// Good - specific context
-/(?:api[_-]?key|apikey)\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi
+## Pull Request Process
 
-// Bad - too broad, catches variable names
-/token\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi
+### Before Submitting
+1. **Run tests**: `npm test`
+2. **Check linting**: Ensure code follows style guidelines
+3. **Update documentation**: README and SECURITY_RULES.md
+4. **Test your changes**: Run Vibe-Guard on sample code
 
-// Better - avoid variable names
-/(?:^|[^a-zA-Z0-9_])(?:token|auth)\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi
+### PR Description
+Include:
+- **What**: Brief description of changes
+- **Why**: Why the change is needed
+- **How**: How the change works
+- **Testing**: What you tested
+
+### Example PR Description
 ```
+## What
+Added new rule to detect insecure cookie configurations
 
-### Testing Your Rules
+## Why
+Cookies without proper security settings can lead to session hijacking
 
-Always test with:
-- Real vulnerable code samples
-- Common false positive scenarios
-- Different file encodings (UTF-8, UTF-16)
-- Files with no newline at end
-- Empty files
-- Very long lines
-- Mixed line endings (CRLF vs LF)
-- Binary files (should be skipped automatically)
-- Large files (should be skipped automatically)
-- Test files and mock data
-- Import/export statements
-- Environment variable usage
-
-```bash
-# Test with various file types
-echo "const secret = 'real-secret-key-123456789';" > test-real.js
-echo "const testKey = 'test-placeholder';" > test-false-positive.js
-echo "import utils from '../utils';" > test-import.js
-
-# Run your rule
-node dist/bin/vibe-guard.js scan test-*.js
-
-# Test with binary file (should be skipped)
-echo -e '\x00\x01\x02\x03' > test.bin
-node dist/bin/vibe-guard.js scan test.bin
-
-# Test with large file (should be skipped)
-dd if=/dev/zero of=large.txt bs=1024 count=6000
-node dist/bin/vibe-guard.js scan large.txt
-```
+## How
+- Created `InsecureCookieRule` class
+- Added patterns for missing httpOnly, secure, sameSite attributes
+- Integrated with existing rule system
 
 ## Testing
-
-```bash
-# Build the project
-npm run build
-
-# Run the tool on test files
-node dist/bin/vibe-guard.js scan test-file.js
-
-# Test with different output formats
-node dist/bin/vibe-guard.js scan . --format json
-node dist/bin/vibe-guard.js scan . --format table
-
-# Run TypeScript compiler (catches type errors)
-npm run build
-
-# Create test binaries
-npm run package:macos
-npm run package:linux
-npm run package:windows
+- Added comprehensive test suite
+- Tested on real-world examples
+- Verified no false positives on safe code
 ```
 
-## Reporting Bugs
+## Review Process
 
-We use GitHub issues to track public bugs. Report a bug by opening a new issue.
+### What We Look For
+- **Correctness**: Does the rule work as intended?
+- **Performance**: Is it optimized and efficient?
+- **Documentation**: Is it well-documented?
+- **Tests**: Are there comprehensive tests?
+- **Style**: Does it follow our guidelines?
 
-**Great Bug Reports** tend to have:
+### Common Issues
+- **Redundant patterns**: Overlapping detection logic
+- **Missing tests**: Incomplete test coverage
+- **Poor documentation**: Unclear explanations
+- **Performance issues**: Slow or inefficient patterns
 
-- A quick summary and/or background
-- Steps to reproduce
-- What you expected would happen
-- What actually happens
-- Notes (possibly including why you think this might be happening)
-- Your platform (macOS, Linux, Windows)
-- How you installed Vibe-Guard (binary, npm, docker)
-- Sample code that triggers the issue (if applicable)
+## Getting Help
+
+### Questions?
+- **GitHub Issues**: For bugs and feature requests
+- **Discussions**: For questions and ideas
+- **Documentation**: Check existing docs first
+
+### Resources
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Security Best Practices](https://owasp.org/www-project-top-ten/)
+- [Regex Testing](https://regex101.com/)
+
+## Recognition
+
+Contributors are recognized in:
+- **README.md**: For significant contributions
+- **CHANGELOG.md**: For all contributions
+- **GitHub**: Through the contributors graph
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License. 
+By contributing to Vibe-Guard, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+**Thank you for contributing to Vibe-Guard! 🛡️** 

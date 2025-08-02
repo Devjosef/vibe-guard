@@ -97,11 +97,8 @@ export class Reporter {
   }
 
   private truncateFilePath(filePath: string, maxLength: number = 35): string {
-    // Normalize all slashes to '/'
     let sanitizedPath = filePath.replace(/\\+/g, '/').replace(/\\/g, '/').replace(/\/+/g, '/');
-    // Remove '..' and multiple slashes
     sanitizedPath = sanitizedPath.replace(/\.\./g, '').replace(/\/+/g, '/');
-    // Remove leading slashes
     sanitizedPath = sanitizedPath.replace(/^\/+/, '');
     
     if (sanitizedPath.length <= maxLength) {
@@ -113,7 +110,6 @@ export class Reporter {
       return sanitizedPath;
     }
     
-    // Show first and last parts with ... in between
     const first = parts[0];
     const last = parts[parts.length - 1];
     const truncated = `${first}/.../${last}`;
@@ -122,7 +118,6 @@ export class Reporter {
       return truncated;
     }
     
-    // If still too long, just truncate from the beginning
     return '...' + sanitizedPath.slice(-(maxLength - 3));
   }
 

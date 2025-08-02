@@ -29,10 +29,8 @@ export class FileScanner {
     '**/obj/**'
   ];
 
-  // File size limit: 5MB (prevents performance issues)
   private readonly maxFileSize = 5 * 1024 * 1024;
 
-  // Binary file extensions to skip
   private readonly binaryExtensions = [
     '.exe', '.dll', '.so', '.dylib', '.bin', '.dat',
     '.img', '.iso', '.dmg', '.pkg', '.deb', '.rpm',
@@ -132,7 +130,6 @@ export class FileScanner {
   private isSupportedFile(filePath: string): boolean {
     const ext = path.extname(filePath).toLowerCase();
     
-    // Skip binary files
     if (this.binaryExtensions.includes(ext)) {
       return false;
     }
@@ -142,14 +139,12 @@ export class FileScanner {
 
   private async readFile(filePath: string): Promise<FileContent | null> {
     try {
-      // Check file size first
       const stats = await fs.promises.stat(filePath);
       if (stats.size > this.maxFileSize) {
         console.warn(`Skipping large file: ${filePath} (${Math.round(stats.size / 1024 / 1024)}MB > 5MB limit)`);
         return null;
       }
 
-      // Check if file is binary by reading first few bytes
       if (await this.isBinaryFile(filePath)) {
         return null;
       }
@@ -166,7 +161,6 @@ export class FileScanner {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
         return null;
       }
-      // Handle encoding errors (binary files read as text)
       if (error instanceof Error && error.message.includes('invalid')) {
         return null;
       }
@@ -176,39 +170,33 @@ export class FileScanner {
 
   private async isBinaryFile(filePath: string): Promise<boolean> {
     try {
-      // Read first 512 bytes to check for binary content
       const fd = await fs.promises.open(filePath, 'r');
       const buffer = Buffer.alloc(512);
       const { bytesRead } = await fd.read(buffer, 0, 512, 0);
       await fd.close();
 
       if (bytesRead === 0) {
-        return false; // Empty file, treat as text
+        return false;
       }
 
-      // Check for null bytes (common in binary files)
       for (let i = 0; i < bytesRead; i++) {
         if (buffer[i] === 0) {
           return true;
         }
       }
 
-      // Check for high percentage of non-printable characters
       let nonPrintable = 0;
       for (let i = 0; i < bytesRead; i++) {
         const byte = buffer[i];
         if (byte !== undefined) {
-          // Allow common text characters: printable ASCII, newlines, tabs
           if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
             nonPrintable++;
           }
         }
       }
 
-      // If more than 30% non-printable, consider it binary
       return (nonPrintable / bytesRead) > 0.3;
     } catch {
-      // If we can't read the file, assume it's not binary
       return false;
     }
   }

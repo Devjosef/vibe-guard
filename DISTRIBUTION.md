@@ -1,6 +1,6 @@
 # 🚀 Vibe-Guard Distribution Guide
 
-This document explains all the ways to distribute and use Vibe-Guard, the comprehensive security scanner with 20 essential security rules.
+This document explains all the ways to distribute and use Vibe-Guard, the comprehensive security scanner with 25 essential security rules and optimized performance.
 
 ## 📦 Distribution Methods
 

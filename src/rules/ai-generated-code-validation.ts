@@ -6,42 +6,31 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly aiCodePatterns = [
-    // AI-generated code markers with context
     { 
       pattern: /(?:generated[_-]?by|ai[_-]?generated|copilot|chatgpt|gpt[_-]?generated|claude[_-]?generated)/gi, 
       type: 'AI-Generated Code',
       severity: 'medium' as const
     },
-    
-    // Unvalidated AI-generated code
     { 
       pattern: /(?:ai|generated|copilot).*?(?:unvalidated|unreviewed|unchecked)/gi, 
       type: 'Unvalidated AI Code',
       severity: 'high' as const
     },
-    
-    // AI-generated code without security review
     { 
       pattern: /(?:ai|generated|copilot).*?(?:no[_-]?review|without[_-]?review|skip[_-]?review)/gi, 
       type: 'AI Code Without Security Review',
       severity: 'high' as const
     },
-    
-    // AI-generated code with known vulnerabilities
     { 
       pattern: /(?:ai|generated|copilot).*?(?:vulnerable|insecure|unsafe)/gi, 
       type: 'Vulnerable AI-Generated Code',
       severity: 'critical' as const
     },
-    
-    // AI-generated code bypassing security checks
     { 
       pattern: /(?:ai|generated|copilot).*?(?:bypass|skip|ignore).*?(?:security|validation)/gi, 
       type: 'AI Code Bypassing Security',
       severity: 'critical' as const
     },
-
-    // Multi-line patterns for complex AI injection
     {
       pattern: /(?:prompt|input).*?(?:ignore|forget|system|assistant|user).*?(?:previous|above|instructions)/gis,
       type: 'Multi-Line AI Injection',
@@ -132,12 +121,18 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
 
-    // Check if we're in a development/test context
     const isDevelopmentContext = this.isDevelopmentContext(fileContent.content);
     const isTestFile = this.isTestFile(fileContent.path);
 
     for (const { pattern, type, severity } of this.aiCodePatterns) {
-      const matches = this.findMatches(fileContent.content, pattern);
+      let matches;
+      
+      // Handle multi line patterns differently
+      if (pattern.flags.includes('s')) {
+        matches = this.findMultiLineMatches(fileContent.content, pattern);
+      } else {
+        matches = this.findMatches(fileContent.content, pattern);
+      }
       
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
@@ -153,7 +148,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
           adjustedSeverity = this.adjustSeverityForContext(severity);
         }
 
-        // Skip medium severity issues in development
+        
         if (adjustedSeverity === 'medium' && isDevelopmentContext) {
           continue;
         }
@@ -174,27 +169,20 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   }
 
   private isFalsePositive(lineContent: string, matchedText: string, filePath: string): boolean {
-    // Check basic false positive patterns
+   
     if (this.falsePositivePatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if it's in a test file
-    if (this.isTestFile(filePath)) {
-      return true;
-    }
 
-    // Check for documentation files
     if (filePath.match(/\.(md|txt|rst|adoc)$/i)) {
       return true;
     }
 
-    // Check for configuration examples
     if (filePath.match(/\.(example|sample|template)\./i)) {
       return true;
     }
 
-    // Check for commented code
     if (lineContent.trim().startsWith('//') || lineContent.trim().startsWith('#') || 
         lineContent.trim().startsWith('/*') || lineContent.trim().startsWith('<!--')) {
       return true;
@@ -230,6 +218,47 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       default:
         return originalSeverity;
     }
+  }
+
+  private findMultiLineMatches(content: string, pattern: RegExp): Array<{
+    match: RegExpMatchArray;
+    line: number;
+    column: number;
+    lineContent: string;
+  }> {
+    const matches: Array<{
+      match: RegExpMatchArray;
+      line: number;
+      column: number;
+      lineContent: string;
+    }> = [];
+    
+    let match: RegExpMatchArray | null;
+    const globalPattern = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+    
+    while ((match = globalPattern.exec(content)) !== null) {
+      // Find the line number for the match
+      const matchIndex = match.index ?? 0;
+      const beforeMatch = content.substring(0, matchIndex);
+      const lineNumber = beforeMatch.split('\n').length;
+      const lineStart = beforeMatch.lastIndexOf('\n') + 1;
+      const columnNumber = matchIndex - lineStart + 1;
+      
+      // Get the line content (first line of multi-line match)
+      const lines = content.split('\n');
+      const lineContent = lines[lineNumber - 1] || '';
+      
+      matches.push({
+        match,
+        line: lineNumber,
+        column: columnNumber,
+        lineContent
+      });
+      
+      if (!pattern.flags.includes('g')) break;
+    }
+    
+    return matches;
   }
 
   private getSuggestion(_type: string, isDevelopment: boolean, isTestFile: boolean): string {

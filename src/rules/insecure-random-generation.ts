@@ -179,22 +179,18 @@ export class InsecureRandomGenerationRule extends BaseRule {
           continue;
         }
 
-        // Skip if it's in a comment or test file
         if (this.isCommentOrTest(lineContent, fileContent.path) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
           continue;
         }
 
-        // Skip false positives
         if (this.isFalsePositive(lineContent) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
           continue;
         }
 
-        // Skip if it's just a simple property access for logging
         if (this.isSimplePropertyAccess(lineContent) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
           continue;
         }
 
-        // Skip if it's a development or test environment
         if (this.isDevelopmentContext(lineContent) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
           continue;
         }

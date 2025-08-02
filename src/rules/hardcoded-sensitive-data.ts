@@ -94,7 +94,6 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
         
-        // Skip false positives
         if (this.isFalsePositive(matchedText)) {
           continue;
         }

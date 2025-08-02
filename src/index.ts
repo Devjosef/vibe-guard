@@ -63,7 +63,6 @@ export class VibeGuard {
     console.log('DEBUG: VibeGuard.scan called with target:', targetPath);
     console.log('DEBUG: Number of rules:', this.rules.length);
     
-    // Verify target exists
     if (!fs.existsSync(targetPath)) {
       throw new Error(`Target path does not exist: ${targetPath}`);
     }
@@ -117,11 +116,9 @@ export class VibeGuard {
   }
 }
 
-// Export everything for external use
 export * from './types';
 export * from './rules';
 export { FileScanner } from './scanner';
 export { Reporter } from './reporter';
 
-// Default export
 export default VibeGuard; 

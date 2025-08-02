@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-01-27
+
+### Added
+- **Performance Optimization**: Streamlined detection patterns across all security rules
+- **Code Quality Improvements**: Eliminated redundant logic and overlapping patterns
+- **Enhanced Maintainability**: Consolidated similar patterns for better code organization
+
+### Changed
+- **CSRF Protection Rule**: Removed redundant GET request filtering, optimized patterns
+- **Insecure Logging Rule**: Eliminated overly broad patterns, kept specific sensitive data detection
+- **Unvalidated Input Rule**: Consolidated overlapping Express request patterns
+- **XSS Detection Rule**: Streamlined DOM manipulation, eval, and event handler patterns
+- **Broken Access Control Rule**: Consolidated 10 route patterns into single optimized pattern
+- **Overall Performance**: Reduced ~20 redundant patterns, improved scanning speed
+
+### Fixed
+- Eliminated redundant logic that was catching everything then filtering
+- Removed duplicate pattern matching that slowed down scanning
+- Improved code maintainability with cleaner rule implementations
+
 ## [1.1.2] - 2025-01-27
 
 ### Added
@@ -34,10 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero False Positives**: Clean code no longer triggers false alarms
 - **Improved Documentation**: Updated README with all 20 rules categorized by severity
 
-### Security Rules (20 Total)
+### Security Rules (25 Total)
 - **Critical (7)**: Exposed secrets, hardcoded sensitive data, XSS detection
 - **High (12)**: Missing authentication, SQL injection, directory traversal, open CORS, CSRF protection, insecure deserialization, broken access control, insecure file upload, insecure session management
-- **Medium (12)**: Unvalidated input, insecure HTTP, insecure dependencies, missing security headers, insecure random generation, insecure logging, insecure error handling, insecure configuration
+- **Medium (13)**: Unvalidated input, insecure HTTP, insecure dependencies, missing security headers, insecure random generation, insecure logging, insecure error handling, insecure configuration, AI-generated code validation, AI data leakage prevention, prompt injection detection, AI agent access control, MCP server security
 
 ### Changed
 - Enhanced pattern detection for all security rules
