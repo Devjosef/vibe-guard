@@ -151,3 +151,7 @@ dist-ssr/
 
 # Frontend marketing website (managed separately)
 documents/
+
+# Marketing strategy (confidential)
+MARKETING_STRATEGY.md
+AUTOMATION_STRATEGY.md
