@@ -143,3 +143,11 @@ scripts/MAINTENANCE.md
 
 # Content
 content
+
+# Build artifacts
+dist/
+dist-ssr/
+*.local
+
+# Frontend marketing website (managed separately)
+documents/

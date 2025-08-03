@@ -77,7 +77,7 @@
   "bugs": {
     "url": "https://github.com/Devjosef/vibe-guard/issues"
   },
-  "homepage": "https://github.com/Devjosef/vibe-guard#readme",
+  "homepage": "https://devjosef.github.io/vibe-guard/",
   "readme": "README.md",
   "files": [
     "dist/**/*",
