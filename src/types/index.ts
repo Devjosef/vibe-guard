@@ -13,7 +13,7 @@ export interface SecurityIssue {
 
 export interface ScanOptions {
   target: string;
-  format: 'table' | 'json';
+  format: 'table' | 'json' | 'sarif' | 'html';
   verbose: boolean;
   exclude?: string[];
   include?: string[];
@@ -52,10 +52,16 @@ export interface RuleConfig {
 }
 
 export interface VibeGuardConfig {
-  rules: Record<string, RuleConfig>;
-  exclude: string[];
-  include: string[];
-  outputFormat: 'table' | 'json';
+  rules?: Record<string, RuleConfig>;
+  exclude?: string[];
+  include?: string[];
+  outputFormat?: 'table' | 'json' | 'sarif' | 'html';
+  outputFile?: string;
+  verbose?: boolean;
+  severity?: SeverityLevel;
+  maxFileSize?: string;
+  parallel?: boolean;
+  maxWorkers?: number;
 }
 
 export abstract class BaseRule {

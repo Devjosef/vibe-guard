@@ -1,0 +1,36 @@
+{
+  "exclude": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    ".git/**",
+    "coverage/**",
+    "**/*.min.js",
+    "**/*.bundle.js"
+  ],
+  "include": [
+    "src/**/*.{js,ts,jsx,tsx}",
+    "lib/**/*.{js,ts}"
+  ],
+  "outputFormat": "table",
+  "outputFile": "security-report.json",
+  "verbose": false,
+  "severity": "low",
+  "maxFileSize": "5MB",
+  "parallel": false,
+  "maxWorkers": 4,
+  "rules": {
+    "sql-injection": {
+      "enabled": true,
+      "severity": "critical"
+    },
+    "xss-detection": {
+      "enabled": true,
+      "severity": "high"
+    },
+    "exposed-secrets": {
+      "enabled": true,
+      "severity": "critical"
+    }
+  }
+} 

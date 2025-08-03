@@ -13,21 +13,28 @@ program
   .description('🛡️  Vibe-Guard Security Scanner - Catch security issues before they catch you!')
   .version(VERSION);
 
+import * as fs from 'fs';
+
 async function handleScan(target: string, options: any) {
   try {
     console.log(chalk.blue.bold('🛡️  Starting Vibe-Guard Security Scan...\n'));
-    console.log('DEBUG: Format option:', options.format);
-    console.log('DEBUG: All options:', JSON.stringify(options, null, 2));
     const scanOptions: ScanOptions = {
       target,
-      format: options.format as 'table' | 'json',
+      format: options.format as 'table' | 'json' | 'sarif' | 'html',
       verbose: options.verbose,
       exclude: options.exclude,
       include: options.include
     };
     const vibeGuard = new VibeGuard();
     const output = await vibeGuard.scanAndFormat(scanOptions);
-    console.log(output);
+    
+    if (options.outputFile) {
+      fs.writeFileSync(options.outputFile, output);
+      console.log(chalk.green(`✅ Results written to: ${options.outputFile}`));
+    } else {
+      console.log(output);
+    }
+    
     const result = await vibeGuard.scan(scanOptions);
     if (result.issuesFound > 0) {
       process.exit(1);
@@ -42,7 +49,8 @@ program
   .command('scan')
   .description('Scan files or directories for security issues')
   .argument('<target>', 'File or directory to scan')
-  .option('-f, --format <format>', 'Output format (table, json)', 'table')
+  .option('-f, --format <format>', 'Output format (table, json, sarif, html)')
+  .option('-o, --output-file <file>', 'Write output to file')
   .option('-v, --verbose', 'Verbose output', false)
   .option('--exclude <patterns...>', 'Exclude patterns')
   .option('--include <patterns...>', 'Include patterns')
@@ -50,7 +58,8 @@ program
 
 program
   .argument('[target]', 'File or directory to scan')
-  .option('-f, --format <format>', 'Output format (table, json)', 'table')
+  .option('-f, --format <format>', 'Output format (table, json, sarif, html)')
+  .option('-o, --output-file <file>', 'Write output to file')
   .option('-v, --verbose', 'Verbose output', false)
   .option('--exclude <patterns...>', 'Exclude patterns')
   .option('--include <patterns...>', 'Include patterns')
@@ -88,6 +97,23 @@ program
     console.log(`Version: ${vibeGuard.getVersion()}`);
     console.log('Built for developers who code fast and need security that keeps up! 🚀');
     console.log(chalk.gray('TypeScript-powered, zero-dependency security scanning'));
+  });
+
+program
+  .command('init')
+  .description('Create a default vibe-guard.json configuration file')
+  .action(() => {
+    const vibeGuard = new VibeGuard();
+    vibeGuard.createConfigFile();
+  });
+
+program
+  .command('config')
+  .description('Show sample configuration')
+  .action(() => {
+    const vibeGuard = new VibeGuard();
+    console.log(chalk.blue.bold('📝 Sample vibe-guard.json Configuration:\n'));
+    console.log(vibeGuard.generateConfig());
   });
 
 process.on('unhandledRejection', (reason, promise) => {
