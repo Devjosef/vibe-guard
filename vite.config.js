@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
+  base: '/vibe-guard/',
   root: 'documents',
   build: {
     outDir: '../dist/docs',
