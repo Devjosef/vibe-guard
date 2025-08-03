@@ -19,18 +19,26 @@ ARCH="$(uname -m)"
 echo -e "${BLUE}🛡️  Vibe-Guard Security Scanner Installer${NC}"
 echo -e "${BLUE}===========================================${NC}"
 
-# Determine the binary name based on platform
+# Determine the binary name based on platform and architecture
 case "$OS" in
     Darwin)
-        BINARY_NAME="vibe-guard-macos"
+        if [ "$ARCH" = "arm64" ]; then
+            BINARY_NAME="vibe-guard-macos-arm64"
+        else
+            BINARY_NAME="vibe-guard-macos-x64"
+        fi
         INSTALL_DIR="/usr/local/bin"
         ;;
     Linux)
-        BINARY_NAME="vibe-guard-linux"
+        if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+            BINARY_NAME="vibe-guard-linux-arm64"
+        else
+            BINARY_NAME="vibe-guard-linux-x64"
+        fi
         INSTALL_DIR="/usr/local/bin"
         ;;
     MINGW*|MSYS*|CYGWIN*)
-        BINARY_NAME="vibe-guard-win.exe"
+        BINARY_NAME="vibe-guard-windows-x64.exe"
         INSTALL_DIR="/usr/local/bin"
         ;;
     *)
@@ -42,8 +50,8 @@ esac
 echo -e "${YELLOW}📋 Detected platform: $OS ($ARCH)${NC}"
 echo -e "${YELLOW}📦 Binary: $BINARY_NAME${NC}"
 
-# GitHub release URL (update this with your actual repository)
-GITHUB_REPO="your-username/vibe-guard"
+# GitHub release URL
+GITHUB_REPO="Devjosef/vibe-guard"
 RELEASE_URL="https://github.com/$GITHUB_REPO/releases/latest/download/$BINARY_NAME"
 
 # Download location
