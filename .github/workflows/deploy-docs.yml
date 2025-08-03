@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
@@ -55,7 +58,7 @@ jobs:
         path: './dist/docs'
         
     - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main' && github.repository_owner == 'Devjosef'
+      if: github.ref == 'refs/heads/main'
       id: deployment
       uses: actions/deploy-pages@v4
       env:
