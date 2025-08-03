@@ -38,7 +38,7 @@ jobs:
     - name: Build documentation
       run: npm run docs:build
       
-    - name: Copy binaries
+    - name: Copy binaries and docs
       run: |
         mkdir -p dist/docs/binaries
         cp -r binaries/* dist/docs/binaries/ 2>/dev/null || true
