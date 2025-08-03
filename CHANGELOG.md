@@ -8,22 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.3] - 2025-01-27
 
 ### Added
+- **Complete Documentation Site**: Beautiful, responsive documentation with performance benchmarks
+- **Performance Benchmarking**: Comprehensive speed testing with `npm run benchmark`
+- **Multiple Output Formats**: SARIF and HTML report support
+- **Configuration System**: Full `vibe-guard.json` configuration support
+- **GitHub Pages Deployment**: Automated documentation deployment
+- **Enhanced CLI**: Better error handling and user experience
+
+### Changed
 - **Performance Optimization**: Streamlined detection patterns across all security rules
 - **Code Quality Improvements**: Eliminated redundant logic and overlapping patterns
 - **Enhanced Maintainability**: Consolidated similar patterns for better code organization
-
-### Changed
-- **CSRF Protection Rule**: Removed redundant GET request filtering, optimized patterns
-- **Insecure Logging Rule**: Eliminated overly broad patterns, kept specific sensitive data detection
-- **Unvalidated Input Rule**: Consolidated overlapping Express request patterns
-- **XSS Detection Rule**: Streamlined DOM manipulation, eval, and event handler patterns
-- **Broken Access Control Rule**: Consolidated 10 route patterns into single optimized pattern
-- **Overall Performance**: Reduced ~20 redundant patterns, improved scanning speed
+- **Documentation**: Complete rewrite with performance metrics and benchmarks
 
 ### Fixed
 - Eliminated redundant logic that was catching everything then filtering
 - Removed duplicate pattern matching that slowed down scanning
 - Improved code maintainability with cleaner rule implementations
+- Fixed Vite build configuration for documentation deployment
 
 ## [1.1.2] - 2025-01-27
 

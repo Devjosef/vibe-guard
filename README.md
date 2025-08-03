@@ -36,7 +36,18 @@ chmod +x vibe-guard
 ./vibe-guard scan .
 ```
 
-### Option 2: NPM
+### Option 2: Homebrew
+```bash
+brew install Devjosef/tap/vibe-guard
+vibe-guard scan .
+```
+
+### Option 3: One-liner Install
+```bash
+curl -fsSL https://raw.githubusercontent.com/Devjosef/vibe-guard/main/install.sh | sh
+```
+
+### Option 4: NPM
 ```bash
 # One-time use
 npx vibe-guard scan .
@@ -46,7 +57,7 @@ npm install -g vibe-guard
 vibe-guard scan .
 ```
 
-### Option 3: Docker
+### Option 5: Docker
 ```bash
 docker run --rm -v $(pwd):/code vibe-guard/vibe-guard:1.1.3 scan /code
 ```
@@ -99,14 +110,22 @@ vibe-guard scan .
 # Scan specific file
 vibe-guard scan app.js
 
-# JSON output for CI/CD
-vibe-guard scan . --format json
+# Multiple output formats
+vibe-guard scan . --format json    # JSON for CI/CD
+vibe-guard scan . --format sarif   # SARIF for GitHub/SonarQube
+vibe-guard scan . --format html    # HTML report
+
+# Configuration file
+vibe-guard scan . --config vibe-guard.json
 
 # Quick syntax (same as scan)
 vibe-guard .
 
 # Show version
 vibe-guard --version
+
+# Run performance benchmarks
+npm run benchmark
 ```
 
 ## CI/CD Integration
@@ -186,6 +205,12 @@ npm run package
 
 # Run tests
 npm test
+
+# Build documentation
+npm run docs:build
+
+# Start docs dev server
+npm run docs:dev
 ```
 
 ### Project Structure
@@ -196,7 +221,19 @@ src/
 ├── bin/             # CLI interface
 ├── scanner.ts       # File scanning engine
 ├── reporter.ts      # Output formatting
+├── config.ts        # Configuration loader
 └── index.ts         # Main application
+
+documents/           # Documentation website
+├── index.html       # Landing page
+├── docs.html        # Full documentation
+├── performance.html # Performance benchmarks
+├── rules.html       # Security rules guide
+└── styles.css       # Styling
+
+scripts/
+├── benchmark.js     # Performance testing
+└── maintenance.js   # Project maintenance
 ```
 
 ## Why Choose Vibe-Guard?
@@ -264,11 +301,21 @@ npm run benchmark
 - **Code reviews** - Run this before you submit that PR
 - **Learning security** - Get real-time feedback on what can or is going wrong (and how to fix it)
 
+## Documentation & Resources
+
+- **📖 [Full Documentation](https://devjosef.github.io/vibe-guard/)** - Complete guides and API reference
+- **⚡ [Performance Benchmarks](https://devjosef.github.io/vibe-guard/performance.html)** - Detailed speed metrics
+- **🛡️ [Security Rules](https://devjosef.github.io/vibe-guard/rules.html)** - All 25 rules explained
+- **🚀 [Getting Started](https://devjosef.github.io/vibe-guard/getting-started.html)** - Quick setup guide
+
 ## Roadmap
 
 ### ✅ Completed Features
 - **Configuration Files**: Full support for `vibe-guard.json` configuration
 - **Multiple Output Formats**: Table, JSON, SARIF, and HTML reports
+- **Documentation Site**: Beautiful, responsive documentation
+- **Performance Benchmarks**: Comprehensive speed testing
+- **GitHub Pages**: Automated deployment
 
 ### 🚧 Planned Features
 - **Custom Rules**: User-defined security rules and patterns
