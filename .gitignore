@@ -155,3 +155,9 @@ documents/
 # Marketing strategy (confidential)
 MARKETING_STRATEGY.md
 AUTOMATION_STRATEGY.md
+
+# Marketing content (local only)
+devto_week*.md
+hashnode_week*.md
+refined_landing_page_content.md
+style.md
