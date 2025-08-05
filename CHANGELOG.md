@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2025-01-27
 
 ### Added
-- **Complete Security Rule Coverage**: All 20 security rules now working and tested
+- **Complete Security Rule Coverage**: All 25 security rules now working and tested
 - **Enhanced Vulnerability Detection**: Improved patterns and edge case handling
 - **Comprehensive Testing**: All rules tested against real vulnerability examples
 - **Zero False Positives**: Clean code no longer triggers false alarms
@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced distribution documentation
 
 ### Fixed
-- All 20 security rules now properly detect vulnerabilities
+- All 25 security rules now properly detect vulnerabilities
 - Eliminated false positives on clean code and test files
 - Fixed edge cases in pattern matching
 - Improved error handling and performance

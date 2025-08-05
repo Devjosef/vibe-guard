@@ -178,7 +178,7 @@ npm run clean && npm run dist
 - ✅ Zero dependencies
 - ✅ Works on all platforms
 - ✅ Single binary solution
-- ✅ 20 comprehensive security rules
+- ✅ 25 comprehensive security rules
 
 ## 🛡️ Security Coverage
 
