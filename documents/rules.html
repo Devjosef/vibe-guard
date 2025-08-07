@@ -46,6 +46,10 @@
             --code-number: #79c0ff;
             
             --focus-ring: 0 0 0 3px rgba(255, 71, 87, 0.5);
+            
+            --surface: #ffffff;
+            --border: var(--border-medium);
+            --background: var(--bg-primary);
         }
 
         * {
@@ -183,14 +187,14 @@
             border-radius: 0.75rem;
             font-size: 1rem;
             transition: all 0.2s ease;
-            background: #ffffff;
+            background: var(--surface);
             color: #000000;
         }
 
         .search-box:focus {
             outline: none;
             border-color: var(--primary);
-            background: #ffffff;
+            background: var(--surface);
             box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.3);
         }
 
