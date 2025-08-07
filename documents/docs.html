@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete Vibe-Guard documentation. Learn about security concepts, usage, and features.">
+    <title>Documentation - Vibe-Guard</title>
+    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-elevated: #222222;
+            --bg-hover: #2a2a2a;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #999999;
+            --text-accent: #ff4757;
+            
+            --primary: #ff4757;
+            --primary-dark: #e84118;
+            --primary-glow: rgba(255, 71, 87, 0.15);
+            --secondary: #ff3838;
+            --accent: #ff6b6b;
+            --danger: #ff3838;
+            --success: #2ed573;
+            --warning: #ffa502;
+            
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --border-strong: rgba(255, 255, 255, 0.35);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(255, 71, 87, 0.3);
+            
+            --code-bg: #1e1e1e;
+            --code-border: #333333;
+            --code-text: #e5e5e5;
+            --code-comment: #6a737d;
+            --code-string: #9ecbff;
+            --code-keyword: #ff7b72;
+            --code-number: #79c0ff;
+            
+            --focus-ring: 0 0 0 3px rgba(255, 71, 87, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--border-light);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            text-shadow: 0 0 10px var(--primary-glow);
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo:focus {
+            box-shadow: var(--focus-ring);
+            border-radius: 4px;
+        }
+        
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+            outline: none;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .nav-links a:focus {
+            box-shadow: var(--focus-ring);
+        }
+
+        .main {
+            padding: 6rem 0 4rem;
+        }
+
+        .docs-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 250px;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 8rem;
+            height: fit-content;
+            max-height: calc(100vh - 10rem);
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            display: block;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-nav .section-title {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 1.5rem 0 0.5rem 0.75rem;
+        }
+
+        .content {
+            max-width: none;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 2.5rem 0 1rem 0;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 2rem 0 0.75rem 0;
+            color: var(--text-primary);
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .content ul, .content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--code-border);
+        }
+
+        .code-content {
+            padding: 1.5rem;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: var(--code-text);
+        }
+
+        .code-content .comment { color: var(--code-comment); }
+        .code-content .string { color: var(--code-string); }
+        .code-content .keyword { color: var(--code-keyword); }
+        .code-content .number { color: var(--code-number); }
+
+        .alert {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-medium);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .alert.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        .alert.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .table th {
+            background: var(--bg-elevated);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table td {
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--text-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .right-sidebar {
+            position: sticky;
+            top: 8rem;
+            height: fit-content;
+            max-height: calc(100vh - 10rem);
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .right-sidebar h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .right-sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .right-sidebar li {
+            margin-bottom: 0.5rem;
+        }
+
+        .right-sidebar a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.25rem 0;
+            display: block;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            border-radius: 0.25rem;
+        }
+
+        .right-sidebar a:hover,
+        .right-sidebar a.active {
+            color: var(--primary);
+            background: var(--bg-tertiary);
+            padding-left: 0.5rem;
+        }
+
+        /* Custom scrollbar for sidebars */
+        .sidebar::-webkit-scrollbar,
+        .right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .right-sidebar::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .right-sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .right-sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--border-strong);
+        }
+
+        @media (max-width: 1200px) {
+            .docs-layout {
+                grid-template-columns: 280px 1fr;
+                gap: 2rem;
+            }
+            
+            .right-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .docs-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .sidebar {
+                position: static;
+                order: 2;
+            }
+            
+            .content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <a href="index.html" class="logo">
+                <img src="vibe-guard-icon.svg" alt="Vibe-Guard" class="logo-icon">
+                Vibe-Guard
+            </a>
+            <ul class="nav-links">
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="rules.html">Security Rules</a></li>
+                <li><a href="docs.html">Documentation</a></li>
+                <li><a href="performance.html">Performance</a></li>
+                <li><a href="https://github.com/Devjosef/vibe-guard" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="docs-layout">
+                <aside class="sidebar">
+                    <nav class="sidebar-nav">
+                        <div class="section-title">Concepts</div>
+                        <li><a href="#motivation">Motivation</a></li>
+                        <li><a href="#security-rules">Security Rules</a></li>
+                        <li><a href="#scanning-engine">Scanning Engine</a></li>
+                        <li><a href="#performance">Performance</a></li>
+                        <li><a href="#zero-dependencies">Zero Dependencies</a></li>
+                        
+                        <div class="section-title">Getting Started</div>
+                        <li><a href="#installation">Installation</a></li>
+                        <li><a href="#basic-usage">Basic Usage</a></li>
+                        <li><a href="#cli-options">CLI Options</a></li>
+                        
+                        <div class="section-title">Core Features</div>
+                        <li><a href="#file-scanning">File Scanning</a></li>
+                        <li><a href="#rule-system">Rule System</a></li>
+                        <li><a href="#output-formats">Output Formats</a></li>
+                        <li><a href="#types">TypeScript Types</a></li>
+                        
+                        <div class="section-title">Guides</div>
+                        <li><a href="#false-positives">False Positives</a></li>
+                        <li><a href="#best-practices">Best Practices</a></li>
+                        
+                        <div class="section-title">Future Features</div>
+                        <li><a href="#roadmap">Roadmap</a></li>
+                    </nav>
+                </aside>
+
+                <div class="content">
+                    <h1>Documentation</h1>
+                    <p>Complete guide to Vibe-Guard's security scanning capabilities and features.</p>
+
+                    <section id="motivation">
+                        <h2>Motivation</h2>
+                        <p>Vibe-Guard was created to solve the problem of security scanning that actually catches real vulnerabilities without the noise. Traditional security tools often produce overwhelming false positives, making them impractical for daily development workflows.</p>
+                        
+                        <div class="alert info">
+                            <strong>Key Insight:</strong> Security tools should enhance developer productivity, not hinder it. Vibe-Guard focuses on actionable results that developers can immediately address.
+                        </div>
+                    </section>
+
+                    <section id="security-rules">
+                        <h2>Security Rules</h2>
+                        <p>Vibe-Guard implements 25 carefully crafted security rules that target real-world vulnerabilities commonly found in production applications.</p>
+                        
+                        <h3>Rule Categories</h3>
+                        <ul>
+                            <li><strong>Injection Attacks:</strong> SQL Injection, XSS, Command Injection</li>
+                            <li><strong>Authentication & Authorization:</strong> Broken Access Control, Missing Authentication</li>
+                            <li><strong>Data Exposure:</strong> Exposed Secrets, Hardcoded Credentials</li>
+                            <li><strong>Configuration:</strong> Insecure Dependencies, Insecure Configuration</li>
+                            <li><strong>Input Validation:</strong> Unvalidated Input, Directory Traversal</li>
+                            <li><strong>AI Security:</strong> AI-generated code validation, Prompt injection detection</li>
+                        </ul>
+                    </section>
+
+                    <section id="scanning-engine">
+                        <h2>Scanning Engine</h2>
+                        <p>Vibe-Guard uses optimized regex patterns to efficiently detect vulnerabilities across multiple file types.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">How It Works</div>
+                            <div class="code-content">
+<span class="comment">// 1. File discovery</span>
+<span class="keyword">const</span> files = discoverFiles(targetPath);
+
+<span class="comment">// 2. Apply security rules</span>
+<span class="keyword">for</span> (<span class="keyword">const</span> rule <span class="keyword">of</span> rules) {
+  <span class="keyword">const</span> issues = rule.check(fileContent);
+  results.push(...issues);
+}
+
+<span class="comment">// 3. Generate report</span>
+<span class="keyword">return</span> formatResults(results);
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="performance">
+                        <h2>Performance & Benchmarks</h2>
+                        <p>Vibe-Guard is engineered for maximum speed and efficiency, designed to scan large codebases in seconds, not minutes.</p>
+                        
+                        <div class="performance-grid">
+                            <div class="performance-card">
+                                <div class="performance-icon">⚡</div>
+                                <h3>Startup Time</h3>
+                                <div class="performance-value">~41ms</div>
+                                <p>Near-instant startup with zero dependency resolution delays</p>
+                            </div>
+                            <div class="performance-card">
+                                <div class="performance-icon">🚀</div>
+                                <h3>Small Files (1KB)</h3>
+                                <div class="performance-value">~51ms</div>
+                                <p>Ultra-fast scanning for individual files</p>
+                            </div>
+                            <div class="performance-card">
+                                <div class="performance-icon">⚡</div>
+                                <h3>Medium Files (5KB)</h3>
+                                <div class="performance-value">~51ms</div>
+                                <p>Very fast processing for typical source files</p>
+                            </div>
+                            <div class="performance-card">
+                                <div class="performance-icon">🏃</div>
+                                <h3>Large Files (50KB)</h3>
+                                <div class="performance-value">~117ms</div>
+                                <p>Efficient handling of large code files</p>
+                            </div>
+                            <div class="performance-card">
+                                <div class="performance-icon">💾</div>
+                                <h3>Memory Usage</h3>
+                                <div class="performance-value">~56KB</div>
+                                <p>Ultra-low memory footprint for large projects</p>
+                            </div>
+                            <div class="performance-card">
+                                <div class="performance-icon">📁</div>
+                                <h3>Directory Scan</h3>
+                                <div class="performance-value">~123ms</div>
+                                <p>Fast scanning of entire project directories</p>
+                            </div>
+                        </div>
+
+                        <h3>Performance Features</h3>
+                        <ul>
+                            <li><strong>Zero Dependencies:</strong> No external runtime dependencies</li>
+                            <li><strong>Optimized Patterns:</strong> Pre-compiled regex patterns for maximum speed</li>
+                            <li><strong>Smart Filtering:</strong> Skip irrelevant files and directories</li>
+                            <li><strong>Memory Efficient:</strong> Stream-based processing for large files</li>
+                            <li><strong>Fast Startup:</strong> No dependency resolution delays</li>
+                            <li><strong>Parallel Processing:</strong> Efficient multi-threading for large codebases</li>
+                        </ul>
+
+                        <h3>Run Your Own Benchmarks</h3>
+                        <p>Test Vibe-Guard's performance on your own system:</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Run Performance Benchmarks</div>
+                            <div class="code-content">
+npm run benchmark
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header">Or run directly</div>
+                            <div class="code-content">
+node scripts/benchmark.js
+                            </div>
+                        </div>
+
+                        <h3>Performance Comparison</h3>
+                        <div class="comparison-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tool</th>
+                                        <th>Startup Time</th>
+                                        <th>Small File</th>
+                                        <th>Large File</th>
+                                        <th>Memory Usage</th>
+                                        <th>Dependencies</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Vibe-Guard</strong></td>
+                                        <td>~41ms</td>
+                                        <td>~51ms</td>
+                                        <td>~117ms</td>
+                                        <td>~56KB</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Other Security Tools</td>
+                                        <td>2-5s</td>
+                                        <td>500ms-2s</td>
+                                        <td>5-15s</td>
+                                        <td>50-200MB</td>
+                                        <td>50-200</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3>Real-World Performance</h3>
+                        <p>Vibe-Guard has been tested on various project sizes:</p>
+                        <ul>
+                            <li><strong>Small Projects (1-10 files):</strong> Scans complete in under 200ms</li>
+                            <li><strong>Medium Projects (100-1000 files):</strong> Scans complete in 2-5 seconds</li>
+                            <li><strong>Large Projects (1000+ files):</strong> Scans complete in 8-20 seconds</li>
+                            <li><strong>Enterprise Codebases:</strong> Efficiently handles projects with 10,000+ files</li>
+                        </ul>
+                    </section>
+
+                    <section id="zero-dependencies">
+                        <h2>Zero Dependencies</h2>
+                        <p>Vibe-Guard is built with zero runtime dependencies, making it lightweight, fast, and secure.</p>
+                        
+                        <h3>Benefits</h3>
+                        <ul>
+                            <li><strong>Lightweight:</strong> Under 1MB total size</li>
+                            <li><strong>Fast Startup:</strong> No dependency resolution delays</li>
+                            <li><strong>Security:</strong> No external dependencies to audit</li>
+                            <li><strong>Reliability:</strong> No dependency conflicts or version issues</li>
+                            <li><strong>Portability:</strong> Works anywhere Node.js runs</li>
+                        </ul>
+                    </section>
+
+                    <section id="installation">
+                        <h2>Installation</h2>
+                        <p>Vibe-Guard can be installed via multiple methods depending on your platform and preferences.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">npm</div>
+                            <div class="code-content">
+npm install -g vibe-guard
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Homebrew</div>
+                            <div class="code-content">
+brew install Devjosef/tap/vibe-guard
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Direct Download</div>
+                            <div class="code-content">
+curl -fsSL https://raw.githubusercontent.com/Devjosef/vibe-guard/main/install.sh | sh
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="basic-usage">
+                        <h2>Basic Usage</h2>
+                        <p>Get started with Vibe-Guard in under 30 seconds.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Scan Current Directory</div>
+                            <div class="code-content">
+vibe-guard
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Scan Specific Path</div>
+                            <div class="code-content">
+vibe-guard /path/to/your/project
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Output to JSON</div>
+                            <div class="code-content">
+vibe-guard --output json --output-file results.json
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="cli-options">
+                        <h2>CLI Options</h2>
+                        <p>Vibe-Guard provides essential command-line options for customization.</p>
+                        
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Description</th>
+                                    <th>Default</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>--format</code></td>
+                                    <td>Output format (table, json, sarif, html)</td>
+                                    <td>table</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--output-file</code></td>
+                                    <td>Save results to file</td>
+                                    <td>stdout</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--verbose</code></td>
+                                    <td>Show detailed output</td>
+                                    <td>false</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--exclude</code></td>
+                                    <td>Exclude file patterns</td>
+                                    <td>config</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--include</code></td>
+                                    <td>Include file patterns</td>
+                                    <td>config</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h3>CLI Commands</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Command</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>vibe-guard scan &lt;target&gt;</code></td>
+                                    <td>Scan files or directories</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vibe-guard rules</code></td>
+                                    <td>List all available security rules</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vibe-guard init</code></td>
+                                    <td>Create a default vibe-guard.json configuration file</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vibe-guard config</code></td>
+                                    <td>Show sample configuration</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vibe-guard version</code></td>
+                                    <td>Show version information</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="file-scanning">
+                        <h2>File Scanning</h2>
+                        <p>Vibe-Guard automatically discovers and scans files across your project.</p>
+                        
+                        <h3>Supported File Types</h3>
+                        <ul>
+                            <li><strong>JavaScript/TypeScript:</strong> .js, .jsx, .ts, .tsx</li>
+                            <li><strong>Web Frameworks:</strong> .vue, .svelte</li>
+                            <li><strong>Backend Languages:</strong> .py, .php, .rb, .go, .java, .cs</li>
+                            <li><strong>Systems Languages:</strong> .cpp, .c, .h, .rs, .kt</li>
+                            <li><strong>Configuration:</strong> .json, .yaml, .yml, .xml, .env</li>
+                        </ul>
+                        
+                        <h3>Configuration Support</h3>
+                        <p>Vibe-Guard automatically loads configuration from <code>vibe-guard.json</code> files in your project hierarchy.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">vibe-guard.json</div>
+                            <div class="code-content">
+{
+  <span class="string">"exclude"</span>: [<span class="string">"node_modules/**"</span>, <span class="string">"dist/**"</span>],
+  <span class="string">"outputFormat"</span>: <span class="string">"json"</span>,
+  <span class="string">"verbose"</span>: <span class="keyword">true</span>,
+  <span class="string">"rules"</span>: {
+    <span class="string">"sql-injection"</span>: { <span class="string">"enabled"</span>: <span class="keyword">true</span> }
+  }
+}
+                            </div>
+                        </div>
+                        
+                        <h3>Automatic Filtering</h3>
+                        <ul>
+                            <li>Skips binary files and large files (>5MB)</li>
+                            <li>Excludes common directories (node_modules, dist, .git)</li>
+                            <li>Ignores minified and bundled files</li>
+                        </ul>
+                    </section>
+
+                    <section id="rule-system">
+                        <h2>Rule System</h2>
+                        <p>Vibe-Guard uses a pattern-based rule system to detect security vulnerabilities.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Rule Structure</div>
+                            <div class="code-content">
+<span class="keyword">abstract class</span> <span class="string">BaseRule</span> {
+  <span class="string">name</span>: <span class="string">string</span>;
+  <span class="string">description</span>: <span class="string">string</span>;
+  <span class="string">severity</span>: <span class="string">SeverityLevel</span>;
+  
+  <span class="keyword">abstract</span> <span class="string">check</span>(fileContent: <span class="string">FileContent</span>): <span class="string">SecurityIssue[]</span>;
+}
+                            </div>
+                        </div>
+                        
+                        <h3>Severity Levels</h3>
+                        <ul>
+                            <li><strong>Critical:</strong> Immediate security risk</li>
+                            <li><strong>High:</strong> Significant security vulnerability</li>
+                            <li><strong>Medium:</strong> Moderate security concern</li>
+                            <li><strong>Low:</strong> Minor security issue</li>
+                        </ul>
+                    </section>
+
+                    <section id="output-formats">
+                        <h2>Output Formats</h2>
+                        <p>Vibe-Guard provides two output formats for different use cases.</p>
+                        
+                        <h3>Text Format (Default)</h3>
+                        <p>Human-readable console output with color-coded severity levels and detailed issue descriptions.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Text Output Example</div>
+                            <div class="code-content">
+🛡️  Vibe-Guard Security Scan Results
+
+📁 Files scanned: 45
+🚨 Issues found: 3
+
+🔴 CRITICAL: SQL Injection detected
+   File: src/database.js:15
+   Line: 15: const query = `SELECT * FROM users WHERE id = ${userId}`;
+   Suggestion: Use parameterized queries or prepared statements
+
+🟡 MEDIUM: Hardcoded credentials found
+   File: config/database.json:8
+   Line: 8: "password": "admin123"
+   Suggestion: Use environment variables for sensitive data
+                            </div>
+                        </div>
+                        
+                        <h3>JSON Format</h3>
+                        <p>Machine-readable structured data for integration with other tools and CI/CD pipelines.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">JSON Output Example</div>
+                            <div class="code-content">
+{
+  <span class="string">"issues"</span>: [
+    {
+      <span class="string">"rule"</span>: <span class="string">"sql-injection"</span>,
+      <span class="string">"severity"</span>: <span class="string">"critical"</span>,
+      <span class="string">"file"</span>: <span class="string">"src/database.js"</span>,
+      <span class="string">"line"</span>: <span class="number">15</span>,
+      <span class="string">"message"</span>: <span class="string">"SQL Injection detected"</span>
+    }
+  ],
+  <span class="string">"summary"</span>: {
+    <span class="string">"critical"</span>: <span class="number">1</span>,
+    <span class="string">"high"</span>: <span class="number">0</span>,
+    <span class="string">"medium"</span>: <span class="number">1</span>,
+    <span class="string">"low"</span>: <span class="number">1</span>
+  }
+}
+                            </div>
+                        </div>
+                        
+                        <h3>SARIF Format</h3>
+                        <p>Static Analysis Results Interchange Format for integration with GitHub, Azure DevOps, and other tools.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">SARIF Output Example</div>
+                            <div class="code-content">
+{
+  <span class="string">"$schema"</span>: <span class="string">"https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json"</span>,
+  <span class="string">"version"</span>: <span class="string">"2.1.0"</span>,
+  <span class="string">"runs"</span>: [
+    {
+      <span class="string">"tool"</span>: {
+        <span class="string">"driver"</span>: {
+          <span class="string">"name"</span>: <span class="string">"Vibe-Guard"</span>,
+          <span class="string">"version"</span>: <span class="string">"1.1.3"</span>
+        }
+      },
+      <span class="string">"results"</span>: [
+        {
+          <span class="string">"ruleId"</span>: <span class="string">"sql-injection"</span>,
+          <span class="string">"level"</span>: <span class="string">"error"</span>,
+          <span class="string">"message"</span>: { <span class="string">"text"</span>: <span class="string">"SQL Injection detected"</span> },
+          <span class="string">"locations"</span>: [
+            {
+              <span class="string">"physicalLocation"</span>: {
+                <span class="string">"artifactLocation"</span>: { <span class="string">"uri"</span>: <span class="string">"src/database.js"</span> },
+                <span class="string">"region"</span>: {
+                  <span class="string">"startLine"</span>: <span class="number">15</span>,
+                  <span class="string">"startColumn"</span>: <span class="number">1</span>
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+                            </div>
+                        </div>
+                        
+                        <h3>HTML Format</h3>
+                        <p>Beautiful, interactive HTML reports for sharing with teams and stakeholders.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">HTML Report Features</div>
+                            <div class="code-content">
+• Responsive design for all devices
+• Color-coded severity levels
+• Interactive issue details
+• Code snippets with syntax highlighting
+• Professional styling and branding
+• Easy to share and archive
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="types">
+                        <h2>TypeScript Types</h2>
+                        <p>Vibe-Guard provides comprehensive TypeScript types for type-safe development.</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">Core Types</div>
+                            <div class="code-content">
+<span class="keyword">interface</span> <span class="string">SecurityIssue</span> {
+  <span class="string">rule</span>: <span class="string">string</span>;
+  <span class="string">severity</span>: <span class="string">SeverityLevel</span>;
+  <span class="string">file</span>: <span class="string">string</span>;
+  <span class="string">line</span>: <span class="number">number</span>;
+  <span class="string">message</span>: <span class="string">string</span>;
+  <span class="string">suggestion</span>: <span class="string">string</span>;
+}
+
+<span class="keyword">interface</span> <span class="string">ScanResult</span> {
+  <span class="string">issues</span>: <span class="string">SecurityIssue[]</span>;
+  <span class="string">filesScanned</span>: <span class="number">number</span>;
+  <span class="string">summary</span>: {
+    <span class="string">critical</span>: <span class="number">number</span>;
+    <span class="string">high</span>: <span class="number">number</span>;
+    <span class="string">medium</span>: <span class="number">number</span>;
+    <span class="string">low</span>: <span class="number">number</span>;
+  };
+}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="false-positives">
+                        <h2>False Positives</h2>
+                        <p>Learn how to handle and reduce false positives in your security scans.</p>
+                        
+                        <h3>Common False Positive Sources</h3>
+                        <ul>
+                            <li><strong>Test Files:</strong> Mock data and test scenarios</li>
+                            <li><strong>Documentation:</strong> Code examples in comments</li>
+                            <li><strong>Generated Code:</strong> Auto-generated boilerplate</li>
+                            <li><strong>Legacy Code:</strong> Deprecated but safe patterns</li>
+                        </ul>
+                        
+                        <div class="alert warning">
+                            <strong>Note:</strong> Vibe-Guard focuses on reducing false positives through careful pattern design, but some may still occur. Always review findings in context.
+                        </div>
+                    </section>
+
+                    <section id="best-practices">
+                        <h2>Best Practices</h2>
+                        <p>Follow these best practices to get the most out of Vibe-Guard.</p>
+                        
+                        <h3>Scanning Strategy</h3>
+                        <ul>
+                            <li>Run scans early in development, not just before deployment</li>
+                            <li>Review findings in context - not all matches are vulnerabilities</li>
+                            <li>Use Vibe-Guard alongside other security tools</li>
+                            <li>Regularly update to get the latest security patterns</li>
+                        </ul>
+                        
+                        <h3>Integration Tips</h3>
+                        <ul>
+                            <li>Add Vibe-Guard to your development workflow</li>
+                            <li>Use JSON output for CI/CD integration</li>
+                            <li>Set up regular automated scans</li>
+                            <li>Document security findings and fixes</li>
+                        </ul>
+                        
+                        <div class="alert success">
+                            <strong>Pro Tip:</strong> Use Vibe-Guard in combination with other security tools for comprehensive coverage. Vibe-Guard excels at catching common vulnerabilities quickly, while other tools can provide deeper analysis.
+                        </div>
+                    </section>
+
+                    <section id="roadmap">
+                        <h2>Roadmap</h2>
+                        <p>Future features we're planning to add to Vibe-Guard.</p>
+                        
+                        <h3>Planned Features</h3>
+                        <ul>
+                            <li><strong>Custom Rules:</strong> User-defined security rules</li>
+                            <li><strong>CI/CD Integration:</strong> GitHub Actions and other CI/CD examples</li>
+                            <li><strong>Performance Improvements:</strong> Parallel processing, caching</li>
+                            <li><strong>IDE Integration:</strong> VS Code extension, editor plugins</li>
+                        </ul>
+                        
+                        <div class="alert info">
+                            <strong>Contributing:</strong> We welcome contributions! Check out our GitHub repository to see how you can help improve Vibe-Guard.
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="right-sidebar">
+                    <h3>On this page</h3>
+                    <ul>
+                        <li><a href="#motivation">Motivation</a></li>
+                        <li><a href="#security-rules">Security Rules</a></li>
+                        <li><a href="#scanning-engine">Scanning Engine</a></li>
+                        <li><a href="#performance">Performance</a></li>
+                        <li><a href="#zero-dependencies">Zero Dependencies</a></li>
+                        <li><a href="#installation">Installation</a></li>
+                        <li><a href="#basic-usage">Basic Usage</a></li>
+                        <li><a href="#cli-options">CLI Options</a></li>
+                        <li><a href="#file-scanning">File Scanning</a></li>
+                        <li><a href="#rule-system">Rule System</a></li>
+                        <li><a href="#output-formats">Output Formats</a></li>
+                        <li><a href="#types">TypeScript Types</a></li>
+                        <li><a href="#false-positives">False Positives</a></li>
+                        <li><a href="#best-practices">Best Practices</a></li>
+                        <li><a href="#roadmap">Roadmap</a></li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Built by <a href="https://github.com/Devjosef" target="_blank">Devjosef</a> | <a href="https://github.com/Devjosef/vibe-guard/blob/main/LICENSE" target="_blank">MIT License</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active link highlighting for both sidebars
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '-20% 0px -80% 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const leftLink = document.querySelector(`.sidebar-nav a[href="#${id}"]`);
+                const rightLink = document.querySelector(`.right-sidebar a[href="#${id}"]`);
+                
+                if (entry.isIntersecting) {
+                    // Remove active class from all links
+                    document.querySelectorAll('.sidebar-nav a, .right-sidebar a').forEach(a => a.classList.remove('active'));
+                    
+                    // Add active class to current links
+                    if (leftLink) leftLink.classList.add('active');
+                    if (rightLink) rightLink.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section[id]').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html> 

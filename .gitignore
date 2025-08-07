@@ -142,6 +142,8 @@ MARKETING_STRATEGY.md
 *_article.md
 devto_*.md
 hashnode_*.md
+hashnode/
+hashnode-post-*.md
 
 # Generated website files
-documents/
+# documents/ - Removed to allow GitHub Pages deployment

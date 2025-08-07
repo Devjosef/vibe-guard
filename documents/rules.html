@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore all 25 security rules in Vibe-Guard. Detailed explanations, examples, and remediation guidance for each vulnerability type.">
+    <title>Security Rules - Vibe-Guard</title>
+    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-elevated: #222222;
+            --bg-hover: #2a2a2a;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #999999;
+            --text-accent: #ff4757;
+            
+            --primary: #ff4757;
+            --primary-dark: #e84118;
+            --primary-glow: rgba(255, 71, 87, 0.15);
+            --secondary: #ff3838;
+            --accent: #ff6b6b;
+            --danger: #ff3838;
+            --success: #2ed573;
+            --warning: #ffa502;
+            
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --border-strong: rgba(255, 255, 255, 0.35);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(255, 71, 87, 0.3);
+            
+            --code-bg: #1e1e1e;
+            --code-border: #333333;
+            --code-text: #e5e5e5;
+            --code-comment: #6a737d;
+            --code-string: #9ecbff;
+            --code-keyword: #ff7b72;
+            --code-number: #79c0ff;
+            
+            --focus-ring: 0 0 0 3px rgba(255, 71, 87, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--border-light);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            text-shadow: 0 0 10px var(--primary-glow);
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo:focus {
+            box-shadow: var(--focus-ring);
+            border-radius: 4px;
+        }
+        
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+            outline: none;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .nav-links a:focus {
+            box-shadow: var(--focus-ring);
+        }
+
+        /* Main Content */
+        .main {
+            padding: 6rem 0 4rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Search Section */
+        .search-section {
+            margin: 3rem 0;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            color: var (--text-primary);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--background);
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+        }
+
+        .search-stats {
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Rules Grid */
+        .rules-section {
+            margin: 4rem 0;
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .rule-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .rule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .rule-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .rule-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--primary);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .rule-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .rule-description {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .rule-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .rule-tag {
+            padding: 0.25rem 0.75rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .rule-tag.critical {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .rule-tag.high {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .rule-tag.medium {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .rule-tag.low {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Rule Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--background);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+            padding-right: 3rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-description {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .modal-section {
+            margin: 1.5rem 0;
+        }
+
+        .modal-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .code-example {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .code-example .comment {
+            color: var(--text-muted);
+        }
+
+        .code-example .string {
+            color: var(--success);
+        }
+
+        .code-example .keyword {
+            color: var(--secondary);
+        }
+
+        .remediation-steps {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .remediation-steps h4 {
+            color: var(--success);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .remediation-steps ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .remediation-steps li {
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--background);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .rules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rule-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .rule-card:nth-child(1) { animation-delay: 0.1s; }
+        .rule-card:nth-child(2) { animation-delay: 0.2s; }
+        .rule-card:nth-child(3) { animation-delay: 0.3s; }
+        .rule-card:nth-child(4) { animation-delay: 0.4s; }
+        .rule-card:nth-child(5) { animation-delay: 0.5s; }
+        .rule-card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <a href="index.html" class="logo">
+                <img src="vibe-guard-icon.svg" alt="Vibe-Guard" class="logo-icon">
+                Vibe-Guard
+            </a>
+            <ul class="nav-links">
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="rules.html">Security Rules</a></li>
+                <li><a href="docs.html">Documentation</a></li>
+                <li><a href="performance.html">Performance</a></li>
+                <li><a href="https://github.com/Devjosef/vibe-guard" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="hero">
+                <h1>The 25 Security Rules</h1>
+                <p>Comprehensive coverage of common security vulnerabilities with detailed explanations and remediation guidance.</p>
+            </div>
+
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" class="search-box" placeholder="Search security rules..." id="searchInput">
+                    <div class="search-stats">
+                        <span id="searchStats">Showing all 25 rules</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rules-section">
+                <div class="rules-grid" id="rulesGrid">
+                    <!-- SQL Injection -->
+                    <div class="rule-card" data-categories="injection,web,database" data-severity="critical">
+                        <div class="rule-header">
+                            <div class="rule-icon">💉</div>
+                            <div class="rule-title">SQL Injection</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects SQL injection vulnerabilities where user input is directly concatenated into SQL queries.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag critical">Critical</span>
+                            <span class="rule-tag">Database</span>
+                            <span class="rule-tag">Web</span>
+                        </div>
+                    </div>
+
+                    <!-- XSS Detection -->
+                    <div class="rule-card" data-categories="xss,web,client" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🎯</div>
+                            <div class="rule-title">XSS Detection</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies Cross-Site Scripting vulnerabilities where user input is rendered without proper sanitization.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Web</span>
+                            <span class="rule-tag">Client</span>
+                        </div>
+                    </div>
+
+                    <!-- Exposed Secrets -->
+                    <div class="rule-card" data-categories="secrets,credentials,config" data-severity="critical">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔑</div>
+                            <div class="rule-title">Exposed Secrets</div>
+                        </div>
+                        <div class="rule-description">
+                            Finds exposed API keys, passwords, tokens, and other sensitive credentials in source code.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag critical">Critical</span>
+                            <span class="rule-tag">Secrets</span>
+                            <span class="rule-tag">Config</span>
+                        </div>
+                    </div>
+
+                    <!-- Directory Traversal -->
+                    <div class="rule-card" data-categories="path,file,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">📁</div>
+                            <div class="rule-title">Directory Traversal</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects path traversal attacks where attackers can access files outside intended directories.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">File</span>
+                            <span class="rule-tag">Web</span>
+                        </div>
+                    </div>
+
+                    <!-- CSRF Protection -->
+                    <div class="rule-card" data-categories="csrf,web,authentication" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔄</div>
+                            <div class="rule-title">CSRF Protection</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies missing CSRF protection in web applications that handle state-changing requests.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Web</span>
+                            <span class="rule-tag">Auth</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Dependencies -->
+                    <div class="rule-card" data-categories="dependencies,packages,versions" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">📦</div>
+                            <div class="rule-title">Insecure Dependencies</div>
+                        </div>
+                        <div class="rule-description">
+                            Checks for known vulnerable dependencies and outdated packages with security issues.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Dependencies</span>
+                            <span class="rule-tag">Packages</span>
+                        </div>
+                    </div>
+
+                    <!-- Missing Authentication -->
+                    <div class="rule-card" data-categories="authentication,access,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔐</div>
+                            <div class="rule-title">Missing Authentication</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies endpoints and resources that lack proper authentication mechanisms.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Auth</span>
+                            <span class="rule-tag">Access</span>
+                        </div>
+                    </div>
+
+                    <!-- Broken Access Control -->
+                    <div class="rule-card" data-categories="authorization,access,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🚫</div>
+                            <div class="rule-title">Broken Access Control</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects authorization bypasses and improper access control implementations.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Auth</span>
+                            <span class="rule-tag">Access</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Logging -->
+                    <div class="rule-card" data-categories="logging,data,privacy" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">📝</div>
+                            <div class="rule-title">Insecure Logging</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies logging of sensitive information like passwords, tokens, and personal data.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Logging</span>
+                            <span class="rule-tag">Privacy</span>
+                        </div>
+                    </div>
+
+                    <!-- Unvalidated Input -->
+                    <div class="rule-card" data-categories="input,validation,web" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">📥</div>
+                            <div class="rule-title">Unvalidated Input</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects user input that lacks proper validation, sanitization, or type checking.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Input</span>
+                            <span class="rule-tag">Validation</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure HTTP -->
+                    <div class="rule-card" data-categories="transport,web,encryption" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">🌐</div>
+                            <div class="rule-title">Insecure HTTP</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies usage of HTTP instead of HTTPS for transmitting sensitive data.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Transport</span>
+                            <span class="rule-tag">Web</span>
+                        </div>
+                    </div>
+
+                    <!-- Missing Security Headers -->
+                    <div class="rule-card" data-categories="headers,web,security" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">🛡️</div>
+                            <div class="rule-title">Missing Security Headers</div>
+                        </div>
+                        <div class="rule-description">
+                            Checks for missing security headers like CSP, HSTS, X-Frame-Options, and others.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Headers</span>
+                            <span class="rule-tag">Web</span>
+                        </div>
+                    </div>
+
+                    <!-- Open CORS -->
+                    <div class="rule-card" data-categories="cors,web,api" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">🌍</div>
+                            <div class="rule-title">Open CORS</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects overly permissive CORS configurations that allow unauthorized cross-origin requests.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">CORS</span>
+                            <span class="rule-tag">API</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure File Upload -->
+                    <div class="rule-card" data-categories="file,upload,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">📤</div>
+                            <div class="rule-title">Insecure File Upload</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies file upload vulnerabilities that could allow malicious file execution.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">File</span>
+                            <span class="rule-tag">Upload</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Deserialization -->
+                    <div class="rule-card" data-categories="serialization,data,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔄</div>
+                            <div class="rule-title">Insecure Deserialization</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects unsafe deserialization of user-controlled data that could lead to code execution.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Data</span>
+                            <span class="rule-tag">Serialization</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Error Handling -->
+                    <div class="rule-card" data-categories="errors,information,web" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">⚠️</div>
+                            <div class="rule-title">Insecure Error Handling</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies error messages that leak sensitive information about the application.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Errors</span>
+                            <span class="rule-tag">Info</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Random Generation -->
+                    <div class="rule-card" data-categories="random,crypto,security" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">🎲</div>
+                            <div class="rule-title">Insecure Random Generation</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects usage of cryptographically weak random number generators for security purposes.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Crypto</span>
+                            <span class="rule-tag">Random</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Session Management -->
+                    <div class="rule-card" data-categories="session,authentication,web" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🎫</div>
+                            <div class="rule-title">Insecure Session Management</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies weak session management practices like predictable session IDs.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">Session</span>
+                            <span class="rule-tag">Auth</span>
+                        </div>
+                    </div>
+
+                    <!-- Hardcoded Sensitive Data -->
+                    <div class="rule-card" data-categories="hardcoded,secrets,config" data-severity="critical">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔒</div>
+                            <div class="rule-title">Hardcoded Sensitive Data</div>
+                        </div>
+                        <div class="rule-description">
+                            Finds hardcoded passwords, API keys, and other sensitive data in source code.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag critical">Critical</span>
+                            <span class="rule-tag">Hardcoded</span>
+                            <span class="rule-tag">Secrets</span>
+                        </div>
+                    </div>
+
+                    <!-- Insecure Configuration -->
+                    <div class="rule-card" data-categories="config,settings,security" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">⚙️</div>
+                            <div class="rule-title">Insecure Configuration</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies insecure configuration settings that could compromise application security.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">Config</span>
+                            <span class="rule-tag">Settings</span>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Injection Detection -->
+                    <div class="rule-card" data-categories="ai,prompt,injection" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🤖</div>
+                            <div class="rule-title">Prompt Injection Detection</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects potential prompt injection vulnerabilities in AI-powered applications.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">AI</span>
+                            <span class="rule-tag">Prompt</span>
+                        </div>
+                    </div>
+
+                    <!-- AI-Generated Code Validation -->
+                    <div class="rule-card" data-categories="ai,code,validation" data-severity="medium">
+                        <div class="rule-header">
+                            <div class="rule-icon">🧠</div>
+                            <div class="rule-title">AI-Generated Code Validation</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies potential security issues in AI-generated code that may lack proper validation.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag medium">Medium</span>
+                            <span class="rule-tag">AI</span>
+                            <span class="rule-tag">Code</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Agent Access Control -->
+                    <div class="rule-card" data-categories="ai,agent,access" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🤖</div>
+                            <div class="rule-title">AI Agent Access Control</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects missing access controls for AI agents that could lead to unauthorized actions.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">AI</span>
+                            <span class="rule-tag">Agent</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Data Leakage Prevention -->
+                    <div class="rule-card" data-categories="ai,data,privacy" data-severity="critical">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔒</div>
+                            <div class="rule-title">AI Data Leakage Prevention</div>
+                        </div>
+                        <div class="rule-description">
+                            Identifies potential data leakage vulnerabilities in AI systems and applications.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag critical">Critical</span>
+                            <span class="rule-tag">AI</span>
+                            <span class="rule-tag">Data</span>
+                        </div>
+                    </div>
+
+                    <!-- MCP Server Security -->
+                    <div class="rule-card" data-categories="mcp,server,security" data-severity="high">
+                        <div class="rule-header">
+                            <div class="rule-icon">🔌</div>
+                            <div class="rule-title">MCP Server Security</div>
+                        </div>
+                        <div class="rule-description">
+                            Detects security vulnerabilities in Model Context Protocol (MCP) server implementations.
+                        </div>
+                        <div class="rule-tags">
+                            <span class="rule-tag high">High</span>
+                            <span class="rule-tag">MCP</span>
+                            <span class="rule-tag">Server</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 3rem 0;">
+                <a href="getting-started.html" class="btn btn-primary">🚀 Get Started</a>
+                <a href="https://github.com/Devjosef/vibe-guard" target="_blank" class="btn btn-secondary">🐙 GitHub Repository</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Rule Details -->
+    <div class="modal" id="ruleModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Built with ❤️ by <a href="https://github.com/Devjosef" target="_blank">Devjosef</a> | <a href="https://github.com/Devjosef/vibe-guard/blob/main/LICENSE" target="_blank">MIT License</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const rulesGrid = document.getElementById('rulesGrid');
+        const searchStats = document.getElementById('searchStats');
+        const ruleCards = document.querySelectorAll('.rule-card');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            ruleCards.forEach(card => {
+                const title = card.querySelector('.rule-title').textContent.toLowerCase();
+                const description = card.querySelector('.rule-description').textContent.toLowerCase();
+                const categories = card.dataset.categories.toLowerCase();
+                const severity = card.dataset.severity.toLowerCase();
+
+                const matches = title.includes(searchTerm) || 
+                              description.includes(searchTerm) || 
+                              categories.includes(searchTerm) || 
+                              severity.includes(searchTerm);
+
+                if (matches) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            searchStats.textContent = `Showing ${visibleCount} of 25 rules`;
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('ruleModal');
+        const modalContent = document.getElementById('modalContent');
+
+        ruleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const title = this.querySelector('.rule-title').textContent;
+                const description = this.querySelector('.rule-description').textContent;
+                const severity = this.dataset.severity;
+                const categories = this.dataset.categories;
+
+                // Generate modal content based on rule
+                modalContent.innerHTML = generateModalContent(title, description, severity, categories);
+                modal.classList.add('active');
+            });
+        });
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        function generateModalContent(title, description, severity, categories) {
+            const severityColors = {
+                critical: '#ef4444',
+                high: '#f59e0b',
+                medium: '#6366f1',
+                low: '#10b981'
+            };
+
+            const categoryTags = categories.split(',').map(cat => '<span class="rule-tag">' + cat + '</span>').join(' ');
+            
+            return '<div class="modal-header">' +
+                '<h2 class="modal-title">' + title + '</h2>' +
+                '<p class="modal-description">' + description + '</p>' +
+                '</div>' +
+                '<div class="modal-section">' +
+                '<h3>Severity</h3>' +
+                '<p>This vulnerability is classified as <strong style="color: ' + severityColors[severity] + '">' + severity.toUpperCase() + '</strong> severity.</p>' +
+                '</div>' +
+                '<div class="modal-section">' +
+                '<h3>Categories</h3>' +
+                '<p>' + categoryTags + '</p>' +
+                '</div>' +
+                '<div class="modal-section">' +
+                '<h3>Example Vulnerable Code</h3>' +
+                '<div class="code-example">' +
+                '<span class="comment">// Example of vulnerable code pattern</span>' +
+                '<span class="keyword">const</span> userInput = req.body.query;' +
+                '<span class="keyword">const</span> sql = <span class="string">`SELECT * FROM users WHERE id = ${userInput}`</span>;' +
+                'db.query(sql);' +
+                '</div>' +
+                '</div>' +
+                '<div class="modal-section">' +
+                '<h3>Remediation</h3>' +
+                '<div class="remediation-steps">' +
+                '<h4>How to Fix:</h4>' +
+                '<ul>' +
+                '<li>Use parameterized queries or prepared statements</li>' +
+                '<li>Validate and sanitize all user input</li>' +
+                '<li>Implement proper input validation</li>' +
+                '<li>Use ORM libraries with built-in protection</li>' +
+                '</ul>' +
+                '</div>' +
+                '</div>' +
+                '<div class="modal-section">' +
+                '<h3>Secure Example</h3>' +
+                '<div class="code-example">' +
+                '<span class="comment">// Secure code using parameterized queries</span>' +
+                '<span class="keyword">const</span> userInput = req.body.query;' +
+                '<span class="keyword">const</span> sql = <span class="string">\'SELECT * FROM users WHERE id = ?\'</span>;' +
+                'db.query(sql, [userInput]);' +
+                '</div>' +
+                '</div>';
+        }
+    </script>
+</body>
+</html> 
