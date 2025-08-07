@@ -3,18 +3,6 @@ name: Deploy Documentation
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'documents/**'
-      - 'vite.config.js'
-      - 'package.json'
-      - 'package-lock.json'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'documents/**'
-      - 'vite.config.js'
-      - 'package.json'
-      - 'package-lock.json'
 
 jobs:
   build-and-deploy:
@@ -31,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         
     - name: Install dependencies
