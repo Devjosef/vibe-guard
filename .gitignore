@@ -134,3 +134,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Marketing and content files
+content/
+AUTOMATION_STRATEGY.md
+MARKETING_STRATEGY.md
+*_article.md
+devto_*.md
+hashnode_*.md
+
+# Generated website files
+documents/
