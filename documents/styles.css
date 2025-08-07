@@ -36,6 +36,10 @@
     --code-number: #79c0ff;
     
     --focus-ring: 0 0 0 3px rgba(255, 71, 87, 0.5);
+    
+    --surface: #ffffff;
+    --border: var(--border-medium);
+    --background: var(--bg-primary);
 }
 
 * {
