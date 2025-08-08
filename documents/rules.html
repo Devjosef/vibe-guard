@@ -1065,6 +1065,9 @@
 
             const categoryTags = categories.split(',').map(cat => '<span class="rule-tag">' + cat + '</span>').join(' ');
             
+            // Get rule-specific content
+            const ruleContent = getRuleSpecificContent(title);
+            
             return '<div class="modal-header">' +
                 '<h2 class="modal-title">' + title + '</h2>' +
                 '<p class="modal-description">' + description + '</p>' +
@@ -1079,34 +1082,391 @@
                 '</div>' +
                 '<div class="modal-section">' +
                 '<h3>Example Vulnerable Code</h3>' +
-                '<div class="code-example">' +
-                '<span class="comment">// Example of vulnerable code pattern</span>' +
-                '<span class="keyword">const</span> userInput = req.body.query;' +
-                '<span class="keyword">const</span> sql = <span class="string">`SELECT * FROM users WHERE id = ${userInput}`</span>;' +
-                'db.query(sql);' +
-                '</div>' +
+                '<div class="code-example">' + ruleContent.vulnerableCode + '</div>' +
                 '</div>' +
                 '<div class="modal-section">' +
                 '<h3>Remediation</h3>' +
                 '<div class="remediation-steps">' +
                 '<h4>How to Fix:</h4>' +
-                '<ul>' +
-                '<li>Use parameterized queries or prepared statements</li>' +
-                '<li>Validate and sanitize all user input</li>' +
-                '<li>Implement proper input validation</li>' +
-                '<li>Use ORM libraries with built-in protection</li>' +
-                '</ul>' +
+                '<ul>' + ruleContent.remediationSteps + '</ul>' +
                 '</div>' +
                 '</div>' +
                 '<div class="modal-section">' +
                 '<h3>Secure Example</h3>' +
-                '<div class="code-example">' +
-                '<span class="comment">// Secure code using parameterized queries</span>' +
-                '<span class="keyword">const</span> userInput = req.body.query;' +
-                '<span class="keyword">const</span> sql = <span class="string">\'SELECT * FROM users WHERE id = ?\'</span>;' +
-                'db.query(sql, [userInput]);' +
-                '</div>' +
+                '<div class="code-example">' + ruleContent.secureCode + '</div>' +
                 '</div>';
+        }
+
+        function getRuleSpecificContent(title) {
+            const ruleContent = {
+                'SQL Injection': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Direct string concatenation</span><br>' +
+                        '<span class="keyword">const</span> userInput = req.body.query;<br>' +
+                        '<span class="keyword">const</span> sql = <span class="string">`SELECT * FROM users WHERE id = ${userInput}`</span>;<br>' +
+                        'db.query(sql);',
+                    remediationSteps: '<li>Use parameterized queries or prepared statements</li>' +
+                        '<li>Validate and sanitize all user input</li>' +
+                        '<li>Implement proper input validation</li>' +
+                        '<li>Use ORM libraries with built-in protection</li>',
+                    secureCode: '<span class="comment">// Secure: Parameterized query</span><br>' +
+                        '<span class="keyword">const</span> userInput = req.body.query;<br>' +
+                        '<span class="keyword">const</span> sql = <span class="string">\'SELECT * FROM users WHERE id = ?\'</span>;<br>' +
+                        'db.query(sql, [userInput]);'
+                },
+                'XSS Detection': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Direct HTML insertion</span><br>' +
+                        '<span class="keyword">const</span> userInput = req.body.comment;<br>' +
+                        'element.innerHTML = userInput;',
+                    remediationSteps: '<li>Use output encoding (HTML, URL, JavaScript)</li>' +
+                        '<li>Implement Content Security Policy (CSP)</li>' +
+                        '<li>Validate and sanitize all user input</li>' +
+                        '<li>Use safe DOM manipulation methods</li>',
+                    secureCode: '<span class="comment">// Secure: Output encoding</span><br>' +
+                        '<span class="keyword">const</span> userInput = req.body.comment;<br>' +
+                        'element.textContent = userInput;'
+                },
+                'Exposed Secrets': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Hardcoded API key</span><br>' +
+                        '<span class="keyword">const</span> apiKey = <span class="string">\'sk-1234567890abcdef\'</span>;<br>' +
+                        '<span class="keyword">const</span> client = <span class="keyword">new</span> OpenAI(apiKey);',
+                    remediationSteps: '<li>Use environment variables for secrets</li>' +
+                        '<li>Implement secret management tools (HashiCorp Vault, AWS Secrets Manager)</li>' +
+                        '<li>Rotate secrets regularly</li>' +
+                        '<li>Use .env files (not committed to git)</li>',
+                    secureCode: '<span class="comment">// Secure: Environment variable</span><br>' +
+                        '<span class="keyword">const</span> apiKey = process.env.OPENAI_API_KEY;<br>' +
+                        '<span class="keyword">const</span> client = <span class="keyword">new</span> OpenAI(apiKey);'
+                },
+                'Directory Traversal': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Direct file path usage</span><br>' +
+                        '<span class="keyword">const</span> filePath = req.params.file;<br>' +
+                        'fs.readFileSync(filePath);',
+                    remediationSteps: '<li>Validate and sanitize file paths</li>' +
+                        '<li>Use path normalization and whitelisting</li>' +
+                        '<li>Implement proper access controls</li>' +
+                        '<li>Use safe file handling libraries</li>',
+                    secureCode: '<span class="comment">// Secure: Path validation</span><br>' +
+                        '<span class="keyword">const</span> filePath = path.join(__dirname, \'uploads\', req.params.file);<br>' +
+                        '<span class="keyword">if</span> (!filePath.startsWith(path.join(__dirname, \'uploads\'))) {<br>' +
+                        '&nbsp;&nbsp;<span class="keyword">throw new</span> Error(\'Invalid path\');<br>' +
+                        '}'
+                },
+                'CSRF Protection': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No CSRF protection</span><br>' +
+                        'app.post(\'/transfer\', (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="comment">// Process transfer without CSRF token</span><br>' +
+                        '&nbsp;&nbsp;processTransfer(req.body);<br>' +
+                        '});',
+                    remediationSteps: '<li>Implement CSRF tokens in forms</li>' +
+                        '<li>Use SameSite cookie attributes</li>' +
+                        '<li>Validate request origin headers</li>' +
+                        '<li>Use framework-provided CSRF protection</li>',
+                    secureCode: '<span class="comment">// Secure: CSRF token validation</span><br>' +
+                        'app.post(\'/transfer\', csrfProtection, (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="comment">// CSRF token automatically validated</span><br>' +
+                        '&nbsp;&nbsp;processTransfer(req.body);<br>' +
+                        '});'
+                },
+                'Insecure Dependencies': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Outdated package with known CVE</span><br>' +
+                        '<span class="string">"dependencies": {</span><br>' +
+                        '&nbsp;&nbsp;<span class="string">"lodash": "^4.17.15"</span><br>' +
+                        '<span class="string">}</span>',
+                    remediationSteps: '<li>Regularly update dependencies</li>' +
+                        '<li>Use automated vulnerability scanning</li>' +
+                        '<li>Implement dependency monitoring</li>' +
+                        '<li>Use package managers with security features</li>',
+                    secureCode: '<span class="comment">// Secure: Updated package</span><br>' +
+                        '<span class="string">"dependencies": {</span><br>' +
+                        '&nbsp;&nbsp;<span class="string">"lodash": "^4.17.21"</span><br>' +
+                        '<span class="string">}</span>'
+                },
+                'Missing Authentication': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No authentication check</span><br>' +
+                        'app.get(\'/admin/users\', (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="comment">// No auth middleware</span><br>' +
+                        '&nbsp;&nbsp;res.json(getAllUsers());<br>' +
+                        '});',
+                    remediationSteps: '<li>Implement proper authentication middleware</li>' +
+                        '<li>Use JWT tokens or session-based auth</li>' +
+                        '<li>Implement role-based access control</li>' +
+                        '<li>Use secure authentication libraries</li>',
+                    secureCode: '<span class="comment">// Secure: Authentication middleware</span><br>' +
+                        'app.get(\'/admin/users\', authenticate, requireRole(\'admin\'), (req, res) => {<br>' +
+                        '&nbsp;&nbsp;res.json(getAllUsers());<br>' +
+                        '});'
+                },
+                'Broken Access Control': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No authorization check</span><br>' +
+                        'app.get(\'/users/:id\', (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="comment">// User can access any user\'s data</span><br>' +
+                        '&nbsp;&nbsp;res.json(getUser(req.params.id));<br>' +
+                        '});',
+                    remediationSteps: '<li>Implement proper authorization checks</li>' +
+                        '<li>Use role-based access control (RBAC)</li>' +
+                        '<li>Validate user permissions for resources</li>' +
+                        '<li>Implement principle of least privilege</li>',
+                    secureCode: '<span class="comment">// Secure: Authorization check</span><br>' +
+                        'app.get(\'/users/:id\', (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="keyword">if</span> (req.user.id !== req.params.id && !req.user.isAdmin) {<br>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> res.status(403).json({ error: \'Unauthorized\' });<br>' +
+                        '&nbsp;&nbsp;}<br>' +
+                        '&nbsp;&nbsp;res.json(getUser(req.params.id));<br>' +
+                        '});'
+                },
+                'Insecure Logging': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Logging sensitive data</span><br>' +
+                        'logger.info(<span class="string">`User login: ${username}, password: ${password}`</span>);',
+                    remediationSteps: '<li>Avoid logging sensitive information</li>' +
+                        '<li>Use structured logging with data masking</li>' +
+                        '<li>Implement log encryption and access controls</li>' +
+                        '<li>Use log monitoring and alerting</li>',
+                    secureCode: '<span class="comment">// Secure: Masked logging</span><br>' +
+                        'logger.info(<span class="string">`User login: ${username}, password: [REDACTED]`</span>);'
+                },
+                'Unvalidated Input': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No input validation</span><br>' +
+                        '<span class="keyword">const</span> email = req.body.email;<br>' +
+                        'sendEmail(email);',
+                    remediationSteps: '<li>Implement comprehensive input validation</li>' +
+                        '<li>Use validation libraries (Joi, Yup, Zod)</li>' +
+                        '<li>Validate data types, formats, and ranges</li>' +
+                        '<li>Implement server-side validation</li>',
+                    secureCode: '<span class="comment">// Secure: Input validation</span><br>' +
+                        '<span class="keyword">const</span> { error, value } = emailSchema.validate(req.body.email);<br>' +
+                        '<span class="keyword">if</span> (error) <span class="keyword">return</span> res.status(400).json({ error: error.message });<br>' +
+                        'sendEmail(value);'
+                },
+                'Insecure HTTP': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: HTTP instead of HTTPS</span><br>' +
+                        '<span class="keyword">const</span> response = fetch(<span class="string">\'http://api.example.com/data\'</span>);',
+                    remediationSteps: '<li>Use HTTPS for all communications</li>' +
+                        '<li>Implement HSTS headers</li>' +
+                        '<li>Use secure cookies and redirects</li>' +
+                        '<li>Configure proper SSL/TLS settings</li>',
+                    secureCode: '<span class="comment">// Secure: HTTPS usage</span><br>' +
+                        '<span class="keyword">const</span> response = fetch(<span class="string">\'https://api.example.com/data\'</span>);'
+                },
+                'Missing Security Headers': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No security headers</span><br>' +
+                        'app.use(express.static(\'public\'));<br>' +
+                        '<span class="comment">// No security headers configured</span>',
+                    remediationSteps: '<li>Implement Content Security Policy (CSP)</li>' +
+                        '<li>Add X-Frame-Options, X-Content-Type-Options</li>' +
+                        '<li>Use helmet.js or similar security middleware</li>' +
+                        '<li>Configure proper CORS settings</li>',
+                    secureCode: '<span class="comment">// Secure: Security headers</span><br>' +
+                        'app.use(helmet());<br>' +
+                        'app.use(helmet.contentSecurityPolicy({<br>' +
+                        '&nbsp;&nbsp;directives: { defaultSrc: ["\'self\'"] }<br>' +
+                        '}));'
+                },
+                'Open CORS': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Overly permissive CORS</span><br>' +
+                        'app.use(cors({<br>' +
+                        '&nbsp;&nbsp;origin: <span class="string">\'*\'</span><br>' +
+                        '}));',
+                    remediationSteps: '<li>Restrict CORS to specific domains</li>' +
+                        '<li>Use proper CORS configuration</li>' +
+                        '<li>Implement proper preflight handling</li>' +
+                        '<li>Use environment-specific CORS settings</li>',
+                    secureCode: '<span class="comment">// Secure: Restricted CORS</span><br>' +
+                        'app.use(cors({<br>' +
+                        '&nbsp;&nbsp;origin: [<span class="string">\'https://trusted-domain.com\'</span>]<br>' +
+                        '}));'
+                },
+                'Insecure File Upload': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No file validation</span><br>' +
+                        'app.post(\'/upload\', upload.single(\'file\'), (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="comment">// No file type or size validation</span><br>' +
+                        '&nbsp;&nbsp;res.json({ filename: req.file.filename });<br>' +
+                        '});',
+                    remediationSteps: '<li>Validate file types and extensions</li>' +
+                        '<li>Implement file size limits</li>' +
+                        '<li>Scan uploaded files for malware</li>' +
+                        '<li>Store files outside web root</li>',
+                    secureCode: '<span class="comment">// Secure: File validation</span><br>' +
+                        'app.post(\'/upload\', upload.single(\'file\'), (req, res) => {<br>' +
+                        '&nbsp;&nbsp;<span class="keyword">if</span> (!allowedTypes.includes(req.file.mimetype)) {<br>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> res.status(400).json({ error: \'Invalid file type\' });<br>' +
+                        '&nbsp;&nbsp;}<br>' +
+                        '&nbsp;&nbsp;res.json({ filename: req.file.filename });<br>' +
+                        '});'
+                },
+                'Insecure Deserialization': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Unsafe deserialization</span><br>' +
+                        '<span class="keyword">const</span> data = JSON.parse(userInput);<br>' +
+                        'processData(data);',
+                    remediationSteps: '<li>Use safe deserialization methods</li>' +
+                        '<li>Validate deserialized data structure</li>' +
+                        '<li>Implement proper type checking</li>' +
+                        '<li>Use schema validation for deserialized data</li>',
+                    secureCode: '<span class="comment">// Secure: Safe deserialization</span><br>' +
+                        '<span class="keyword">const</span> { error, value } = dataSchema.validate(JSON.parse(userInput));<br>' +
+                        '<span class="keyword">if</span> (error) <span class="keyword">throw new</span> Error(\'Invalid data\');<br>' +
+                        'processData(value);'
+                },
+                'Insecure Error Handling': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Detailed error messages</span><br>' +
+                        'app.use((err, req, res, next) => {<br>' +
+                        '&nbsp;&nbsp;res.status(500).json({<br>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;error: err.message,<br>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;stack: err.stack<br>' +
+                        '&nbsp;&nbsp;});<br>' +
+                        '});',
+                    remediationSteps: '<li>Use generic error messages in production</li>' +
+                        '<li>Implement proper error logging</li>' +
+                        '<li>Hide sensitive information in errors</li>' +
+                        '<li>Use structured error handling</li>',
+                    secureCode: '<span class="comment">// Secure: Generic error messages</span><br>' +
+                        'app.use((err, req, res, next) => {<br>' +
+                        '&nbsp;&nbsp;logger.error(err);<br>' +
+                        '&nbsp;&nbsp;res.status(500).json({ error: \'Internal server error\' });<br>' +
+                        '});'
+                },
+                'Insecure Random Generation': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Weak random generation</span><br>' +
+                        '<span class="keyword">const</span> token = Math.random().toString(36);',
+                    remediationSteps: '<li>Use cryptographically secure random generators</li>' +
+                        '<li>Use crypto.randomBytes() or similar</li>' +
+                        '<li>Implement proper entropy sources</li>' +
+                        '<li>Use secure random libraries</li>',
+                    secureCode: '<span class="comment">// Secure: Crypto-secure random</span><br>' +
+                        '<span class="keyword">const</span> token = crypto.randomBytes(32).toString(\'hex\');'
+                },
+                'Insecure Session Management': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Predictable session ID</span><br>' +
+                        '<span class="keyword">const</span> sessionId = Date.now().toString();<br>' +
+                        'req.session.id = sessionId;',
+                    remediationSteps: '<li>Use cryptographically secure session IDs</li>' +
+                        '<li>Implement proper session expiration</li>' +
+                        '<li>Use secure session storage</li>' +
+                        '<li>Implement session invalidation</li>',
+                    secureCode: '<span class="comment">// Secure: Secure session management</span><br>' +
+                        'app.use(session({<br>' +
+                        '&nbsp;&nbsp;secret: process.env.SESSION_SECRET,<br>' +
+                        '&nbsp;&nbsp;resave: false,<br>' +
+                        '&nbsp;&nbsp;saveUninitialized: false<br>' +
+                        '}));'
+                },
+                'Hardcoded Sensitive Data': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Hardcoded credentials</span><br>' +
+                        '<span class="keyword">const</span> dbConfig = {<br>' +
+                        '&nbsp;&nbsp;host: <span class="string">\'localhost\'</span>,<br>' +
+                        '&nbsp;&nbsp;password: <span class="string">\'mypassword123\'</span><br>' +
+                        '};',
+                    remediationSteps: '<li>Use environment variables for all secrets</li>' +
+                        '<li>Implement secret rotation</li>' +
+                        '<li>Use secure configuration management</li>' +
+                        '<li>Implement proper access controls</li>',
+                    secureCode: '<span class="comment">// Secure: Environment variables</span><br>' +
+                        '<span class="keyword">const</span> dbConfig = {<br>' +
+                        '&nbsp;&nbsp;host: process.env.DB_HOST,<br>' +
+                        '&nbsp;&nbsp;password: process.env.DB_PASSWORD<br>' +
+                        '};'
+                },
+                'Insecure Configuration': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Debug mode in production</span><br>' +
+                        'app.set(<span class="string">\'debug\'</span>, true);<br>' +
+                        'app.set(<span class="string">\'env\'</span>, <span class="string">\'development\'</span>);',
+                    remediationSteps: '<li>Use environment-specific configurations</li>' +
+                        '<li>Disable debug modes in production</li>' +
+                        '<li>Implement secure default settings</li>' +
+                        '<li>Use configuration validation</li>',
+                    secureCode: '<span class="comment">// Secure: Environment-specific config</span><br>' +
+                        'app.set(<span class="string">\'env\'</span>, process.env.NODE_ENV);<br>' +
+                        '<span class="keyword">if</span> (process.env.NODE_ENV === <span class="string">\'production\'</span>) {<br>' +
+                        '&nbsp;&nbsp;app.set(<span class="string">\'debug\'</span>, false);<br>' +
+                        '}'
+                },
+                'Prompt Injection Detection': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Direct user input to AI</span><br>' +
+                        '<span class="keyword">const</span> prompt = <span class="string">`Analyze: ${userInput}`</span>;<br>' +
+                        '<span class="keyword">const</span> response = await ai.analyze(prompt);',
+                    remediationSteps: '<li>Implement prompt validation and sanitization</li>' +
+                        '<li>Use prompt templates with input validation</li>' +
+                        '<li>Implement output filtering</li>' +
+                        '<li>Use AI safety frameworks</li>',
+                    secureCode: '<span class="comment">// Secure: Validated prompt template</span><br>' +
+                        '<span class="keyword">const</span> sanitizedInput = validateInput(userInput);<br>' +
+                        '<span class="keyword">const</span> prompt = <span class="string">`Analyze the following text: ${sanitizedInput}`</span>;<br>' +
+                        '<span class="keyword">const</span> response = await ai.analyze(prompt);'
+                },
+                'AI-Generated Code Validation': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Direct AI code usage</span><br>' +
+                        '<span class="keyword">const</span> aiCode = await ai.generateCode(requirements);<br>' +
+                        'eval(aiCode);',
+                    remediationSteps: '<li>Review and validate all AI-generated code</li>' +
+                        '<li>Implement code quality checks</li>' +
+                        '<li>Use static analysis tools</li>' +
+                        '<li>Test AI-generated code thoroughly</li>',
+                    secureCode: '<span class="comment">// Secure: Code review process</span><br>' +
+                        '<span class="keyword">const</span> aiCode = await ai.generateCode(requirements);<br>' +
+                        '<span class="keyword">const</span> validatedCode = await reviewCode(aiCode);<br>' +
+                        '<span class="keyword">if</span> (validatedCode.isSafe) {<br>' +
+                        '&nbsp;&nbsp;executeCode(validatedCode.code);<br>' +
+                        '}'
+                },
+                'AI Agent Access Control': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: No AI agent restrictions</span><br>' +
+                        'aiAgent.performAction(userRequest);<br>' +
+                        '<span class="comment">// No permission checks</span>',
+                    remediationSteps: '<li>Implement proper access controls for AI agents</li>' +
+                        '<li>Use role-based permissions</li>' +
+                        '<li>Implement action validation</li>' +
+                        '<li>Use secure agent frameworks</li>',
+                    secureCode: '<span class="comment">// Secure: Access control for AI agents</span><br>' +
+                        '<span class="keyword">if</span> (hasPermission(user, action)) {<br>' +
+                        '&nbsp;&nbsp;aiAgent.performAction(userRequest);<br>' +
+                        '} <span class="keyword">else</span> {<br>' +
+                        '&nbsp;&nbsp;<span class="keyword">throw new</span> Error(\'Unauthorized action\');<br>' +
+                        '}'
+                },
+                'AI Data Leakage Prevention': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Sensitive data to AI</span><br>' +
+                        '<span class="keyword">const</span> prompt = <span class="string">`Process: ${sensitiveData}`</span>;<br>' +
+                        'ai.process(prompt);',
+                    remediationSteps: '<li>Implement data classification and filtering</li>' +
+                        '<li>Use data anonymization techniques</li>' +
+                        '<li>Implement proper data handling policies</li>' +
+                        '<li>Use secure AI processing frameworks</li>',
+                    secureCode: '<span class="comment">// Secure: Data filtering</span><br>' +
+                        '<span class="keyword">const</span> filteredData = filterSensitiveData(sensitiveData);<br>' +
+                        '<span class="keyword">const</span> prompt = <span class="string">`Process: ${filteredData}`</span>;<br>' +
+                        'ai.process(prompt);'
+                },
+                'MCP Server Security': {
+                    vulnerableCode: '<span class="comment">// Vulnerable: Unsecured MCP server</span><br>' +
+                        'mcpServer.start({<br>' +
+                        '&nbsp;&nbsp;port: 3000<br>' +
+                        '<span class="comment">// No authentication or encryption</span><br>' +
+                        '});',
+                    remediationSteps: '<li>Implement proper authentication for MCP servers</li>' +
+                        '<li>Use TLS encryption for communications</li>' +
+                        '<li>Implement access controls and rate limiting</li>' +
+                        '<li>Use secure MCP server frameworks</li>',
+                    secureCode: '<span class="comment">// Secure: Authenticated MCP server</span><br>' +
+                        'mcpServer.start({<br>' +
+                        '&nbsp;&nbsp;port: 3000,<br>' +
+                        '&nbsp;&nbsp;auth: { token: process.env.MCP_TOKEN },<br>' +
+                        '&nbsp;&nbsp;tls: { cert: process.env.TLS_CERT }<br>' +
+                        '});'
+                }
+            };
+
+            return ruleContent[title] || {
+                vulnerableCode: '<span class="comment">// Example vulnerable code pattern</span><br>' +
+                    '<span class="keyword">const</span> userInput = req.body.data;<br>' +
+                    'processData(userInput);',
+                remediationSteps: '<li>Implement proper input validation</li>' +
+                    '<li>Use secure coding practices</li>' +
+                    '<li>Follow security best practices</li>' +
+                    '<li>Regular security audits</li>',
+                secureCode: '<span class="comment">// Secure code example</span><br>' +
+                    '<span class="keyword">const</span> { error, value } = validateInput(req.body.data);<br>' +
+                    '<span class="keyword">if</span> (error) <span class="keyword">return</span> res.status(400).json({ error });<br>' +
+                    'processData(value);'
+            };
         }
     </script>
 </body>
