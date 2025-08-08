@@ -1,0 +1,146 @@
+name: Security Scan with Vibe-Guard
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly security scans on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install jq
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+        
+    - name: Install dependencies (if package.json exists)
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+      continue-on-error: true
+        
+    - name: Run Vibe-Guard Security Scan
+      id: security-scan
+      run: |
+        echo "🛡️ Running Vibe-Guard security scan..."
+        npx vibe-guard --format table .
+      continue-on-error: true
+      
+    - name: Generate JSON Security Report
+      if: always()
+      run: |
+        echo "📋 Generating detailed security report..."
+        npx vibe-guard --format json . > security-report.json || echo "{}" > security-report.json
+      continue-on-error: true
+      
+    - name: Check Security Report
+      id: check-report
+      run: |
+        if [ -f security-report.json ] && [ -s security-report.json ]; then
+          ISSUES_COUNT=$(cat security-report.json | jq -r '.issuesFound // .totalIssues // 0' 2>/dev/null || echo "0")
+          CRITICAL_COUNT=$(cat security-report.json | jq -r '.summary.critical // .critical // 0' 2>/dev/null || echo "0")
+          HIGH_COUNT=$(cat security-report.json | jq -r '.summary.high // .high // 0' 2>/dev/null || echo "0")
+          echo "issues_found=$ISSUES_COUNT" >> $GITHUB_OUTPUT
+          echo "critical_count=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+          echo "high_count=$HIGH_COUNT" >> $GITHUB_OUTPUT
+          echo "📊 Security Scan Results:"
+          echo "  Total Issues: $ISSUES_COUNT"
+          echo "  Critical: $CRITICAL_COUNT"
+          echo "  High: $HIGH_COUNT"
+          if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "❌ Critical or high severity security issues detected!"
+            exit 1
+          else
+            echo "✅ No critical or high severity issues found"
+          fi
+        else
+          echo "⚠️ Security report not generated or empty"
+          echo "issues_found=0" >> $GITHUB_OUTPUT
+          echo "critical_count=0" >> $GITHUB_OUTPUT
+          echo "high_count=0" >> $GITHUB_OUTPUT
+        fi
+      
+    - name: Upload Security Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: vibe-guard-security-report
+        path: security-report.json
+        retention-days: 30
+        
+    - name: Comment PR with Security Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (!fs.existsSync('security-report.json')) return;
+          try {
+            const report = JSON.parse(fs.readFileSync('security-report.json', 'utf8'));
+            const issuesFound = report.issuesFound || report.totalIssues || 0;
+            const summary = report.summary || {};
+            const filesScanned = report.filesScanned || 0;
+            let comment = `## 🛡️ Vibe-Guard Security Scan Results\n\n`;
+            if (issuesFound === 0) {
+              comment += `✅ **No security issues detected!**\n\n`;
+            } else {
+              comment += `⚠️ **${issuesFound} security issue(s) detected**\n\n`;
+              comment += `| Severity | Count |\n|----------|-------|\n`;
+              comment += `| Critical | ${summary.critical || 0} |\n`;
+              comment += `| High | ${summary.high || 0} |\n`;
+              comment += `| Medium | ${summary.medium || 0} |\n`;
+              comment += `| Low | ${summary.low || 0} |\n\n`;
+              if ((summary.critical || 0) > 0 || (summary.high || 0) > 0) {
+                comment += `🚨 **Action Required**: Critical or high severity issues must be addressed before merging.\n\n`;
+              }
+            }
+            comment += `📊 **Scan Summary**: ${filesScanned} files scanned\n\n`;
+            comment += `💡 **Next Steps**:\n- Download the detailed report from the workflow artifacts\n- Run \`npx vibe-guard scan .\` locally for detailed output\n- Check our [Security Rules Guide](https://github.com/Devjosef/vibe-guard/blob/main/SECURITY_RULES.md) for fix suggestions`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.error('Error processing security report:', error);
+          }
+
+  security-monitoring:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: security-scan
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download Security Report
+      uses: actions/download-artifact@v4
+      with:
+        name: vibe-guard-security-report
+        
+    - name: Security Trend Analysis
+      run: |
+        echo "📈 Analyzing security trends..."
+        if [ -f security-report.json ] && [ -s security-report.json ]; then
+          ISSUES_COUNT=$(cat security-report.json | jq -r '.issuesFound // .totalIssues // 0' 2>/dev/null || echo "0")
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Security scan completed at $TIMESTAMP with $ISSUES_COUNT issues"
+        fi
+
