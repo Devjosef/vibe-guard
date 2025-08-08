@@ -147,3 +147,6 @@ hashnode-post-*.md
 
 # Generated website files
 # documents/ - Removed to allow GitHub Pages deployment
+
+# Local packaged binaries (use GitHub Releases instead)
+binaries/
