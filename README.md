@@ -3,7 +3,8 @@
 **25 essential security rules to catch vulnerabilities before they catch you!** Zero dependencies, instant setup, works everywhere, optimized performance. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, and more.
 
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
-[![Downloads](https://img.shields.io/npm/dm/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
+[![Downloads (month)](https://img.shields.io/npm/dm/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
+[![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![License](https://img.shields.io/npm/l/vibe-guard.svg)](https://github.com/Devjosef/vibe-guard/blob/main/LICENSE)
 
 ## 🚀 Quick Start
@@ -170,7 +171,7 @@ curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-gua
 
 Every scan makes the web a little more secure:
 
-- **600+ downloads** on NPM
+- **600+ total downloads** on NPM
 - **25 security rules** covering modern threats
 - **Cross-platform** support (Linux, macOS, Windows)
 - **Zero dependencies** for maximum compatibility
