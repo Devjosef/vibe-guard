@@ -170,7 +170,7 @@ curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-gua
 
 Every scan makes the web a little more secure:
 
-- **527+ downloads** on NPM
+- **600+ downloads** on NPM
 - **25 security rules** covering modern threats
 - **Cross-platform** support (Linux, macOS, Windows)
 - **Zero dependencies** for maximum compatibility
