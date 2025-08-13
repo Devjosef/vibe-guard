@@ -1,0 +1,65 @@
+{
+  "name": "vibe-guard",
+  "displayName": "Vibe-Guard Security Scanner",
+  "description": "Security vulnerability scanner for your codebase",
+  "version": "0.0.1",
+  "publisher": "devjosef",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Devjosef/vibe-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Devjosef/vibe-guard/issues"
+  },
+  "homepage": "https://github.com/Devjosef/vibe-guard#readme",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "vulnerability",
+    "scanner",
+    "code-analysis"
+  ],
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vibe-guard.scan"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibe-guard.scan",
+        "title": "Run Security Scan"
+      }
+    ],
+    "configuration": {
+      "title": "Vibe-Guard",
+      "properties": {
+        "vibe-guard.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Vibe-Guard security scanning"
+        },
+        "vibe-guard.autoScan": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan files on save"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@types/node": "^16.0.0",
+    "typescript": "^4.5.0"
+  }
+}
