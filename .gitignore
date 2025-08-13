@@ -139,6 +139,7 @@ dist
 content/
 AUTOMATION_STRATEGY.md
 MARKETING_STRATEGY.md
+RELEASE_STRATEGY.md
 *_article.md
 devto_*.md
 hashnode_*.md

@@ -55,7 +55,12 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "test": "npm run compile && code --extensionDevelopmentPath=.",
+    "clean": "rm -rf out node_modules",
+    "build": "npm run clean && npm install && npm run compile"
   },
   "devDependencies": {
     "@types/vscode": "^1.60.0",
