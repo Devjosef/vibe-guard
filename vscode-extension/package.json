@@ -2,7 +2,7 @@
   "name": "vibe-guard",
   "displayName": "Vibe-Guard Security Scanner",
   "description": "Security vulnerability scanner for your codebase",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "devjosef",
   "repository": {
     "type": "git",
