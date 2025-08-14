@@ -1,135 +1,324 @@
 import { BaseRule, FileContent, SecurityIssue } from '../types';
 
+interface SqlInjectionContext {
+  isInComment: boolean;
+  isInString: boolean;
+  isInTestFile: boolean;
+  isInDocumentation: boolean;
+  isInMigration: boolean;
+  surroundingCode: string;
+  language: string;
+  framework: string | undefined;
+  hasParameterizedQueries: boolean;
+  isORMUsage: boolean;
+}
+
 export class SqlInjectionRule extends BaseRule {
   readonly name = 'sql-injection';
-  readonly description = 'Detects potential SQL injection vulnerabilities';
+  readonly description = 'Detects potential SQL injection vulnerabilities with context-aware analysis';
   readonly severity = 'high' as const;
 
   private readonly sqlInjectionPatterns = [
-    { pattern: /(?:query|sql|execute)\s*\(\s*['"`][^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'String concatenation in SQL query' },
-    { pattern: /['"`]SELECT\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'SELECT query with concatenation' },
-    { pattern: /['"`]INSERT\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'INSERT query with concatenation' },
-    { pattern: /['"`]UPDATE\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'UPDATE query with concatenation' },
-    { pattern: /['"`]DELETE\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'DELETE query with concatenation' },
+    // High confidence - Direct string concatenation
+    { 
+      pattern: /(?:query|sql|execute)\s*\(\s*['"`][^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, 
+      type: 'String concatenation in SQL query',
+      confidence: 0.95,
+      validation: (text: string) => this.validateStringConcatenation(text)
+    },
+    { 
+      pattern: /['"`](?:SELECT|INSERT|UPDATE|DELETE)\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, 
+      type: 'SQL statement with concatenation',
+      confidence: 0.9,
+      validation: (text: string) => this.validateSqlStatement(text)
+    },
     
-    { pattern: /['"`][^'"`]*(?:SELECT|INSERT|UPDATE|DELETE)[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'SQL string concatenation' },
+    // Medium confidence - Template literals with user input
+    { 
+      pattern: /`(?:SELECT|INSERT|UPDATE|DELETE)\s+[^`]*\$\{[^}]+\}[^`]*`/gi, 
+      type: 'Template literal SQL with variables',
+      confidence: 0.8,
+      validation: (text: string) => this.validateTemplateLiteral(text)
+    },
+    { 
+      pattern: /db\.query\s*\(\s*['"`][^'"`]*\$\{[^}]+\}[^'"`]*['"`]/gi, 
+      type: 'Database query with template literals',
+      confidence: 0.75,
+      validation: (text: string) => this.validateDatabaseQuery(text)
+    },
     
-    { pattern: /['"`]SELECT\s+.*\s+FROM\s+.*\s+WHERE\s+.*\s*=\s*['"`]\s*\+\s*[^'"`\s)]+/gi, type: 'SQL query with concatenated variable' },
-    { pattern: /['"`]SELECT\s+.*\s+FROM\s+.*\s+WHERE\s+.*=\s*['"].*['"]?\s*\+/gi, type: 'SQL WHERE clause with concatenation' },
-    
-    { pattern: /db\.query\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'Database query with string concatenation' },
-    { pattern: /db\.query\s*\(\s*['"`][^'"`]*\$\{[^}]+\}[^'"`]*['"`]/gi, type: 'Database query with template literals' },
-    
-    { pattern: /`SELECT\s+[^`]*\$\{[^}]+\}[^`]*`/gi, type: 'Template literal SQL with variables' },
-    { pattern: /`INSERT\s+[^`]*\$\{[^}]+\}[^`]*`/gi, type: 'Template literal INSERT with variables' },
-    { pattern: /`UPDATE\s+[^`]*\$\{[^}]+\}[^`]*`/gi, type: 'Template literal UPDATE with variables' },
-    { pattern: /`DELETE\s+[^`]*\$\{[^}]+\}[^`]*`/gi, type: 'Template literal DELETE with variables' },
-    
-    { pattern: /(?:query|sql)\s*=\s*['"`][^'"`]*%s[^'"`]*['"`]\s*%\s*\(/gi, type: 'Python string formatting in SQL' },
-    { pattern: /(?:query|sql)\s*=\s*f['"`][^'"`]*\{[^}]+\}[^'"`]*['"`]/gi, type: 'Python f-string in SQL' },
-    { pattern: /String\.format\s*\(\s*['"`][^'"`]*\{[^}]*\}[^'"`]*['"`]/gi, type: 'Java String.format in SQL' },
-    
-    { pattern: /WHERE\s+[^'"`\s]+\s*=\s*['"`]?\s*\+\s*[^'"`\s)]+/gi, type: 'WHERE clause with concatenation' },
-    { pattern: /WHERE\s+[^'"`\s]+\s*=\s*\$\{[^}]+\}/gi, type: 'WHERE clause with template variable' },
-    
-    { pattern: /\.query\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'Database query with concatenation' },
-    { pattern: /\.exec\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'Database exec with concatenation' },
-    { pattern: /\.raw\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'Raw SQL query with concatenation' },
-    
-    { pattern: /\.where\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'ORM where clause with concatenation' },
-    { pattern: /\.whereRaw\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, type: 'ORM raw where with concatenation' },
-    
-    { pattern: /(?:const|let|var)\s+\w+\s*=\s*['"`]SELECT\s+.*\s+FROM\s+.*\s+WHERE\s+.*\s*['"`]\s*\+/gi, type: 'SQL variable assignment with concatenation' }
+    // Lower confidence - Complex patterns that might be safe
+    { 
+      pattern: /\.where\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, 
+      type: 'ORM where clause with concatenation',
+      confidence: 0.6,
+      validation: (text: string) => this.validateORMQuery(text)
+    },
+    { 
+      pattern: /WHERE\s+[^'"`\s]+\s*=\s*['"`]?\s*\+\s*[^'"`\s)]+/gi, 
+      type: 'WHERE clause with concatenation',
+      confidence: 0.7,
+      validation: (text: string) => this.validateWhereClause(text)
+    }
   ];
 
   private readonly safePatterns = [
+    // Parameterized queries
     /\?\s*,/g,
     /\$\d+/g,
     /:\w+/g,
+    /@\w+/g,
     /prepare\s*\(/i,
     /bind\s*\(/i,
     /params\s*\[/i,
-    /placeholder\s*\(/i
+    /placeholder\s*\(/i,
+    
+    // ORM safe patterns
+    /\.findOne\s*\(\s*\{/gi,
+    /\.findAll\s*\(\s*\{/gi,
+    /\.create\s*\(\s*\{/gi,
+    /\.update\s*\(\s*\{/gi,
+    /\.destroy\s*\(\s*\{/gi,
+    
+    // Query builders
+    /\.select\s*\(/gi,
+    /\.from\s*\(/gi,
+    /\.where\s*\(\s*\{/gi,
+    /\.andWhere\s*\(/gi,
+    /\.orWhere\s*\(/gi
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
+    const language = this.detectLanguage(fileContent.path);
+    const framework = this.detectFramework(fileContent.content, language);
     
-    if (fileContent.content.includes("SELECT * FROM users WHERE username = '") && 
-        fileContent.content.includes("req.params.username")) {
-      
-      let lineNumber = 0;
-      let lineContent = '';
-      let columnNumber = 0;
-      
-      for (let i = 0; i < fileContent.lines.length; i++) {
-        const line = fileContent.lines[i];
-        if (line && line.includes("SELECT * FROM users WHERE username = '") && 
-            line.includes("req.params.username")) {
-          lineNumber = i + 1;
-          lineContent = line;
-          columnNumber = line.indexOf("SELECT") + 1;
-          break;
-        }
-      }
-      
-      if (lineNumber > 0) {
-        issues.push(this.createIssue(
-          fileContent.path,
-          lineNumber,
-          columnNumber,
-          lineContent,
-          `Potential SQL injection vulnerability: String concatenation in SQL query`,
-          `Use parameterized queries or prepared statements instead of string concatenation. Replace concatenation with placeholders (?, $1, :param) and pass values as parameters.`
-        ));
-        
-        return issues;
-      }
-    }
-
-    for (const { pattern, type } of this.sqlInjectionPatterns) {
+    for (const { pattern, type, confidence, validation } of this.sqlInjectionPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
-      for (const { line, column, lineContent } of matches) {
-        if (this.isCommentOrTest(lineContent, fileContent.path)) {
+      for (const { match, line, column, lineContent } of matches) {
+        const matchedText = match[0];
+        const context = this.analyzeContext(fileContent, line, column, language, framework);
+        
+        // Skip if in safe context
+        if (this.isSafeContext(context)) {
           continue;
         }
-
-        if (this.hasSafeParameterization(lineContent)) {
+        
+        // Validate the pattern
+        if (!validation(matchedText)) {
           continue;
         }
-
-        issues.push(this.createIssue(
-          fileContent.path,
-          line,
-          column,
-          lineContent,
-          `Potential SQL injection vulnerability: ${type}`,
-          `Use parameterized queries or prepared statements instead of string concatenation. Replace concatenation with placeholders (?, $1, :param) and pass values as parameters.`
-        ));
+        
+        // Calculate final confidence based on context
+        const finalConfidence = this.calculateConfidence(confidence, context);
+        
+        if (finalConfidence >= 0.5) {
+          issues.push(this.createIssue(
+            fileContent.path,
+            line,
+            column,
+            lineContent,
+            `Potential SQL injection: ${type} (confidence: ${Math.round(finalConfidence * 100)}%)`,
+            this.generateSuggestion(type, context),
+            finalConfidence >= 0.8 ? 'high' : 'medium'
+          ));
+        }
       }
     }
 
     return issues;
   }
 
-  private hasSafeParameterization(line: string): boolean {
-    return this.safePatterns.some(pattern => pattern.test(line));
+  private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, framework?: string): SqlInjectionContext {
+    const lines = fileContent.lines;
+    const currentLine = lines[line - 1] || '';
+    const surroundingLines = lines.slice(Math.max(0, line - 3), line + 2);
+    
+    return {
+      isInComment: this.isInComment(currentLine, language),
+      isInString: this.isInString(currentLine, column),
+      isInTestFile: this.isInTestFile(fileContent.path),
+      isInDocumentation: this.isInDocumentation(surroundingLines),
+      isInMigration: this.isInMigration(fileContent.path),
+      surroundingCode: surroundingLines.join('\n'),
+      language,
+      framework,
+      hasParameterizedQueries: this.hasParameterizedQueries(surroundingLines),
+      isORMUsage: this.isORMUsage(surroundingLines, framework)
+    };
   }
 
-  private isCommentOrTest(line: string, filePath: string): boolean {
-    const trimmedLine = line.trim();
+  private isSafeContext(context: SqlInjectionContext): boolean {
+    // Safe if in comment
+    if (context.isInComment) return true;
     
-    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || 
-        trimmedLine.startsWith('*') || trimmedLine.startsWith('#')) {
-      return true;
-    }
+    // Safe if in test file
+    if (context.isInTestFile) return true;
     
-    if (filePath.includes('test') || filePath.includes('spec') || 
-        filePath.includes('mock') || filePath.includes('example')) {
-      return true;
-    }
+    // Safe if in documentation
+    if (context.isInDocumentation) return true;
+    
+    // Safe if in migration file
+    if (context.isInMigration) return true;
+    
+    // Safe if using parameterized queries
+    if (context.hasParameterizedQueries) return true;
+    
+    // Safe if using ORM properly
+    if (context.isORMUsage) return true;
     
     return false;
+  }
+
+  private detectLanguage(filePath: string): string {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const languageMap: Record<string, string> = {
+      'js': 'javascript',
+      'jsx': 'javascript',
+      'ts': 'typescript',
+      'tsx': 'typescript',
+      'py': 'python',
+      'php': 'php',
+      'rb': 'ruby',
+      'java': 'java',
+      'cs': 'csharp'
+    };
+    return languageMap[ext || ''] || 'unknown';
+  }
+
+  private detectFramework(content: string, language: string): string | undefined {
+    if (language === 'javascript' || language === 'typescript') {
+      if (content.includes('sequelize') || content.includes('Sequelize')) return 'sequelize';
+      if (content.includes('prisma') || content.includes('Prisma')) return 'prisma';
+      if (content.includes('typeorm') || content.includes('TypeORM')) return 'typeorm';
+      if (content.includes('mongoose') || content.includes('Mongoose')) return 'mongoose';
+      if (content.includes('knex') || content.includes('Knex')) return 'knex';
+    }
+    if (language === 'python') {
+      if (content.includes('sqlalchemy') || content.includes('SQLAlchemy')) return 'sqlalchemy';
+      if (content.includes('django.db') || content.includes('models.Model')) return 'django';
+    }
+    if (language === 'java') {
+      if (content.includes('hibernate') || content.includes('Hibernate')) return 'hibernate';
+      if (content.includes('jpa') || content.includes('JPA')) return 'jpa';
+    }
+    return undefined;
+  }
+
+
+
+  private isInComment(line: string, language: string): boolean {
+    const trimmed = line.trim();
+    if (language === 'javascript' || language === 'typescript') {
+      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*');
+    }
+    if (language === 'python') {
+      return trimmed.startsWith('#');
+    }
+    if (language === 'php') {
+      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#');
+    }
+    return false;
+  }
+
+  private isInString(line: string, column: number): boolean {
+    const before = line.substring(0, column);
+    const quotes = (before.match(/['"`]/g) || []).length;
+    return quotes % 2 === 1;
+  }
+
+  private isInTestFile(filePath: string): boolean {
+    return filePath.includes('test') || filePath.includes('spec') || filePath.includes('mock');
+  }
+
+  private isInDocumentation(lines: string[]): boolean {
+    return lines.some(line => 
+      line.includes('@example') || 
+      line.includes('TODO') ||
+      line.includes('FIXME') ||
+      line.includes('NOTE:')
+    );
+  }
+
+  private isInMigration(filePath: string): boolean {
+    return filePath.includes('migration') || filePath.includes('migrate') || filePath.includes('schema');
+  }
+
+  private hasParameterizedQueries(lines: string[]): boolean {
+    return lines.some(line => 
+      this.safePatterns.some(pattern => pattern.test(line))
+    );
+  }
+
+  private isORMUsage(lines: string[], framework?: string): boolean {
+    if (!framework) return false;
+    
+    const ormPatterns = {
+      'sequelize': /\.findOne|\.findAll|\.create|\.update|\.destroy/gi,
+      'prisma': /\.findFirst|\.findMany|\.create|\.update|\.delete/gi,
+      'typeorm': /\.findOne|\.find|\.save|\.remove/gi,
+      'mongoose': /\.find|\.findOne|\.create|\.updateOne/gi,
+      'sqlalchemy': /\.query\.|\.filter|\.filter_by/gi,
+      'django': /\.objects\.|\.filter|\.get/gi
+    };
+    
+    const pattern = ormPatterns[framework as keyof typeof ormPatterns];
+    return pattern ? lines.some(line => pattern.test(line)) : false;
+  }
+
+  private calculateConfidence(baseConfidence: number, context: SqlInjectionContext): number {
+    let confidence = baseConfidence;
+    
+    // Reduce confidence for certain contexts
+    if (context.isORMUsage) confidence *= 0.7;
+    if (context.framework) confidence *= 0.9; // Framework might have built-in protection
+    
+    return Math.min(confidence, 1.0);
+  }
+
+  // Validation methods
+  private validateStringConcatenation(text: string): boolean {
+    return text.includes('+') && (text.includes('req.') || text.includes('request.') || text.includes('input.'));
+  }
+
+  private validateSqlStatement(text: string): boolean {
+    return /(SELECT|INSERT|UPDATE|DELETE)/i.test(text) && text.includes('+');
+  }
+
+  private validateTemplateLiteral(text: string): boolean {
+    return text.includes('${') && (text.includes('req.') || text.includes('request.') || text.includes('input.'));
+  }
+
+  private validateDatabaseQuery(text: string): boolean {
+    return text.includes('${') && text.includes('db.');
+  }
+
+  private validateORMQuery(text: string): boolean {
+    return text.includes('+') && text.includes('.where');
+  }
+
+  private validateWhereClause(text: string): boolean {
+    return text.includes('WHERE') && text.includes('+');
+  }
+
+  private generateSuggestion(_type: string, context: SqlInjectionContext): string {
+    const baseSuggestion = 'Use parameterized queries or prepared statements instead of string concatenation.';
+    
+    if (context.framework) {
+      const frameworkSuggestions = {
+        'sequelize': 'Use Sequelize parameterized queries: Model.findOne({ where: { id: req.params.id } })',
+        'prisma': 'Use Prisma parameterized queries: prisma.user.findFirst({ where: { id: req.params.id } })',
+        'typeorm': 'Use TypeORM parameterized queries: repository.findOne({ where: { id: req.params.id } })',
+        'mongoose': 'Use Mongoose parameterized queries: User.findOne({ _id: req.params.id })',
+        'sqlalchemy': 'Use SQLAlchemy parameterized queries: session.query(User).filter(User.id == user_id)',
+        'django': 'Use Django ORM: User.objects.filter(id=user_id)'
+      };
+      
+      const frameworkSuggestion = frameworkSuggestions[context.framework as keyof typeof frameworkSuggestions];
+      return `${baseSuggestion} ${frameworkSuggestion}`;
+    }
+    
+    return `${baseSuggestion} Replace concatenation with placeholders (?, $1, :param) and pass values as parameters.`;
   }
 } 
