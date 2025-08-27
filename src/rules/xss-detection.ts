@@ -1,140 +1,263 @@
-import { BaseRule, FileContent, SecurityIssue } from '../types';
+import { BaseRule, FileContent, SecurityIssue, SeverityLevel } from '../types';
+
+interface XssPattern {
+  pattern: RegExp;
+  type: string;
+  severity: SeverityLevel;
+  description: string;
+  sink: string;
+  framework?: string;
+  validation: (text: string) => boolean;
+}
 
 export class XssDetectionRule extends BaseRule {
   readonly name = 'xss-detection';
   readonly description = 'Detects potential cross-site scripting (XSS) vulnerabilities';
   readonly severity = 'critical' as const;
 
-  private readonly xssPatterns = [
-    { pattern: /(?:innerHTML|outerHTML)\s*=\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'DOM manipulation with variable' },
-    { pattern: /(?:innerHTML|outerHTML)\s*\+=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'DOM manipulation with concatenation' },
-    { pattern: /(?:innerHTML|outerHTML)\s*\+=\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'DOM manipulation with variable concatenation' },
-    { pattern: /document\.write\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe document.write' },
-    { pattern: /document\.writeln\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe document.writeln' },
-    { pattern: /document\.open\s*\(\s*\)/gi, type: 'Document open without validation' },
+  private readonly xssPatterns: XssPattern[] = [
+    // Critical - Direct user input in dangerous sinks
+    { 
+      pattern: /\b(?:innerHTML|outerHTML)\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'DOM manipulation with user input',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input directly assigned to innerHTML/outerHTML',
+      sink: 'innerHTML/outerHTML',
+      framework: 'all',
+      validation: (text: string) => this.validateDomManipulation(text)
+    },
+    { 
+      pattern: /\b(?:innerHTML|outerHTML)\s*\+=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'DOM manipulation with user input concatenation',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input concatenated into innerHTML/outerHTML',
+      sink: 'innerHTML/outerHTML',
+      framework: 'all',
+      validation: (text: string) => this.validateDomManipulation(text)
+    },
+    { 
+      pattern: /\bdocument\.write\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Unsafe document.write with user input',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input used in document.write',
+      sink: 'document.write',
+      framework: 'all',
+      validation: (text: string) => this.validateDocumentWrite(text)
+    },
+    { 
+      pattern: /\bdocument\.writeln\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Unsafe document.writeln with user input',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input used in document.writeln',
+      sink: 'document.writeln',
+      framework: 'all',
+      validation: (text: string) => this.validateDocumentWrite(text)
+    },
+    { 
+      pattern: /\beval\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Eval with user input',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input used in eval()',
+      sink: 'eval',
+      framework: 'all',
+      validation: (text: string) => this.validateEval(text)
+    },
+    { 
+      pattern: /\bFunction\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Function constructor with user input',
+      severity: 'critical',
+      description: 'Critical XSS risk: User input used in Function constructor',
+      sink: 'Function',
+      framework: 'all',
+      validation: (text: string) => this.validateFunctionConstructor(text)
+    },
     
-    { pattern: /document\.write\s*\(\s*["'`]<script[^>]*>["'`]\s*\+/gi, type: 'Unsafe document.write with script tag' },
-    { pattern: /document\.write\s*\(\s*["'`][^"'`]*["'`]\s*\+\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Unsafe document.write with concatenation' },
+    // High - Template injection and dynamic content
+    { 
+      pattern: /\b(?:ejs|handlebars|mustache|pug)\.render\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Template engine injection with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input used in template engine rendering',
+      sink: 'template.render',
+      framework: 'all',
+      validation: (text: string) => this.validateTemplateInjection(text)
+    },
+    { 
+      pattern: /\brender_template_string\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Flask template string with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input used in Flask template string rendering',
+      sink: 'render_template_string',
+      framework: 'Flask',
+      validation: (text: string) => this.validateFlaskTemplate(text)
+    },
+    { 
+      pattern: /\bMarkup\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Flask Markup with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input used in Flask Markup',
+      sink: 'Markup',
+      framework: 'Flask',
+      validation: (text: string) => this.validateFlaskMarkup(text)
+    },
     
-    { pattern: /element\.innerHTML\s*=\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Unsafe element.innerHTML assignment' },
-    { pattern: /\.innerHTML\s*=\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Unsafe innerHTML assignment' },
+    // Medium - React/Vue/Angular unsafe patterns
+    { 
+      pattern: /\bdangerouslySetInnerHTML\s*=\s*\{\s*__html:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'React dangerouslySetInnerHTML with user input',
+      severity: 'medium',
+      description: 'Medium XSS risk: User input used in React dangerouslySetInnerHTML',
+      sink: 'dangerouslySetInnerHTML',
+      framework: 'React',
+      validation: (text: string) => this.validateReactDangerousHtml(text)
+    },
+    { 
+      pattern: /\bv-html\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Vue v-html with user input',
+      severity: 'medium',
+      description: 'Medium XSS risk: User input used in Vue v-html directive',
+      sink: 'v-html',
+      framework: 'Vue',
+      validation: (text: string) => this.validateVueVHtml(text)
+    },
+    { 
+      pattern: /\b\[innerHTML\]\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'Angular innerHTML binding with user input',
+      severity: 'medium',
+      description: 'Medium XSS risk: User input used in Angular innerHTML binding',
+      sink: '[innerHTML]',
+      framework: 'Angular',
+      validation: (text: string) => this.validateAngularInnerHtml(text)
+    },
     
-    { pattern: /eval\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Eval with variable' },
-    { pattern: /eval\s*\(\s*JSON\.stringify/gi, type: 'Eval with JSON stringify' },
-    { pattern: /Function\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Function constructor with user input' },
-    { pattern: /Function\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Function constructor with variable' },
-    { pattern: /setTimeout\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'setTimeout with variable' },
-    { pattern: /setInterval\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'setInterval with variable' },
+    // Low - Legacy jQuery/AngularJS patterns
+    { 
+      pattern: /\$\([^)]*\)\.html\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'jQuery html() with user input',
+      severity: 'low',
+      description: 'Low XSS risk: User input used in jQuery html() method',
+      sink: 'jQuery.html()',
+      framework: 'jQuery',
+      validation: (text: string) => this.validateJQueryHtml(text)
+    },
+    { 
+      pattern: /\$\([^)]*\)\.append\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'jQuery append() with user input',
+      severity: 'low',
+      description: 'Low XSS risk: User input used in jQuery append() method',
+      sink: 'jQuery.append()',
+      framework: 'jQuery',
+      validation: (text: string) => this.validateJQueryAppend(text)
+    },
+    { 
+      pattern: /\bng-bind-html\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
+      type: 'AngularJS ng-bind-html with user input',
+      severity: 'low',
+      description: 'Low XSS risk: User input used in AngularJS ng-bind-html directive',
+      sink: 'ng-bind-html',
+      framework: 'AngularJS',
+      validation: (text: string) => this.validateAngularJSBindHtml(text)
+    },
     
-    { pattern: /new\s+Function\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Dynamic function with user input' },
-    { pattern: /execScript\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'ExecScript with user input' },
-    { pattern: /script\s*\.\s*src\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Dynamic script src with user input' },
-    
-    { pattern: /(?:template|render)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Template injection' },
-    { pattern: /(?:ejs|handlebars|mustache|pug)\.render\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Template engine injection' },
-    { pattern: /React\.createElement\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'React element with variable' },
-    { pattern: /Vue\.component\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Vue component with variable' },
-    { pattern: /angular\.component\s*\(\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Angular component with variable' },
-    
-    { pattern: /location\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe location assignment' },
-    { pattern: /window\.open\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe window.open' },
-    { pattern: /location\.href\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe location.href assignment' },
-    { pattern: /location\.assign\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe location.assign' },
-    { pattern: /location\.replace\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Unsafe location.replace' },
-    
-    { pattern: /<script[^>]*>\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'Script tag with user input' },
-    { pattern: /on\w+\s*=\s*[a-zA-Z_][a-zA-Z0-9_]*/gi, type: 'Event handler with variable' },
-    { pattern: /addEventListener\s*\(\s*['"`][^'"`]*['"`]\s*,\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'addEventListener with user input' },
-    { pattern: /attachEvent\s*\(\s*['"`][^'"`]*['"`]\s*,\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'attachEvent with user input' },
-    
-    { pattern: /style\s*\.\s*cssText\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'CSS injection with user input' },
-    { pattern: /style\s*\.\s*background\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'CSS background with user input' },
-    { pattern: /style\s*\.\s*color\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'CSS color with user input' },
-    
-    { pattern: /JSON\.parse\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'JSON parse with user input' },
-    { pattern: /JSON\.stringify\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, type: 'JSON stringify with user input' },
-    
-    { pattern: /echo\s+(?:\$_GET|\$_POST|\$_REQUEST)/gi, type: 'PHP echo with user input' },
-    { pattern: /print\s+(?:\$_GET|\$_POST|\$_REQUEST)/gi, type: 'PHP print with user input' },
-    { pattern: /printf\s*\(\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, type: 'PHP printf with user input' },
-    { pattern: /print_r\s*\(\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, type: 'PHP print_r with user input' },
-    { pattern: /var_dump\s*\(\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, type: 'PHP var_dump with user input' },
-    
-    { pattern: /print\s*\(\s*(?:request\.|flask\.request\.)/gi, type: 'Python print with user input' },
-    { pattern: /render_template\s*\(\s*[^,]*,\s*(?:request\.|flask\.request\.)/gi, type: 'Flask template with user input' },
-    { pattern: /render_template_string\s*\(\s*(?:request\.|flask\.request\.)/gi, type: 'Flask template string with user input' },
-    { pattern: /Markup\s*\(\s*(?:request\.|flask\.request\.)/gi, type: 'Flask Markup with user input' },
-    
-    { pattern: /out\.print\s*\(\s*(?:request\.getParameter|request\.getAttribute)/gi, type: 'Java print with user input' },
-    { pattern: /response\.getWriter\(\)\.print\s*\(\s*(?:request\.getParameter|request\.getAttribute)/gi, type: 'Java response print with user input' },
-    { pattern: /response\.getWriter\(\)\.write\s*\(\s*(?:request\.getParameter|request\.getAttribute)/gi, type: 'Java response write with user input' },
-    
-    { pattern: /puts\s+(?:params|request)/gi, type: 'Ruby puts with user input' },
-    { pattern: /print\s+(?:params|request)/gi, type: 'Ruby print with user input' },
-    { pattern: /render\s*:\s*text\s*=>\s*(?:params|request)/gi, type: 'Ruby render text with user input' },
-    { pattern: /render\s*:\s*inline\s*=>\s*(?:params|request)/gi, type: 'Ruby render inline with user input' },
-    
-    { pattern: /Response\.Write\s*\(\s*(?:Request|Input)/gi, type: '.NET Response.Write with user input' },
-    { pattern: /Response\.Output\.Write\s*\(\s*(?:Request|Input)/gi, type: '.NET Response.Output.Write with user input' },
-    { pattern: /Literal\.Text\s*=\s*(?:Request|Input)/gi, type: '.NET Literal.Text with user input' },
-    
-    { pattern: /webView\.loadUrl\s*\(\s*(?:request|input)/gi, type: 'Android WebView with user input' },
-    { pattern: /webView\.loadHTMLString\s*\(\s*(?:request|input)/gi, type: 'iOS WebView with user input' },
-    { pattern: /WKWebView.*loadHTMLString.*(?:request|input)/gi, type: 'iOS WKWebView with user input' }
+    // Server-side output patterns
+    { 
+      pattern: /\becho\s+(?:\$_GET|\$_POST|\$_REQUEST)/gi, 
+      type: 'PHP echo with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input echoed in PHP',
+      sink: 'echo',
+      framework: 'PHP',
+      validation: (text: string) => this.validatePhpEcho(text)
+    },
+    { 
+      pattern: /\bprint\s*\(\s*(?:request\.|flask\.request\.|django\.request\.)/gi, 
+      type: 'Python print with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input printed in Python',
+      sink: 'print',
+      framework: 'Python',
+      validation: (text: string) => this.validatePythonPrint(text)
+    },
+    { 
+      pattern: /\bResponse\.Write\s*\(\s*(?:Request|Input)/gi, 
+      type: '.NET Response.Write with user input',
+      severity: 'high',
+      description: 'High XSS risk: User input written in .NET Response',
+      sink: 'Response.Write',
+      framework: 'ASP.NET',
+      validation: (text: string) => this.validateDotNetResponse(text)
+    }
   ];
-
-  private readonly safePatterns = [
-    /textContent/i,
-    /innerText/i,
-    /createTextNode/i,
-    /appendChild/i,
-    /insertBefore/i,
-    /replaceChild/i,
+  private readonly sanitizationPatterns = [
+    // JavaScript/Node.js sanitization
+    /\bDOMPurify\.sanitize\b/i,
+    /\bsanitize-html\b/i,
+    /\bescapeHtml\b/i,
+    /\bhtmlEscape\b/i,
+    /\bencodeURIComponent\b/i,
+    /\bencodeURI\b/i,
+    /\btextContent\b/i,
+    /\binnerText\b/i,
+    /\bcreateTextNode\b/i,
     
-    /escape/i,
-    /sanitize/i,
-    /clean/i,
-    /purify/i,
-    /filter/i,
-    /validate/i,
-    /encodeURIComponent/i,
-    /encodeURI/i,
-    /escapeHtml/i,
-    /htmlEscape/i,
-    /xss/i,
-    /DOMPurify/i,
-    /sanitize-html/i,
-    /validator\.escape/i,
-    /html\.escape/i,
-    /cgi\.escape/i,
-    /htmlspecialchars/i,
-    /htmlentities/i,
-    /StringEscapeUtils/i,
-    /HtmlUtils\.escape/i,
-    /SecurityUtils\.sanitize/i,
+    // React sanitization
+    /\bdangerouslySetInnerHTML\b/i,
+    /\bDOMPurify\.sanitize\b/i,
+    /\bsanitize-html\b/i,
     
-    /React\.createElement\s*\(\s*['"`][^'"`]*['"`]/i,
-    /Vue\.component\s*\(\s*['"`][^'"`]*['"`]/i,
-    /angular\.component\s*\(\s*['"`][^'"`]*['"`]/i,
+    // Vue sanitization
+    /\bv-text\b/i,
+    /\bv-bind\b/i,
+    /\bDOMPurify\.sanitize\b/i,
     
-    /template\s*:\s*['"`][^'"`]*['"`]/i,
-    /render\s*:\s*['"`][^'"`]*['"`]/i,
+    // Angular sanitization
+    /\bDomSanitizer\b/i,
+    /\bsanitize\b/i,
+    /\bbypassSecurityTrustHtml\b/i,
     
-    /console\.log\s*\(\s*['"`][^'"`]*['"`]/i,
-    /console\.warn\s*\(\s*['"`][^'"`]*['"`]/i,
-    /console\.error\s*\(\s*['"`][^'"`]*['"`]/i,
+    // Python sanitization
+    /\bhtml\.escape\b/i,
+    /\bcgi\.escape\b/i,
+    /\bmarkupsafe\.escape\b/i,
+    /\bjinja2\.escape\b/i,
+    /\bwerkzeug\.escape\b/i,
     
-    /toString\(\)/i,
-    /String\(\)/i,
-    /JSON\.stringify\s*\(\s*['"`][^'"`]*['"`]/i,
+    // PHP sanitization
+    /\bhtmlspecialchars\b/i,
+    /\bhtmlentities\b/i,
+    /\bescape\b/i,
+    /\bsanitize\b/i,
     
-    /const\s+\w+\s*=\s*['"`][^'"`]*['"`]/i,
-    /let\s+\w+\s*=\s*['"`][^'"`]*['"`]/i,
-    /var\s+\w+\s*=\s*['"`][^'"`]*['"`]/i
+    // Ruby sanitization
+    /\bCGI\.escapeHTML\b/i,
+    /\bERB::Util\.html_escape\b/i,
+    /\bsanitize\b/i,
+    
+    // .NET sanitization
+    /\bHttpUtility\.HtmlEncode\b/i,
+    /\bServer\.HtmlEncode\b/i,
+    /\bAntiXss\.HtmlEncode\b/i,
+    /\bHtmlEncode\b/i,
+    
+    // Generic sanitization
+    /\bescape\b/i,
+    /\bsanitize\b/i,
+    /\bclean\b/i,
+    /\bpurify\b/i,
+    /\bfilter\b/i,
+    /\bvalidate\b/i,
+    /\bencode\b/i,
+    /\bencodeURIComponent\b/i,
+    /\bencodeURI\b/i,
+    /\bStringEscapeUtils\b/i,
+    /\bHtmlUtils\.escape\b/i,
+    /\bSecurityUtils\.sanitize\b/i
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
+    const language = this.detectLanguage(fileContent.path);
+    const framework = this.detectFramework(fileContent.content, language);
     
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
       for (let i = 0; i < fileContent.lines.length; i++) {
@@ -142,24 +265,28 @@ export class XssDetectionRule extends BaseRule {
         if (!line) continue;
         
         if (line.includes('document.write("<script>"') && line.includes('userInput')) {
+          const severity = this.determineSeverity('critical', fileContent, i + 1);
           issues.push(this.createIssue(
             fileContent.path,
             i + 1,
             line.indexOf('document.write') + 1,
             line,
             `Potential XSS vulnerability: Unsafe document.write with script tag`,
-            `Sanitize user input before rendering. Use textContent instead of innerHTML, escape HTML entities, or use a sanitization library like DOMPurify.`
+            this.getRemediationMessage('document.write', severity, framework),
+            severity
           ));
         }
         
         if (line.includes('innerHTML') && line.includes('userInput')) {
+          const severity = this.determineSeverity('critical', fileContent, i + 1);
           issues.push(this.createIssue(
             fileContent.path,
             i + 1,
             line.indexOf('innerHTML') + 1,
             line,
             `Potential XSS vulnerability: Unsafe innerHTML assignment`,
-            `Sanitize user input before rendering. Use textContent instead of innerHTML, escape HTML entities, or use a sanitization library like DOMPurify.`
+            this.getRemediationMessage('innerHTML/outerHTML', severity, framework),
+            severity
           ));
         }
       }
@@ -167,29 +294,34 @@ export class XssDetectionRule extends BaseRule {
       return issues;
     }
 
-    for (const { pattern, type } of this.xssPatterns) {
+    for (const { pattern, type, severity, description, sink, framework: patternFramework, validation } of this.xssPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        if (this.isCommentOrTest(lineContent, fileContent.path)) {
+        // Validate the pattern
+        if (!validation(lineContent)) {
           continue;
         }
-
-        if (this.hasSafePatterns(lineContent)) {
+        
+        // Skip if sanitization is present in the same line or nearby lines
+        if (this.hasSanitizationNearby(fileContent.content, line)) {
           continue;
         }
-
-        if (this.isSimplePropertyAccess(lineContent)) {
-          continue;
-        }
-
+        
+        // Determine final severity based on context
+        const finalSeverity = this.determineSeverity(severity, fileContent, line);
+        
+        // Use pattern framework if specified, otherwise use detected framework
+        const targetFramework = patternFramework !== 'all' ? patternFramework : framework;
+        
         issues.push(this.createIssue(
           fileContent.path,
           line,
           column,
           lineContent,
-          `Potential XSS vulnerability: ${type}`,
-          `Sanitize user input before rendering. Use textContent instead of innerHTML, escape HTML entities, or use a sanitization library like DOMPurify.`
+          `Potential XSS vulnerability: ${type} - ${description}`,
+          this.getRemediationMessage(sink, finalSeverity, targetFramework),
+          finalSeverity
         ));
       }
     }
@@ -197,37 +329,516 @@ export class XssDetectionRule extends BaseRule {
     return issues;
   }
 
-  private hasSafePatterns(line: string): boolean {
-    return this.safePatterns.some(pattern => pattern.test(line));
-  }
 
-  private isCommentOrTest(line: string, filePath: string): boolean {
-    const trimmedLine = line.trim();
-    
-    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || 
-        trimmedLine.startsWith('*') || trimmedLine.startsWith('#')) {
-      return true;
-    }
-    
-    if (filePath.includes('test') || filePath.includes('spec') || 
-        filePath.includes('mock') || filePath.includes('example')) {
-      return true;
-    }
-    
-    return false;
-  }
 
-  private isSimplePropertyAccess(line: string): boolean {
-    const simplePatterns = [
-      /console\.(log|warn|error|info)\s*\(\s*[^)]+\)/i,
-      /logger\.(log|warn|error|info)\s*\(\s*[^)]+\)/i,
-      /print\s*\(\s*[^)]+\)/i,
-      /echo\s+[^;]+/i,
-      /puts\s+[^;]+/i,
-      /System\.out\.println\s*\(\s*[^)]+\)/i,
-      /Console\.WriteLine\s*\(\s*[^)]+\)/i
+  // Validation methods for different XSS sink types
+  private validateDomManipulation(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
     ];
     
-    return simplePatterns.some(pattern => pattern.test(line));
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateDocumentWrite(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateEval(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateFunctionConstructor(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateTemplateInjection(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateFlaskTemplate(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateFlaskMarkup(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateReactDangerousHtml(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateVueVHtml(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateAngularInnerHtml(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateJQueryHtml(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateJQueryAppend(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateAngularJSBindHtml(text: string): boolean {
+    const userInputPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bparams\./i,
+      /\bquery\./i,
+      /\bbody\./i,
+      /\bform\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i,
+      /\brails\.params\./i,
+      /\bc\.Request\./i,
+      /\bHttpContext\.Request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validatePhpEcho(text: string): boolean {
+    const userInputPatterns = [
+      /\$_GET/i,
+      /\$_POST/i,
+      /\$_REQUEST/i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validatePythonPrint(text: string): boolean {
+    const userInputPatterns = [
+      /\brequest\./i,
+      /\bflask\.request\./i,
+      /\bdjango\.request\./i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateDotNetResponse(text: string): boolean {
+    const userInputPatterns = [
+      /\bRequest/i,
+      /\bInput/i
+    ];
+    
+    return userInputPatterns.some(pattern => pattern.test(text));
+  }
+
+  private determineSeverity(baseSeverity: SeverityLevel, fileContent: FileContent, lineNumber: number): SeverityLevel {
+    // Downgrade severity in development/test contexts instead of skipping
+    if (this.isDevelopmentContext(fileContent.content, lineNumber) || this.isTestFile(fileContent.path)) {
+      switch (baseSeverity) {
+        case 'critical': return 'high';
+        case 'high': return 'medium';
+        case 'medium': return 'low';
+        case 'low': return 'low';
+        default: return baseSeverity;
+      }
+    }
+    
+    return baseSeverity;
+  }
+
+  private isDevelopmentContext(content: string, lineNumber: number): boolean {
+    const devPatterns = [
+      /\bdevelopment\b/i,
+      /\bdev\b/i,
+      /\bstaging\b/i,
+      /\blocalhost\b/i,
+      /\b127\.0\.0\.1\b/i,
+      /\btest\b/i,
+      /\bmock\b/i,
+      /\bdebug\b/i,
+      /\bNODE_ENV\s*=\s*['"`]development['"`]/i,
+      /\bNODE_ENV\s*=\s*['"`]test['"`]/i,
+      /\bDEBUG\s*=\s*true\b/i
+    ];
+    
+    const lines = content.split('\n');
+    const contextRange = 5;
+    
+    const startLine = Math.max(0, lineNumber - contextRange - 1);
+    const endLine = Math.min(lines.length, lineNumber + contextRange);
+    
+    const contextLines = lines.slice(startLine, endLine).join('\n');
+    
+    return devPatterns.some(pattern => pattern.test(contextLines));
+  }
+
+  private isTestFile(filePath: string): boolean {
+    const testPatterns = [
+      /\.test\./i,
+      /\.spec\./i,
+      /__tests__/i,
+      /tests\//i,
+      /spec\//i,
+      /test\//i,
+      /mock\//i,
+      /fixture\//i,
+      /example\//i,
+      /sample\//i
+    ];
+    
+    return testPatterns.some(pattern => pattern.test(filePath));
+  }
+
+  private detectLanguage(filePath: string): string {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const languageMap: Record<string, string> = {
+      'js': 'javascript',
+      'jsx': 'javascript',
+      'ts': 'typescript',
+      'tsx': 'typescript',
+      'py': 'python',
+      'php': 'php',
+      'rb': 'ruby',
+      'go': 'go',
+      'java': 'java',
+      'cs': 'csharp',
+      'vb': 'vbnet'
+    };
+    return languageMap[ext || ''] || 'unknown';
+  }
+
+  private detectFramework(content: string, language: string): string | undefined {
+    if (language === 'javascript' || language === 'typescript') {
+      if (content.includes('react') || content.includes('jsx') || content.includes('tsx')) return 'react';
+      if (content.includes('vue') || content.includes('Vue.createApp')) return 'vue';
+      if (content.includes('angular') || content.includes('@Component')) return 'angular';
+      if (content.includes('jquery') || content.includes('$(')) return 'jquery';
+      if (content.includes('angularjs') || content.includes('ng-')) return 'angularjs';
+    }
+    if (language === 'python') {
+      if (content.includes('flask') || content.includes('Flask')) return 'flask';
+      if (content.includes('django') || content.includes('Django')) return 'django';
+    }
+    if (language === 'php') {
+      return 'php';
+    }
+    if (language === 'csharp') {
+      if (content.includes('asp.net') || content.includes('ASP.NET')) return 'aspnet';
+    }
+    return undefined;
+  }
+
+  private hasSanitizationNearby(content: string, lineNumber: number): boolean {
+    const lines = content.split('\n');
+    const contextRange = 3; // Check 3 lines before and after
+    
+    const startLine = Math.max(0, lineNumber - contextRange - 1);
+    const endLine = Math.min(lines.length, lineNumber + contextRange);
+    
+    const contextLines = lines.slice(startLine, endLine).join('\n');
+    
+    return this.sanitizationPatterns.some(pattern => pattern.test(contextLines));
+  }
+
+  private getRemediationMessage(sink: string, severity: SeverityLevel, framework?: string): string {
+    const messages: Record<string, Record<string, string>> = {
+      'innerHTML/outerHTML': {
+        'critical': 'CRITICAL: Never use user input directly in innerHTML/outerHTML. This can lead to XSS attacks.',
+        'high': 'HIGH: Avoid using user input in innerHTML/outerHTML. Use textContent instead.',
+        'medium': 'MEDIUM: Consider using textContent instead of innerHTML for user input.',
+        'low': 'LOW: Review innerHTML usage for security.'
+      },
+      'document.write': {
+        'critical': 'CRITICAL: Never use user input in document.write. This can lead to XSS attacks.',
+        'high': 'HIGH: Avoid using user input in document.write. Use safer DOM methods.',
+        'medium': 'MEDIUM: Consider using safer DOM methods instead of document.write.',
+        'low': 'LOW: Review document.write usage for security.'
+      },
+      'eval': {
+        'critical': 'CRITICAL: Never use user input in eval(). This can lead to code injection attacks.',
+        'high': 'HIGH: Avoid using user input in eval(). Use safer alternatives.',
+        'medium': 'MEDIUM: Consider using safer alternatives to eval().',
+        'low': 'LOW: Review eval() usage for security.'
+      },
+      'Function': {
+        'critical': 'CRITICAL: Never use user input in Function constructor. This can lead to code injection.',
+        'high': 'HIGH: Avoid using user input in Function constructor. Use safer alternatives.',
+        'medium': 'MEDIUM: Consider using safer alternatives to Function constructor.',
+        'low': 'LOW: Review Function constructor usage for security.'
+      },
+      'template.render': {
+        'critical': 'CRITICAL: Never use user input directly in template rendering without sanitization.',
+        'high': 'HIGH: Sanitize user input before template rendering.',
+        'medium': 'MEDIUM: Consider sanitizing user input for template rendering.',
+        'low': 'LOW: Review template rendering practices.'
+      },
+      'dangerouslySetInnerHTML': {
+        'critical': 'CRITICAL: Never use user input in dangerouslySetInnerHTML without sanitization.',
+        'high': 'HIGH: Sanitize user input before using dangerouslySetInnerHTML.',
+        'medium': 'MEDIUM: Consider sanitizing user input for dangerouslySetInnerHTML.',
+        'low': 'LOW: Review dangerouslySetInnerHTML usage.'
+      },
+      'v-html': {
+        'critical': 'CRITICAL: Never use user input in v-html without sanitization.',
+        'high': 'HIGH: Sanitize user input before using v-html.',
+        'medium': 'MEDIUM: Consider sanitizing user input for v-html.',
+        'low': 'LOW: Review v-html usage.'
+      },
+      '[innerHTML]': {
+        'critical': 'CRITICAL: Never use user input in innerHTML binding without sanitization.',
+        'high': 'HIGH: Sanitize user input before using innerHTML binding.',
+        'medium': 'MEDIUM: Consider sanitizing user input for innerHTML binding.',
+        'low': 'LOW: Review innerHTML binding usage.'
+      },
+      'jQuery.html()': {
+        'critical': 'CRITICAL: Never use user input in jQuery html() without sanitization.',
+        'high': 'HIGH: Sanitize user input before using jQuery html().',
+        'medium': 'MEDIUM: Consider sanitizing user input for jQuery html().',
+        'low': 'LOW: Review jQuery html() usage.'
+      },
+      'echo': {
+        'critical': 'CRITICAL: Never echo user input without sanitization. Use htmlspecialchars().',
+        'high': 'HIGH: Sanitize user input before echoing. Use htmlspecialchars().',
+        'medium': 'MEDIUM: Consider using htmlspecialchars() for user input.',
+        'low': 'LOW: Review PHP echo practices.'
+      },
+      'print': {
+        'critical': 'CRITICAL: Never print user input without sanitization. Use html.escape().',
+        'high': 'HIGH: Sanitize user input before printing. Use html.escape().',
+        'medium': 'MEDIUM: Consider using html.escape() for user input.',
+        'low': 'LOW: Review Python print practices.'
+      },
+      'Response.Write': {
+        'critical': 'CRITICAL: Never write user input without sanitization. Use HttpUtility.HtmlEncode().',
+        'high': 'HIGH: Sanitize user input before writing. Use HttpUtility.HtmlEncode().',
+        'medium': 'MEDIUM: Consider using HttpUtility.HtmlEncode() for user input.',
+        'low': 'LOW: Review .NET Response.Write practices.'
+      }
+    };
+    
+    let suggestion = messages[sink]?.[severity] || 'Sanitize user input before rendering. Use appropriate sanitization methods.';
+    
+    if (framework) {
+      suggestion += this.getFrameworkSpecificAdvice(framework, sink);
+    }
+    
+    return suggestion;
+  }
+
+  private getFrameworkSpecificAdvice(framework: string, sink: string): string {
+    const advice: Record<string, Record<string, string>> = {
+      'react': {
+        'innerHTML/outerHTML': ' For React, use textContent or dangerouslySetInnerHTML with DOMPurify.sanitize().',
+        'dangerouslySetInnerHTML': ' For React, use DOMPurify.sanitize() before dangerouslySetInnerHTML.',
+        'document.write': ' For React, use React DOM methods instead of document.write.'
+      },
+      'vue': {
+        'innerHTML/outerHTML': ' For Vue, use v-text instead of v-html, or sanitize with DOMPurify.',
+        'v-html': ' For Vue, use v-text instead of v-html, or sanitize with DOMPurify.sanitize().',
+        'document.write': ' For Vue, use Vue DOM methods instead of document.write.'
+      },
+      'angular': {
+        'innerHTML/outerHTML': ' For Angular, use DomSanitizer.sanitize() before innerHTML binding.',
+        '[innerHTML]': ' For Angular, use DomSanitizer.sanitize() before innerHTML binding.',
+        'document.write': ' For Angular, use Angular DOM methods instead of document.write.'
+      },
+      'jquery': {
+        'jQuery.html()': ' For jQuery, use .text() instead of .html(), or sanitize with DOMPurify.',
+        'jQuery.append()': ' For jQuery, use .text() instead of .html(), or sanitize with DOMPurify.'
+      },
+      'angularjs': {
+        'ng-bind-html': ' For AngularJS, use ng-bind instead of ng-bind-html, or sanitize with $sanitize.'
+      },
+      'flask': {
+        'template.render': ' For Flask, use Markup(html.escape()) or DOMPurify for user input.',
+        'render_template_string': ' For Flask, use html.escape() before render_template_string.',
+        'Markup': ' For Flask, use html.escape() before Markup().'
+      },
+      'php': {
+        'echo': ' For PHP, use htmlspecialchars() or htmlentities() before echoing user input.'
+      },
+      'aspnet': {
+        'Response.Write': ' For .NET, use HttpUtility.HtmlEncode() or Server.HtmlEncode() before Response.Write.'
+      }
+    };
+    
+    return advice[framework]?.[sink] || ` For ${framework}, implement framework-specific input sanitization.`;
   }
 } 
