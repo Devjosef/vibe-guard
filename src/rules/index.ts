@@ -19,6 +19,11 @@ import { InsecureLoggingRule } from './insecure-logging';
 import { InsecureSessionManagementRule } from './insecure-session-management';
 import { InsecureErrorHandlingRule } from './insecure-error-handling';
 import { InsecureConfigurationRule } from './insecure-configuration';
+import { AiGeneratedCodeValidationRule } from './ai-generated-code-validation';
+import { AiAgentAccessControlRule } from './ai-agent-access-control';
+import { AiDataLeakagePreventionRule } from './ai-data-leakage-prevention';
+import { McpServerSecurityRule } from './mcp-server-security';
+import { PromptInjectionDetectionRule } from './prompt-injection-detection';
 
 export function getAllRules(): BaseRule[] {
   return [
@@ -42,6 +47,11 @@ export function getAllRules(): BaseRule[] {
     new InsecureSessionManagementRule(),
     new InsecureErrorHandlingRule(),
     new InsecureConfigurationRule(),
+    new AiGeneratedCodeValidationRule(),
+    new AiAgentAccessControlRule(),
+    new AiDataLeakagePreventionRule(),
+    new McpServerSecurityRule(),
+    new PromptInjectionDetectionRule(),
   ];
 }
 
@@ -66,6 +76,11 @@ export {
   InsecureSessionManagementRule,
   InsecureErrorHandlingRule,
   InsecureConfigurationRule,
+  AiGeneratedCodeValidationRule,
+  AiAgentAccessControlRule,
+  AiDataLeakagePreventionRule,
+  McpServerSecurityRule,
+  PromptInjectionDetectionRule,
 };
 
 export * from '../types'; 
