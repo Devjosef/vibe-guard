@@ -1,4 +1,4 @@
-import { BaseRule, FileContent, SecurityIssue } from '../types';
+import { BaseRule, FileContent, SecurityIssue, SeverityLevel } from '../types';
 
 export class InsecureRandomGenerationRule extends BaseRule {
   readonly name = 'insecure-random-generation';
@@ -6,97 +6,125 @@ export class InsecureRandomGenerationRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly insecureRandomPatterns = [
-    // JavaScript/Node.js insecure patterns
-    { pattern: /Math\.random\s*\(\s*\)/gi, type: 'Math.random() for security purposes' },
-    { pattern: /Math\.floor\s*\(\s*Math\.random\s*\(\s*\)/gi, type: 'Math.floor with Math.random()' },
-    { pattern: /Math\.ceil\s*\(\s*Math\.random\s*\(\s*\)/gi, type: 'Math.ceil with Math.random()' },
-    { pattern: /Math\.round\s*\(\s*Math\.random\s*\(\s*\)/gi, type: 'Math.round with Math.random()' },
-    { pattern: /parseInt\s*\(\s*Math\.random\s*\(\s*\)/gi, type: 'parseInt with Math.random()' },
+    // Critical: Token generation patterns
+    { 
+      pattern: /\b(?:token|session|jwt|api[_-]?key|secret|password|auth|id|nonce|salt|iv|key)\b[^=]*=\s*[^=]*(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)/gi, 
+      type: 'Insecure random for token generation',
+      severity: 'critical' as const
+    },
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^=]*=\s*[^=]*\b(?:token|session|jwt|api[_-]?key|secret|password|auth|id|nonce|salt|iv|key)\b/gi, 
+      type: 'Insecure random assigned to security variable',
+      severity: 'critical' as const
+    },
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*\.toString\s*\(\s*\d+\s*\)/gi, 
+      type: 'Insecure random with toString for token generation',
+      severity: 'critical' as const
+    },
     
-    // Weak crypto usage
-    { pattern: /crypto\.randomBytes\s*\(\s*1\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*2\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*3\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*4\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*5\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*6\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*7\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
-    { pattern: /crypto\.randomBytes\s*\(\s*8\s*\)/gi, type: 'Weak crypto.randomBytes with small size' },
+    // High: Predictable seeds and weak crypto
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*\*\s*\d+/gi, 
+      type: 'Insecure random with multiplication',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*\+\s*\d+/gi, 
+      type: 'Insecure random with addition',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*-\s*\d+/gi, 
+      type: 'Insecure random with subtraction',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*\/\s*\d+/gi, 
+      type: 'Insecure random with division',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /crypto\.randomBytes\s*\(\s*[1-8]\s*\)/gi, 
+      type: 'Weak crypto.randomBytes with small size',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /(?:random\.seed|Random\s*\(|Random\.new\s*\()\s*\d+/gi, 
+      type: 'Predictable seed for random generator',
+      severity: 'high' as const
+    },
+    { 
+      pattern: /(?:random\.seed|Random\s*\(|Random\.new\s*\()\s*(?:time\.time|System\.currentTimeMillis|Time\.now\.to_i|DateTime\.Now\.Ticks)/gi, 
+      type: 'Time-based seed for random generator',
+      severity: 'high' as const
+    },
     
-    // Predictable seeds
-    { pattern: /Math\.random\s*\(\s*\)\s*\*\s*\d+/gi, type: 'Math.random() with multiplication' },
-    { pattern: /Math\.random\s*\(\s*\)\s*\+\s*\d+/gi, type: 'Math.random() with addition' },
-    { pattern: /Math\.random\s*\(\s*\)\s*-\s*\d+/gi, type: 'Math.random() with subtraction' },
-    { pattern: /Math\.random\s*\(\s*\)\s*\/\s*\d+/gi, type: 'Math.random() with division' },
-    
-    // Token generation with Math.random
-    { pattern: /Math\.random\s*\(\s*\)\.toString\s*\(\s*\d+\s*\)/gi, type: 'Math.random() with toString for token generation' },
-    { pattern: /Math\.random\s*\(\s*\)\.toString\s*\(\s*36\s*\)/gi, type: 'Math.random() with toString(36) for token generation' },
-    
-    // Python insecure patterns
-    { pattern: /random\.random\s*\(\s*\)/gi, type: 'Python random.random() for security' },
-    { pattern: /random\.randint\s*\(\s*\d+\s*,\s*\d+\s*\)/gi, type: 'Python random.randint() for security' },
-    { pattern: /random\.choice\s*\(\s*[^)]+\s*\)/gi, type: 'Python random.choice() for security' },
-    { pattern: /random\.shuffle\s*\(\s*[^)]+\s*\)/gi, type: 'Python random.shuffle() for security' },
-    { pattern: /random\.seed\s*\(\s*\d+\s*\)/gi, type: 'Python random.seed() with predictable value' },
-    { pattern: /random\.seed\s*\(\s*time\.time\s*\(\s*\)\s*\)/gi, type: 'Python random.seed() with time' },
-    
-    // PHP insecure patterns
-    { pattern: /rand\s*\(\s*\)/gi, type: 'PHP rand() for security' },
-    { pattern: /mt_rand\s*\(\s*\)/gi, type: 'PHP mt_rand() for security' },
-    { pattern: /array_rand\s*\(\s*[^)]+\s*\)/gi, type: 'PHP array_rand() for security' },
-    { pattern: /shuffle\s*\(\s*[^)]+\s*\)/gi, type: 'PHP shuffle() for security' },
-    
-    // Java insecure patterns
-    { pattern: /Math\.random\s*\(\s*\)/gi, type: 'Java Math.random() for security' },
-    { pattern: /Random\s*\(\s*\d+\s*\)/gi, type: 'Java Random with predictable seed' },
-    { pattern: /Random\s*\(\s*System\.currentTimeMillis\s*\(\s*\)\s*\)/gi, type: 'Java Random with time seed' },
-    { pattern: /new\s+Random\s*\(\s*\)/gi, type: 'Java Random without secure seed' },
-    
-    // Ruby insecure patterns
-    { pattern: /rand\s*\(\s*\)/gi, type: 'Ruby rand() for security' },
-    { pattern: /Random\.rand\s*\(\s*\)/gi, type: 'Ruby Random.rand() for security' },
-    { pattern: /Random\.new\s*\(\s*\d+\s*\)/gi, type: 'Ruby Random.new with predictable seed' },
-    { pattern: /Random\.new\s*\(\s*Time\.now\.to_i\s*\)/gi, type: 'Ruby Random.new with time seed' },
-    
-    // C# insecure patterns
-    { pattern: /new\s+Random\s*\(\s*\)/gi, type: 'C# Random without secure seed' },
-    { pattern: /new\s+Random\s*\(\s*\d+\s*\)/gi, type: 'C# Random with predictable seed' },
-    { pattern: /new\s+Random\s*\(\s*DateTime\.Now\.Ticks\s*\)/gi, type: 'C# Random with time seed' },
-    { pattern: /Random\.Next\s*\(\s*\)/gi, type: 'C# Random.Next() for security' }
+    // Medium: General insecure random usage
+    { 
+      pattern: /\b(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)\b/gi, 
+      type: 'Insecure random number generation',
+      severity: 'medium' as const
+    },
+    { 
+      pattern: /(?:Math\.floor|Math\.ceil|Math\.round|parseInt)\s*\(\s*(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)/gi, 
+      type: 'Insecure random with math operations',
+      severity: 'medium' as const
+    },
+    { 
+      pattern: /(?:random\.choice|random\.shuffle|array_rand|shuffle)\s*\(\s*[^)]+\s*\)/gi, 
+      type: 'Insecure random selection/shuffling',
+      severity: 'medium' as const
+    }
   ];
 
   private readonly secureRandomPatterns = [
-    // Secure random patterns
+    // JavaScript/Node.js secure patterns
     /crypto\.randomBytes\s*\(\s*[1-9]\d{2,}\s*\)/i,  // 100+ bytes
     /crypto\.randomFillSync/i,
     /crypto\.randomFill/i,
     /crypto\.getRandomValues/i,
+    /crypto\.randomInt/i,
+    /crypto\.randomUUID/i,
+    
+    // Python secure patterns
     /secrets\.token_bytes/i,
     /secrets\.token_hex/i,
     /secrets\.token_urlsafe/i,
     /secrets\.choice/i,
     /secrets\.randbelow/i,
+    /secrets\.compare_digest/i,
+    
+    // Java secure patterns
     /SecureRandom/i,
-    /RNGCryptoServiceProvider/i,
+    /java\.security\.SecureRandom/i,
+    /java\.security\.MessageDigest/i,
+    
+    // C# secure patterns
     /RandomNumberGenerator/i,
     /System\.Security\.Cryptography\.RandomNumberGenerator/i,
-    /OpenSSL::Random/i,
+    /System\.Security\.Cryptography\.RNGCryptoServiceProvider/i,
+    
+    // Ruby secure patterns
     /SecureRandom\.random_bytes/i,
     /SecureRandom\.hex/i,
     /SecureRandom\.base64/i,
     /SecureRandom\.urlsafe_base64/i,
     /SecureRandom\.random_number/i,
-    /SecureRandom\.random_bytes/i,
-    /SecureRandom\.random_hex/i,
-    /SecureRandom\.random_base64/i,
-    /SecureRandom\.random_urlsafe_base64/i,
-    /SecureRandom\.random_number/i,
-    /SecureRandom\.random_bytes/i,
-    /SecureRandom\.random_hex/i,
-    /SecureRandom\.random_base64/i,
-    /SecureRandom\.random_urlsafe_base64/i,
-    /SecureRandom\.random_number/i
+    
+    // PHP secure patterns
+    /random_bytes/i,
+    /random_int/i,
+    /openssl_random_pseudo_bytes/i,
+    
+    // Go secure patterns
+    /crypto\/rand/i,
+    /math\/rand\.Seed/i,
+    
+    // Rust secure patterns
+    /rand::thread_rng/i,
+    /rand::rngs::ThreadRng/i,
+    /rand::RngCore/i
   ];
 
   private readonly falsePositivePatterns = [
@@ -148,7 +176,8 @@ export class InsecureRandomGenerationRule extends BaseRule {
             line.indexOf('Math.random()') + 1,
             line,
             `Insecure random generation: Math.random() with toString(36) for token generation`,
-            `Use cryptographically secure random number generators for security purposes. Use crypto.randomBytes(32), secrets module (Python), or SecureRandom (Java/C#).`
+            this.getRemediationMessage('token_generation', 'javascript'),
+            'critical'
           ));
         }
         
@@ -160,7 +189,8 @@ export class InsecureRandomGenerationRule extends BaseRule {
             line.indexOf('Math.floor') + 1,
             line,
             `Insecure random generation: Math.floor with Math.random()`,
-            `Use cryptographically secure random number generators for security purposes. Use crypto.randomBytes(32), secrets module (Python), or SecureRandom (Java/C#).`
+            this.getRemediationMessage('general', 'javascript'),
+            'medium'
           ));
         }
       }
@@ -170,7 +200,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       }
     }
 
-    for (const { pattern, type } of this.insecureRandomPatterns) {
+    for (const { pattern, type, severity } of this.insecureRandomPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
@@ -187,13 +217,11 @@ export class InsecureRandomGenerationRule extends BaseRule {
           continue;
         }
 
-        if (this.isSimplePropertyAccess(lineContent) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
-          continue;
-        }
-
-        if (this.isDevelopmentContext(lineContent) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
-          continue;
-        }
+        // Determine final severity based on context
+        const finalSeverity = this.determineSeverity(severity, lineContent, fileContent.path);
+        
+        // Determine language for specific remediation
+        const language = this.detectLanguage(fileContent.path, lineContent);
 
         issues.push(this.createIssue(
           fileContent.path,
@@ -201,7 +229,8 @@ export class InsecureRandomGenerationRule extends BaseRule {
           column,
           lineContent,
           `Insecure random generation: ${type}`,
-          `Use cryptographically secure random number generators for security purposes. Use crypto.randomBytes(32), secrets module (Python), or SecureRandom (Java/C#).`
+          this.getRemediationMessage(type, language),
+          finalSeverity
         ));
       }
     }
@@ -255,28 +284,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
     return this.falsePositivePatterns.some(pattern => pattern.test(line));
   }
 
-  private isSimplePropertyAccess(line: string): boolean {
-    // Don't apply simple property access patterns to our test file
-    if (line.includes('all-vulnerabilities-test.js')) {
-      return false;
-    }
-    
-    // Check if it's just a simple property access for logging or display
-    const simplePatterns = [
-      /console\.log\s*\(\s*Math\.random/i,
-      /console\.warn\s*\(\s*Math\.random/i,
-      /console\.error\s*\(\s*Math\.random/i,
-      /logger\.(?:log|warn|error|info)\s*\(\s*Math\.random/i,
-      /print\s*\(\s*Math\.random/i,
-      /echo\s*Math\.random/i,
-      /printf\s*\(\s*.*Math\.random/i,
-      /System\.out\.println\s*\(\s*Math\.random/i,
-      /puts\s*Math\.random/i,
-      /Console\.WriteLine\s*\(\s*Math\.random/i
-    ];
 
-    return simplePatterns.some(pattern => pattern.test(line));
-  }
 
   private isDevelopmentContext(line: string): boolean {
     // Don't apply development context patterns to our test file
@@ -286,16 +294,160 @@ export class InsecureRandomGenerationRule extends BaseRule {
     
     // Check if it's in a development context
     const devPatterns = [
-      /development/i,
-      /dev/i,
-      /staging/i,
-      /test/i,
-      /localhost/i,
-      /127\.0\.0\.1/i,
+      /\bdevelopment\b/i,
+      /\bdev\b/i,
+      /\bstaging\b/i,
+      /\btest\b/i,
+      /\blocalhost\b/i,
+      /\b127\.0\.0\.1\b/i,
       /NODE_ENV\s*=\s*['"`]development['"`]/i,
       /DEBUG\s*=\s*true/i
     ];
 
     return devPatterns.some(pattern => pattern.test(line));
+  }
+
+  private determineSeverity(baseSeverity: SeverityLevel, lineContent: string, filePath: string): SeverityLevel {
+    // Downgrade severity in development/test contexts instead of skipping
+    if (this.isDevelopmentContext(lineContent) || this.isTestFile(filePath)) {
+      switch (baseSeverity) {
+        case 'critical':
+          return 'high';
+        case 'high':
+          return 'medium';
+        case 'medium':
+          return 'low';
+        case 'low':
+          return 'low';
+        default:
+          return baseSeverity;
+      }
+    }
+    
+    return baseSeverity;
+  }
+
+  private isTestFile(filePath: string): boolean {
+    const testPatterns = [
+      /test/i,
+      /spec/i,
+      /__tests__/i,
+      /\.test\./i,
+      /\.spec\./i
+    ];
+
+    return testPatterns.some(pattern => pattern.test(filePath));
+  }
+
+  private detectLanguage(filePath: string, lineContent: string): string {
+    // Detect language based on file extension and content
+    if (filePath.endsWith('.js') || filePath.endsWith('.ts') || filePath.endsWith('.jsx') || filePath.endsWith('.tsx')) {
+      return 'javascript';
+    }
+    if (filePath.endsWith('.py')) {
+      return 'python';
+    }
+    if (filePath.endsWith('.php')) {
+      return 'php';
+    }
+    if (filePath.endsWith('.java')) {
+      return 'java';
+    }
+    if (filePath.endsWith('.rb')) {
+      return 'ruby';
+    }
+    if (filePath.endsWith('.cs')) {
+      return 'csharp';
+    }
+    if (filePath.endsWith('.go')) {
+      return 'go';
+    }
+    if (filePath.endsWith('.rs')) {
+      return 'rust';
+    }
+    
+    // Fallback based on content patterns
+    if (lineContent.includes('Math.random') || lineContent.includes('crypto.')) {
+      return 'javascript';
+    }
+    if (lineContent.includes('random.') || lineContent.includes('secrets.')) {
+      return 'python';
+    }
+    if (lineContent.includes('rand(') || lineContent.includes('mt_rand(')) {
+      return 'php';
+    }
+    if (lineContent.includes('Random(') || lineContent.includes('SecureRandom')) {
+      return 'java';
+    }
+    if (lineContent.includes('rand(') || lineContent.includes('Random.')) {
+      return 'ruby';
+    }
+    if (lineContent.includes('new Random(') || lineContent.includes('RandomNumberGenerator')) {
+      return 'csharp';
+    }
+    
+    return 'general';
+  }
+
+  private getRemediationMessage(type: string, language: string): string {
+    const messages: Record<string, Record<string, string>> = {
+      'token_generation': {
+        'javascript': 'Use crypto.randomBytes(32) or crypto.randomUUID() for token generation. Never use Math.random() for security purposes.',
+        'python': 'Use secrets.token_bytes(32), secrets.token_hex(32), or secrets.token_urlsafe(32) for token generation.',
+        'java': 'Use SecureRandom.generateSeed(32) or SecureRandom.nextBytes() for token generation.',
+        'csharp': 'Use RandomNumberGenerator.GetBytes(32) for token generation.',
+        'php': 'Use random_bytes(32) or bin2hex(random_bytes(16)) for token generation.',
+        'ruby': 'Use SecureRandom.random_bytes(32) or SecureRandom.hex(32) for token generation.',
+        'go': 'Use crypto/rand.Read() for token generation.',
+        'rust': 'Use rand::thread_rng().gen::<[u8; 32]>() for token generation.',
+        'general': 'Use cryptographically secure random number generators for token generation.'
+      },
+      'Insecure random for token generation': {
+        'javascript': 'Use crypto.randomBytes(32) or crypto.randomUUID() for token generation. Never use Math.random() for security purposes.',
+        'python': 'Use secrets.token_bytes(32), secrets.token_hex(32), or secrets.token_urlsafe(32) for token generation.',
+        'java': 'Use SecureRandom.generateSeed(32) or SecureRandom.nextBytes() for token generation.',
+        'csharp': 'Use RandomNumberGenerator.GetBytes(32) for token generation.',
+        'php': 'Use random_bytes(32) or bin2hex(random_bytes(16)) for token generation.',
+        'ruby': 'Use SecureRandom.random_bytes(32) or SecureRandom.hex(32) for token generation.',
+        'go': 'Use crypto/rand.Read() for token generation.',
+        'rust': 'Use rand::thread_rng().gen::<[u8; 32]>() for token generation.',
+        'general': 'Use cryptographically secure random number generators for token generation.'
+      },
+      'Insecure random assigned to security variable': {
+        'javascript': 'Use crypto.randomBytes(32) or crypto.randomUUID() for security variables. Never use Math.random() for security purposes.',
+        'python': 'Use secrets.token_bytes(32), secrets.token_hex(32), or secrets.token_urlsafe(32) for security variables.',
+        'java': 'Use SecureRandom.generateSeed(32) or SecureRandom.nextBytes() for security variables.',
+        'csharp': 'Use RandomNumberGenerator.GetBytes(32) for security variables.',
+        'php': 'Use random_bytes(32) or bin2hex(random_bytes(16)) for security variables.',
+        'ruby': 'Use SecureRandom.random_bytes(32) or SecureRandom.hex(32) for security variables.',
+        'go': 'Use crypto/rand.Read() for security variables.',
+        'rust': 'Use rand::thread_rng().gen::<[u8; 32]>() for security variables.',
+        'general': 'Use cryptographically secure random number generators for security variables.'
+      },
+      'Insecure random with toString for token generation': {
+        'javascript': 'Use crypto.randomBytes(32) or crypto.randomUUID() for token generation. Never use Math.random() for security purposes.',
+        'python': 'Use secrets.token_bytes(32), secrets.token_hex(32), or secrets.token_urlsafe(32) for token generation.',
+        'java': 'Use SecureRandom.generateSeed(32) or SecureRandom.nextBytes() for token generation.',
+        'csharp': 'Use RandomNumberGenerator.GetBytes(32) for token generation.',
+        'php': 'Use random_bytes(32) or bin2hex(random_bytes(16)) for token generation.',
+        'ruby': 'Use SecureRandom.random_bytes(32) or SecureRandom.hex(32) for token generation.',
+        'go': 'Use crypto/rand.Read() for token generation.',
+        'rust': 'Use rand::thread_rng().gen::<[u8; 32]>() for token generation.',
+        'general': 'Use cryptographically secure random number generators for token generation.'
+      },
+      'general': {
+        'javascript': 'Use crypto.randomBytes(32) or crypto.randomInt() for secure random number generation. Never use Math.random() for security purposes.',
+        'python': 'Use secrets module (secrets.token_bytes, secrets.token_hex, secrets.randbelow) for secure random number generation.',
+        'java': 'Use SecureRandom for secure random number generation.',
+        'csharp': 'Use RandomNumberGenerator for secure random number generation.',
+        'php': 'Use random_bytes() or random_int() for secure random number generation.',
+        'ruby': 'Use SecureRandom for secure random number generation.',
+        'go': 'Use crypto/rand for secure random number generation.',
+        'rust': 'Use rand::thread_rng() for secure random number generation.',
+        'general': 'Use cryptographically secure random number generators for security purposes.'
+      }
+    };
+
+    return messages[type]?.[language] || messages['general']?.[language] || (messages['general'] && messages['general']['general']) || 'Use cryptographically secure random number generators for security purposes.';
   }
 } 
