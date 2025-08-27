@@ -168,7 +168,7 @@ export class AiAgentAccessControlRule extends BaseRule {
     const framework = this.detectFramework(fileContent.content, language);
     const hasAuthChecks = this.hasAuthChecks(fileContent.content);
     const isProtectedEnvironment = this.isProtectedEnvironment(fileContent.content);
-    
+
     for (const { pattern, type, confidence, severity, validation } of this.accessControlPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
@@ -185,16 +185,16 @@ export class AiAgentAccessControlRule extends BaseRule {
         if (!validation(matchedText)) {
           continue;
         }
-        
+
         // Calculate final confidence based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         
         if (finalConfidence >= 0.5) {
-          issues.push(this.createIssue(
-            fileContent.path,
-            line,
-            column,
-            lineContent,
+        issues.push(this.createIssue(
+          fileContent.path,
+          line,
+          column,
+          lineContent,
             `${severity.toUpperCase()}: ${type} detected (confidence: ${Math.round(finalConfidence * 100)}%): ${this.getLineContext(lineContent, column)}`,
             this.generateSuggestion(type, context),
             severity
