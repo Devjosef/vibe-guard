@@ -22,7 +22,7 @@ vibe-guard learn xss-detection
 vibe-guard demo
 ```
 
-## 📚 Learning Security (Like curl teaches HTTP)
+## Learning Security 
 
 Vibe-Guard is more than a scanner - it's an educational tool that teaches you about web security:
 
@@ -70,7 +70,7 @@ const API_KEY = process.env.API_KEY; // Environment variable
 4. **Environment Variables** - Never hardcode secrets
 5. **Security Headers** - Implement proper HTTP security headers
 
-## 🛡️ Security Rules
+## Security Rules
 
 Vibe-Guard detects 25 types of vulnerabilities:
 
@@ -85,7 +85,7 @@ Vibe-Guard detects 25 types of vulnerabilities:
 - **AI/ML Security**: AI-generated code validation, prompt injection
 - **Modern Threats**: CSRF, CORS issues, insecure logging
 
-## 🎯 Use Cases
+## Use Cases
 
 **CI/CD Integration:**
 ```yaml
@@ -111,7 +111,7 @@ vibe-guard learn xss-detection
 vibe-guard demo
 ```
 
-## 🌍 Installation
+## Installation
 
 **NPM:**
 ```bash
@@ -137,7 +137,7 @@ chmod +x vibe-guard
 curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-windows-x64.exe -o vibe-guard.exe
 ```
 
-## 📖 Documentation
+## Documentation
 
 - **[Getting Started](https://devjosef.github.io/vibe-guard/getting-started.html)** - Complete setup guide
 - **[Security Rules](https://devjosef.github.io/vibe-guard/rules.html)** - Detailed rule explanations
@@ -148,25 +148,25 @@ curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-gua
 
 **Join us in making the web more secure:**
 
-- 📚 **Learn**: `vibe-guard learn [topic]` - Understand security concepts
-- 🎯 **Demo**: `vibe-guard demo` - Try with example vulnerabilities
-- 📊 **Stats**: `vibe-guard stats` - See your security impact
-- 💬 **Discuss**: [GitHub Discussions](https://github.com/Devjosef/vibe-guard/discussions)
-- 🐛 **Report**: [GitHub Issues](https://github.com/Devjosef/vibe-guard/issues)
-- 🌟 **Star**: [GitHub Repository](https://github.com/Devjosef/vibe-guard)
+-  **Learn**: `vibe-guard learn [topic]` - Understand security concepts
+-  **Demo**: `vibe-guard demo` - Try with example vulnerabilities
+-  **Stats**: `vibe-guard stats` - See your security impact
+-  **Discuss**: [GitHub Discussions](https://github.com/Devjosef/vibe-guard/discussions)
+-  **Report**: [GitHub Issues](https://github.com/Devjosef/vibe-guard/issues)
+-  **Star**: [GitHub Repository](https://github.com/Devjosef/vibe-guard)
 
-## 🚀 Why Vibe-Guard?
+##  Why Vibe-Guard?
 
 **Built for developers who code fast and need security that keeps up:**
 
-- ⚡ **Zero dependencies** - Lightweight and fast
-- 🎯 **25 security rules** - Comprehensive coverage
-- 🌍 **Cross-platform** - Works everywhere
-- 📚 **Educational** - Learn while you scan
-- 🛡️ **OWASP aligned** - Industry best practices
-- 🔧 **Developer-friendly** - Simple CLI interface
+-  **Zero dependencies** - Lightweight and fast
+-  **25 security rules** - Comprehensive coverage
+-  **Cross-platform** - Works everywhere
+-  **Educational** - Learn while you scan
+-  **OWASP aligned** - Industry best practices
+-  **Developer-friendly** - Simple CLI interface
 
-## 📈 Impact
+##  Impact
 
 Every scan makes the web a little more secure:
 
@@ -176,10 +176,10 @@ Every scan makes the web a little more secure:
 - **Zero dependencies** for maximum compatibility
 - **Educational focus** - teaching security concepts
 
-## 📄 License
+##  License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Built for the greater good, like curl for security scanning.** 🛡️🚀 
+**Built for the greater good, like curl for security scanning.** 
