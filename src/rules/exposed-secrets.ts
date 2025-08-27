@@ -9,6 +9,8 @@ interface SecretContext {
   surroundingCode: string;
   language: string;
   framework: string | undefined;
+  isInDocumentation: boolean;
+  isRepeatedSecret: boolean;
 }
 
 export class ExposedSecretsRule extends BaseRule {
@@ -59,6 +61,36 @@ export class ExposedSecretsRule extends BaseRule {
       validation: (secret: string) => this.validateGoogleKey(secret)
     },
     
+    // Azure
+    { 
+      pattern: /[A-Za-z0-9+\/=]{88}/g, 
+      type: 'Azure Storage Key',
+      confidence: 0.85,
+      validation: (secret: string) => this.validateAzureKey(secret)
+    },
+    
+    // Stripe
+    { 
+      pattern: /sk_live_[0-9a-zA-Z]{24}/g, 
+      type: 'Stripe Live Secret Key',
+      confidence: 0.95,
+      validation: (secret: string) => this.validateStripeKey(secret)
+    },
+    { 
+      pattern: /sk_test_[0-9a-zA-Z]{24}/g, 
+      type: 'Stripe Test Secret Key',
+      confidence: 0.8,
+      validation: (secret: string) => this.validateStripeKey(secret)
+    },
+    
+    // Twilio
+    { 
+      pattern: /SK[0-9a-fA-F]{32}/g, 
+      type: 'Twilio Secret Key',
+      confidence: 0.9,
+      validation: (secret: string) => this.validateTwilioKey(secret)
+    },
+    
     // Slack
     { 
       pattern: /xox[baprs]-[0-9a-zA-Z\-]{10,}/g, 
@@ -73,6 +105,22 @@ export class ExposedSecretsRule extends BaseRule {
       type: 'JWT Token',
       confidence: 0.8,
       validation: (secret: string) => this.validateJWT(secret)
+    },
+    
+    // RSA/SSH Private Keys
+    { 
+      pattern: /-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----[a-zA-Z0-9+\/=\s]+-----END (?:RSA |EC |DSA )?PRIVATE KEY-----/g, 
+      type: 'RSA/SSH Private Key',
+      confidence: 0.95,
+      validation: (secret: string) => this.validatePrivateKey(secret)
+    },
+    
+    // Google OAuth Client Secrets
+    { 
+      pattern: /"[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com"/g, 
+      type: 'Google OAuth Client Secret',
+      confidence: 0.85,
+      validation: (secret: string) => this.validateGoogleOAuth(secret)
     },
     
     // Generic patterns with lower confidence
@@ -96,17 +144,29 @@ export class ExposedSecretsRule extends BaseRule {
     }
   ];
 
+  // Multi-line comment patterns
+  private readonly multiLineCommentPatterns = [
+    /\/\*[\s\S]*?\*\//g,  // JavaScript/TypeScript multi-line comments
+    /""".*?"""/gs,        // Python docstrings
+    /<!--.*?-->/gs,       // HTML comments
+    /#\[\[.*?\]\]/gs,     // Lua multi-line comments
+    /\/\*[\s\S]*?\*\//g,  // C/C++ multi-line comments
+    /\/\*[\s\S]*?\*\//g   // Java multi-line comments
+  ];
+
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
+    const isInDocumentation = this.isInDocumentation(fileContent.path);
+    const repeatedSecrets = this.findRepeatedSecrets(fileContent.content);
     
     for (const { pattern, type, confidence, validation } of this.secretPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
-        const context = this.analyzeContext(fileContent, line, column, language, framework);
+        const context = this.analyzeContext(fileContent, line, column, language, framework, isInDocumentation, repeatedSecrets);
         
         // Skip if in safe context
         if (this.isSafeContext(context)) {
@@ -138,20 +198,22 @@ export class ExposedSecretsRule extends BaseRule {
     return issues;
   }
 
-  private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, framework?: string): SecretContext {
+  private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, framework?: string, isInDocumentation?: boolean, repeatedSecrets?: Set<string>): SecretContext {
     const lines = fileContent.lines;
     const currentLine = lines[line - 1] || '';
     const surroundingLines = lines.slice(Math.max(0, line - 3), line + 2);
     
     return {
-      isInComment: this.isInComment(currentLine, language),
+      isInComment: this.isInComment(currentLine, language, fileContent.content, line),
       isInString: this.isInString(currentLine, column),
       isInTemplate: this.isInTemplate(currentLine, language),
       isInObject: this.isInObject(currentLine),
       isInFunction: this.isInFunction(surroundingLines),
       surroundingCode: surroundingLines.join('\n'),
       language,
-      framework
+      framework,
+      isInDocumentation: isInDocumentation || false,
+      isRepeatedSecret: repeatedSecrets ? repeatedSecrets.has(currentLine) : false
     };
   }
 
@@ -160,6 +222,12 @@ export class ExposedSecretsRule extends BaseRule {
     if (context.isInComment) return true;
     
     // Safe if in documentation
+    if (context.isInDocumentation) return true;
+    
+    // Safe if repeated secret (likely test data)
+    if (context.isRepeatedSecret) return true;
+    
+    // Safe if in documentation context
     if (context.surroundingCode.includes('@example') || 
         context.surroundingCode.includes('TODO') ||
         context.surroundingCode.includes('FIXME')) {
@@ -181,6 +249,84 @@ export class ExposedSecretsRule extends BaseRule {
     }
     
     return false;
+  }
+
+  private isInComment(line: string, language: string, fullContent: string, lineNumber: number): boolean {
+    const trimmed = line.trim();
+    
+    // Check for single-line comments
+    if (language === 'javascript' || language === 'typescript') {
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return true;
+    }
+    if (language === 'python') {
+      if (trimmed.startsWith('#')) return true;
+    }
+    if (language === 'php') {
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#')) return true;
+    }
+    
+    // Check for multi-line comments
+    const beforeContent = fullContent.split('\n').slice(0, lineNumber).join('\n');
+    
+    for (const pattern of this.multiLineCommentPatterns) {
+      const matches = beforeContent.match(pattern);
+      if (matches && matches.length > 0) {
+        // Check if the current line is within a multi-line comment
+        const lastMatch = matches[matches.length - 1];
+        if (lastMatch) {
+          const lastMatchIndex = beforeContent.lastIndexOf(lastMatch);
+          const commentEndIndex = lastMatchIndex + lastMatch.length;
+          
+          // If we're still within the comment, return true
+          if (commentEndIndex >= beforeContent.length) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  private isInDocumentation(filePath: string): boolean {
+    const docPatterns = [
+      /docs?\//i,
+      /documentation/i,
+      /examples?/i,
+      /samples?/i,
+      /tutorials?/i,
+      /guides?/i,
+      /readme/i,
+      /\.md$/i,
+      /\.rst$/i,
+      /\.txt$/i
+    ];
+    
+    return docPatterns.some(pattern => pattern.test(filePath));
+  }
+
+  private findRepeatedSecrets(content: string): Set<string> {
+    const repeatedSecrets = new Set<string>();
+    const secretLines = new Map<string, number>();
+    
+    // Extract all potential secret lines
+    for (const { pattern } of this.secretPatterns) {
+      const matches = this.findMatches(content, pattern);
+      for (const { lineContent } of matches) {
+        const normalizedLine = lineContent.trim();
+        const count = secretLines.get(normalizedLine) || 0;
+        secretLines.set(normalizedLine, count + 1);
+      }
+    }
+    
+    // Mark as repeated if appears more than 3 times
+    for (const [line, count] of secretLines) {
+      if (count > 3) {
+        repeatedSecrets.add(line);
+      }
+    }
+    
+    return repeatedSecrets;
   }
 
   private detectLanguage(filePath: string): string {
@@ -224,20 +370,6 @@ export class ExposedSecretsRule extends BaseRule {
     return undefined;
   }
 
-  private isInComment(line: string, language: string): boolean {
-    const trimmed = line.trim();
-    if (language === 'javascript' || language === 'typescript') {
-      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*');
-    }
-    if (language === 'python') {
-      return trimmed.startsWith('#');
-    }
-    if (language === 'php') {
-      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#');
-    }
-    return false;
-  }
-
   private isInString(line: string, column: number): boolean {
     // Simple heuristic - could be improved with proper parsing
     const before = line.substring(0, column);
@@ -264,8 +396,29 @@ export class ExposedSecretsRule extends BaseRule {
     if (context.isInTemplate) confidence *= 0.8;
     if (context.isInObject) confidence *= 0.9;
     if (context.framework) confidence *= 1.1; // Slightly increase for known frameworks
+    if (context.isInDocumentation) confidence *= 0.5; // Reduce for documentation
+    if (context.isRepeatedSecret) confidence *= 0.3; // Significantly reduce for repeated secrets
     
     return Math.min(confidence, 1.0);
+  }
+
+  // Entropy calculation for better generic secret validation
+  private calculateEntropy(str: string): number {
+    const len = str.length;
+    if (len === 0) return 0;
+    
+    const charCounts = new Map<string, number>();
+    for (const char of str) {
+      charCounts.set(char, (charCounts.get(char) || 0) + 1);
+    }
+    
+    let entropy = 0;
+    for (const count of charCounts.values()) {
+      const probability = count / len;
+      entropy -= probability * Math.log2(probability);
+    }
+    
+    return entropy;
   }
 
   // Validation methods for different secret types
@@ -285,6 +438,18 @@ export class ExposedSecretsRule extends BaseRule {
     return /^AIza[0-9A-Za-z_\-]{35}$/.test(key);
   }
 
+  private validateAzureKey(key: string): boolean {
+    return /^[A-Za-z0-9+\/=]{88}$/.test(key);
+  }
+
+  private validateStripeKey(key: string): boolean {
+    return /^sk_(live|test)_[0-9a-zA-Z]{24}$/.test(key);
+  }
+
+  private validateTwilioKey(key: string): boolean {
+    return /^SK[0-9a-fA-F]{32}$/.test(key);
+  }
+
   private validateSlackToken(token: string): boolean {
     return /^xox[baprs]-[0-9a-zA-Z\-]{10,}$/.test(token);
   }
@@ -301,13 +466,21 @@ export class ExposedSecretsRule extends BaseRule {
     }
   }
 
+  private validatePrivateKey(key: string): boolean {
+    return /^-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----[a-zA-Z0-9+\/=\s]+-----END (?:RSA |EC |DSA )?PRIVATE KEY-----$/.test(key);
+  }
+
+  private validateGoogleOAuth(secret: string): boolean {
+    return /^"[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com"$/.test(secret);
+  }
+
   private validateGenericSecret(secret: string): boolean {
     // More sophisticated validation for generic secrets
     if (secret.length < 20) return false;
     
-    // Check for entropy (basic)
-    const uniqueChars = new Set(secret).size;
-    if (uniqueChars < 10) return false;
+    // Check for entropy (improved)
+    const entropy = this.calculateEntropy(secret);
+    if (entropy < 3.5) return false; // Require minimum entropy
     
     // Check for common patterns
     if (/^(.)\1+$/.test(secret)) return false;
@@ -322,8 +495,14 @@ export class ExposedSecretsRule extends BaseRule {
       'AWS Secret': 'Use AWS Secrets Manager or environment variables for AWS secrets.',
       'GitHub Personal Access Token': 'Use GitHub Actions secrets or environment variables. Rotate tokens regularly.',
       'Google API Key': 'Restrict API key usage and use environment variables.',
+      'Azure Storage Key': 'Use Azure Key Vault or environment variables for Azure storage keys.',
+      'Stripe Live Secret Key': 'Use Stripe webhook signing secrets and environment variables. Never commit live keys.',
+      'Stripe Test Secret Key': 'Use environment variables for test keys as well.',
+      'Twilio Secret Key': 'Use Twilio environment variables and secure key management.',
       'Slack Token': 'Use Slack app configuration or environment variables.',
       'JWT Token': 'Use secure token storage and environment variables for JWT secrets.',
+      'RSA/SSH Private Key': 'Use SSH key management systems and never commit private keys to version control.',
+      'Google OAuth Client Secret': 'Use environment variables for OAuth client secrets.',
       'API Key': 'Use environment variables or secure secret management systems.',
       'Secret Key': 'Use environment variables or secure secret management systems.',
       'Access Token': 'Use environment variables or secure token management systems.'
