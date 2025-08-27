@@ -12,6 +12,7 @@ interface AccessControlContext {
   hasAuthorizationChecks: boolean;
   hasAuthentication: boolean;
   isProtectedRoute: boolean;
+  issueType: string | undefined;
 }
 
 export class BrokenAccessControlRule extends BaseRule {
@@ -20,181 +21,213 @@ export class BrokenAccessControlRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly accessControlPatterns = [
-    // Missing authorization checks in routes - Edge cases
+    // Missing authorization checks in routes: tighter patterns
     { 
-      pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/(?:admin|user|api|dashboard|settings|profile|account|billing|payment|order)[^'"`]*['"`]\s*,\s*(?!.*auth|.*login|.*verify|.*middleware|.*authorize|.*permission|.*guard|.*protect)/gi, 
+      pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/(?:admin|user|api|dashboard|settings|profile|account|billing|payment|order)[^'"`]*['"`]\s*,\s*(?!.*(?:auth|login|verify|middleware|authorize|permission|guard|protect))/gi, 
       type: 'Protected route without authorization',
       confidence: 0.9,
+      severity: 'high' as const,
       validation: (text: string) => this.validateProtectedRoute(text)
     },
     
-    // Direct object references without ownership checks
+    // Direct object references without ownership checks:  tighter patterns
     { 
-      pattern: /findById\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /findById\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'Direct object reference without ownership check',
       confidence: 0.85,
+      severity: 'high' as const,
       validation: (text: string) => this.validateDirectObjectReference(text)
     },
     { 
-      pattern: /findOne\s*\(\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /findOne\s*\(\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'Database query without ownership check',
       confidence: 0.8,
+      severity: 'high' as const,
       validation: (text: string) => this.validateDatabaseQuery(text)
     },
     { 
-      pattern: /find\s*\(\s*\{[^}]*_id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /find\s*\(\s*\{[^}]*_id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'MongoDB query without ownership check',
       confidence: 0.8,
+      severity: 'high' as const,
       validation: (text: string) => this.validateMongoDBQuery(text)
     },
     { 
       pattern: /where\s*\(\s*['"`]id['"`]\s*,\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'ORM query without ownership check',
       confidence: 0.8,
+      severity: 'high' as const,
       validation: (text: string) => this.validateORMQuery(text)
     },
     
-    // File access without authorization
+    // File access without authorization: tighter patterns
     { 
-      pattern: /readFile\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /readFile\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'File access without authorization',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateFileAccess(text)
     },
     { 
-      pattern: /writeFile\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /writeFile\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'File write without authorization',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateFileWrite(text)
     },
     { 
-      pattern: /unlink\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /unlink\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'File deletion without authorization',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateFileDeletion(text)
     },
     
-    // Database operations without user context
+    // Database operations without user context - tighter patterns
     { 
-      pattern: /\.update\s*\(\s*\{[^}]*\},\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /\.update\s*\(\s*\{[^}]*\},\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'Database update without user context',
       confidence: 0.85,
+      severity: 'high' as const,
       validation: (text: string) => this.validateDatabaseUpdate(text)
     },
     { 
-      pattern: /\.delete\s*\(\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /\.delete\s*\(\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'Database deletion without user context',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateDatabaseDeletion(text)
     },
     { 
-      pattern: /\.remove\s*\(\s*\{[^}]*_id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
+      pattern: /\.remove\s*\(\s*\{[^}]*_id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'MongoDB removal without user context',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateMongoDBRemoval(text)
     },
     
-    // Role-based access control missing
+    // Role-based access control missing: tighter patterns
     { 
       pattern: /(?:admin|user|role)\s*[:=]\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Role assignment from user input',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateRoleAssignment(text)
     },
     { 
       pattern: /(?:permission|access)\s*[:=]\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Permission assignment from user input',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (text: string) => this.validatePermissionAssignment(text)
     },
     
-    // Session manipulation
+    // Session manipulation: tighter patterns
     { 
       pattern: /req\.session\.(?:user|role|admin)\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Session manipulation with user input',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateSessionManipulation(text)
     },
     { 
       pattern: /session\[(?:user|role|admin)\]\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Session assignment with user input',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateSessionAssignment(text)
     },
     
-    // PHP patterns
+    // PHP patterns: tighter
     { 
       pattern: /\$_SESSION\[(?:user|role|admin)\]\s*=\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, 
       type: 'PHP session manipulation with user input',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validatePHPSessionManipulation(text)
     },
     { 
       pattern: /SELECT\s+\*\s+FROM\s+\w+\s+WHERE\s+id\s*=\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, 
       type: 'PHP database query without authorization',
       confidence: 0.9,
+      severity: 'high' as const,
       validation: (text: string) => this.validatePHPDatabaseQuery(text)
     },
     
-    // Python patterns
+    // Python patterns: tighter
     { 
       pattern: /session\[(?:user|role|admin)\]\s*=\s*(?:request\.|flask\.request\.)/gi, 
       type: 'Python session manipulation with user input',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validatePythonSessionManipulation(text)
     },
     { 
       pattern: /User\.query\.filter_by\(id\s*=\s*(?:request\.|flask\.request\.)/gi, 
       type: 'Python ORM query without authorization',
       confidence: 0.9,
+      severity: 'high' as const,
       validation: (text: string) => this.validatePythonORMQuery(text)
     },
     
-    // Java patterns
+    // Java patterns: tighter
     { 
       pattern: /session\.setAttribute\s*\(\s*['"`](?:user|role|admin)['"`]\s*,\s*(?:request\.getParameter|request\.getAttribute)/gi, 
       type: 'Java session manipulation with user input',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateJavaSessionManipulation(text)
     },
     { 
       pattern: /userRepository\.findById\s*\(\s*(?:request\.getParameter|request\.getAttribute)/gi, 
       type: 'Java repository query without authorization',
       confidence: 0.9,
+      severity: 'high' as const,
       validation: (text: string) => this.validateJavaRepositoryQuery(text)
     }
   ];
 
-  private readonly authorizationPatterns = [
-    // Authorization check patterns
-    /auth/i,
-    /authorize/i,
-    /permission/i,
-    /role/i,
-    /admin/i,
-    /user/i,
-    /owner/i,
-    /belongsTo/i,
-    /canAccess/i,
-    /hasPermission/i,
-    /isAuthorized/i,
-    /checkAccess/i,
-    /validateAccess/i,
-    /verifyOwnership/i,
-    /ensureOwnership/i,
-    /middleware/i,
-    /guard/i,
-    /protect/i,
-    /secure/i,
-    /authorized/i,
-    /authenticated/i,
-    /loggedIn/i,
-    /session/i,
-    /token/i,
-    /jwt/i
+  // Multi-line comment patterns
+  private readonly multiLineCommentPatterns = [
+    /\/\*[\s\S]*?\*\//g,  // JavaScript/TypeScript multi-line comments
+    /""".*?"""/gs,        // Python docstrings
+    /<!--.*?-->/gs,       // HTML comments
+    /#\[\[.*?\]\]/gs,     // Lua multi-line comments
+    /\/\*[\s\S]*?\*\//g,  // C/C++ multi-line comments
+    /\/\*[\s\S]*?\*\//g   // Java multi-line comments
   ];
 
-  private readonly safePatterns = [
+  private readonly authorizationPatterns = [
+    // Specific authorization check patterns - only match actual middleware/auth calls
+    /auth\s*\(/i,
+    /authorize\s*\(/i,
+    /permission\s*\(/i,
+    /role\s*\(/i,
+    /admin\s*\(/i,
+    /user\s*\(/i,
+    /owner\s*\(/i,
+    /belongsTo\s*\(/i,
+    /canAccess\s*\(/i,
+    /hasPermission\s*\(/i,
+    /isAuthorized\s*\(/i,
+    /checkAccess\s*\(/i,
+    /validateAccess\s*\(/i,
+    /verifyOwnership\s*\(/i,
+    /ensureOwnership\s*\(/i,
+    /middleware\s*\(/i,
+    /guard\s*\(/i,
+    /protect\s*\(/i,
+    /secure\s*\(/i,
+    /authorized\s*\(/i,
+    /authenticated\s*\(/i,
+    /loggedIn\s*\(/i,
+    /session\s*\(/i,
+    /token\s*\(/i,
+    /jwt\s*\(/i
+  ];
+
+  private readonly falsePositivePatterns = [
+    // Development and testing patterns
     /example/i,
     /demo/i,
     /test/i,
@@ -219,14 +252,30 @@ export class BrokenAccessControlRule extends BaseRule {
     /note/i,
     /todo/i,
     /fixme/i,
-    /secure/i,
-    /safe/i,
-    /protected/i,
-    /defense/i,
-    /guard/i,
-    /prevent/i,
-    /block/i,
-    /restrict/i
+    
+    // Documentation and examples
+    /documentation/i,
+    /docs?/i,
+    /readme/i,
+    /example[_-]?code/i,
+    /sample[_-]?code/i,
+    /demo[_-]?code/i,
+    /tutorial/i,
+    /guide/i,
+    
+    // Test files and directories
+    /test[_-]?files?/i,
+    /test[_-]?data/i,
+    /test[_-]?cases/i,
+    /spec[_-]?files?/i,
+    /__tests__/i,
+    /\.test\./i,
+    /\.spec\./i,
+    
+    // Configuration and setup
+    /config[_-]?example/i,
+    /setup[_-]?example/i,
+    /template[_-]?example/i
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {
@@ -237,12 +286,12 @@ export class BrokenAccessControlRule extends BaseRule {
     const hasAuthentication = this.hasAuthentication(fileContent.content);
     const isProtectedRoute = this.isProtectedRoute(fileContent.content);
     
-    for (const { pattern, type, confidence, validation } of this.accessControlPatterns) {
+    for (const { pattern, type, confidence, severity, validation } of this.accessControlPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
-        const context = this.analyzeContext(fileContent, line, column, language, framework, hasAuthorizationChecks, hasAuthentication, isProtectedRoute);
+        const context = this.analyzeContext(fileContent, line, column, language, framework, hasAuthorizationChecks, hasAuthentication, isProtectedRoute, type);
         
         // Skip if in safe context
         if (this.isSafeContext(context)) {
@@ -254,8 +303,9 @@ export class BrokenAccessControlRule extends BaseRule {
           continue;
         }
         
-        // Calculate final confidence based on context
+        // Calculate final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
+        const finalSeverity = this.calculateSeverity(severity, context);
         
         if (finalConfidence >= 0.5) {
           issues.push(this.createIssue(
@@ -263,9 +313,9 @@ export class BrokenAccessControlRule extends BaseRule {
             line,
             column,
             lineContent,
-            `Missing access control: ${type} (confidence: ${Math.round(finalConfidence * 100)}%)`,
+            `${finalSeverity.toUpperCase()}: ${type} detected (confidence: ${Math.round(finalConfidence * 100)}%): ${this.getLineContext(lineContent, column)}`,
             this.generateSuggestion(type, context),
-            finalConfidence >= 0.8 ? 'high' : finalConfidence >= 0.6 ? 'medium' : 'low'
+            finalSeverity
           ));
         }
       }
@@ -274,23 +324,24 @@ export class BrokenAccessControlRule extends BaseRule {
     return issues;
   }
 
-  private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, framework?: string, hasAuthorizationChecks?: boolean, hasAuthentication?: boolean, isProtectedRoute?: boolean): AccessControlContext {
+  private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, framework?: string, hasAuthorizationChecks?: boolean, hasAuthentication?: boolean, isProtectedRoute?: boolean, issueType?: string): AccessControlContext {
     const lines = fileContent.lines;
     const currentLine = lines[line - 1] || '';
     const surroundingLines = lines.slice(Math.max(0, line - 3), line + 2);
     
     return {
-      isInComment: this.isInComment(currentLine, language),
+      isInComment: this.isInComment(currentLine, language, fileContent.content, line),
       isInString: this.isInString(currentLine, column),
       isInTestFile: this.isInTestFile(fileContent.path),
-      isInDocumentation: this.isInDocumentation(surroundingLines),
+      isInDocumentation: this.isInDocumentation(fileContent.path),
       isInDevelopment: this.isInDevelopment(surroundingLines),
       surroundingCode: surroundingLines.join('\n'),
       language,
       framework,
       hasAuthorizationChecks: hasAuthorizationChecks || false,
       hasAuthentication: hasAuthentication || false,
-      isProtectedRoute: isProtectedRoute || false
+      isProtectedRoute: isProtectedRoute || false,
+      issueType
     };
   }
 
@@ -307,15 +358,148 @@ export class BrokenAccessControlRule extends BaseRule {
     // Safe if in development context
     if (context.isInDevelopment) return true;
     
-    // Safe if using security-related keywords
-    if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
+    // Safe if using false positive patterns (but don't suppress valid insecure code)
+    if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
     
-    // Safe if authorization checks are present
-    if (context.hasAuthorizationChecks) return true;
+    // Only reduce confidence for authorization checks, don't suppress entirely
+    // This prevents suppressing valid insecure code just because "secure" appears
     
     return false;
+  }
+
+  private isInComment(line: string, language: string, fullContent: string, lineNumber: number): boolean {
+    const trimmed = line.trim();
+    
+    // Check for single-line comments
+    if (language === 'javascript' || language === 'typescript') {
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return true;
+    }
+    if (language === 'python') {
+      if (trimmed.startsWith('#')) return true;
+    }
+    if (language === 'php') {
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#')) return true;
+    }
+    
+    // Check for multi-line comments
+    const beforeContent = fullContent.split('\n').slice(0, lineNumber).join('\n');
+    
+    for (const pattern of this.multiLineCommentPatterns) {
+      const matches = beforeContent.match(pattern);
+      if (matches && matches.length > 0) {
+        // Check if the current line is within a multi-line comment
+        const lastMatch = matches[matches.length - 1];
+        if (lastMatch) {
+          const lastMatchIndex = beforeContent.lastIndexOf(lastMatch);
+          const commentEndIndex = lastMatchIndex + lastMatch.length;
+          
+          // If we're still within the comment, return true
+          if (commentEndIndex >= beforeContent.length) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  private isInTestFile(filePath: string): boolean {
+    return filePath.includes('test') || 
+           filePath.includes('spec') || 
+           filePath.includes('__tests__') ||
+           filePath.match(/\.(test|spec)\./i) !== null;
+  }
+
+  private isInDocumentation(filePath: string): boolean {
+    const docPatterns = [
+      /docs?\//i,
+      /documentation/i,
+      /examples?/i,
+      /samples?/i,
+      /tutorials?/i,
+      /guides?/i,
+      /readme/i,
+      /\.md$/i,
+      /\.rst$/i,
+      /\.txt$/i
+    ];
+    return docPatterns.some(pattern => pattern.test(filePath));
+  }
+
+  private isInDevelopment(lines: string[]): boolean {
+    return lines.some(line => 
+      line.includes('development') || 
+      line.includes('dev') ||
+      line.includes('staging') ||
+      line.includes('localhost') ||
+      line.includes('127.0.0.1') ||
+      line.includes('NODE_ENV') ||
+      line.includes('DEBUG')
+    );
+  }
+
+  private hasAuthorizationChecks(content: string): boolean {
+    return this.authorizationPatterns.some(pattern => pattern.test(content));
+  }
+
+  private hasAuthentication(content: string): boolean {
+    const authPatterns = [
+      /auth\s*\(/i,
+      /login\s*\(/i,
+      /authenticate\s*\(/i,
+      /session\s*\(/i,
+      /token\s*\(/i,
+      /jwt\s*\(/i
+    ];
+    return authPatterns.some(pattern => pattern.test(content));
+  }
+
+  private isProtectedRoute(content: string): boolean {
+    const protectedPatterns = [
+      /admin/i,
+      /user/i,
+      /api/i,
+      /dashboard/i,
+      /settings/i,
+      /profile/i,
+      /account/i,
+      /billing/i,
+      /payment/i,
+      /order/i
+    ];
+    return protectedPatterns.some(pattern => pattern.test(content));
+  }
+
+  private calculateConfidence(baseConfidence: number, context: AccessControlContext): number {
+    let confidence = baseConfidence;
+    
+    // Adjust confidence based on context
+    if (context.hasAuthorizationChecks) confidence *= 0.6; // Reduce if auth checks present
+    if (context.hasAuthentication) confidence *= 0.8; // Reduce if auth present
+    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    
+    return Math.min(confidence, 1.0);
+  }
+
+  private calculateSeverity(baseSeverity: 'critical' | 'high' | 'medium', context: AccessControlContext): 'critical' | 'high' | 'medium' {
+    let severity = baseSeverity;
+    
+    // Never downgrade critical issues below medium
+    if (baseSeverity === 'critical') {
+      if (context.hasAuthorizationChecks) severity = 'high';
+      if (context.hasAuthentication) severity = 'high';
+      // Keep as critical if no auth measures present
+    }
+    
+    // Adjust other severities
+    if (context.hasAuthorizationChecks) {
+      if (severity === 'high') severity = 'medium';
+    }
+    
+    return severity;
   }
 
   private detectLanguage(filePath: string): string {
@@ -364,93 +548,10 @@ export class BrokenAccessControlRule extends BaseRule {
     return undefined;
   }
 
-  private isInComment(line: string, language: string): boolean {
-    const trimmed = line.trim();
-    if (language === 'javascript' || language === 'typescript') {
-      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*');
-    }
-    if (language === 'python') {
-      return trimmed.startsWith('#');
-    }
-    if (language === 'php') {
-      return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#');
-    }
-    return false;
-  }
-
   private isInString(line: string, column: number): boolean {
     const before = line.substring(0, column);
     const quotes = (before.match(/['"`]/g) || []).length;
     return quotes % 2 === 1;
-  }
-
-  private isInTestFile(filePath: string): boolean {
-    return filePath.includes('test') || filePath.includes('spec') || filePath.includes('mock');
-  }
-
-  private isInDocumentation(lines: string[]): boolean {
-    return lines.some(line => 
-      line.includes('@example') || 
-      line.includes('@doc') || 
-      line.includes('@description') ||
-      line.includes('README') ||
-      line.includes('documentation')
-    );
-  }
-
-  private isInDevelopment(lines: string[]): boolean {
-    return lines.some(line => 
-      line.includes('development') || 
-      line.includes('dev') ||
-      line.includes('staging') ||
-      line.includes('localhost') ||
-      line.includes('127.0.0.1') ||
-      line.includes('NODE_ENV') ||
-      line.includes('DEBUG')
-    );
-  }
-
-  private hasAuthorizationChecks(content: string): boolean {
-    return this.authorizationPatterns.some(pattern => pattern.test(content));
-  }
-
-  private hasAuthentication(content: string): boolean {
-    const authPatterns = [
-      /auth/i,
-      /login/i,
-      /authenticate/i,
-      /session/i,
-      /token/i,
-      /jwt/i
-    ];
-    return authPatterns.some(pattern => pattern.test(content));
-  }
-
-  private isProtectedRoute(content: string): boolean {
-    const protectedPatterns = [
-      /admin/i,
-      /user/i,
-      /api/i,
-      /dashboard/i,
-      /settings/i,
-      /profile/i,
-      /account/i,
-      /billing/i,
-      /payment/i,
-      /order/i
-    ];
-    return protectedPatterns.some(pattern => pattern.test(content));
-  }
-
-  private calculateConfidence(baseConfidence: number, context: AccessControlContext): number {
-    let confidence = baseConfidence;
-    
-    // Adjust confidence based on context
-    if (context.hasAuthorizationChecks) confidence *= 0.5; // Reduce if auth checks present
-    if (context.hasAuthentication) confidence *= 0.7; // Reduce if auth present
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
-    
-    return Math.min(confidence, 1.0);
   }
 
   // Validation methods for different access control issues
@@ -545,43 +646,62 @@ export class BrokenAccessControlRule extends BaseRule {
     return /userRepository\.findById/.test(text) && /request\.getParameter|request\.getAttribute/.test(text);
   }
 
+  private getLineContext(lineContent: string, column: number): string {
+    const start = Math.max(0, column - 20);
+    const end = Math.min(lineContent.length, column + 20);
+    return lineContent.substring(start, end).trim();
+  }
+
   private generateSuggestion(type: string, context: AccessControlContext): string {
     const suggestions = {
-      'Protected route without authorization': 'Implement proper authorization checks using middleware or route guards.',
-      'Direct object reference without ownership check': 'Verify user ownership before accessing resources. Use user context in queries.',
-      'Database query without ownership check': 'Add ownership validation to database queries. Filter by user ID or role.',
-      'MongoDB query without ownership check': 'Add ownership validation to MongoDB queries. Filter by user ID or role.',
-      'ORM query without ownership check': 'Add ownership validation to ORM queries. Use user context in filters.',
-      'File access without authorization': 'Implement file access controls and validate user permissions before file operations.',
-      'File write without authorization': 'Implement file write controls and validate user permissions before file operations.',
-      'File deletion without authorization': 'Implement file deletion controls and validate user permissions before file operations.',
-      'Database update without user context': 'Add user context to database updates. Ensure users can only update their own data.',
-      'Database deletion without user context': 'Add user context to database deletions. Ensure users can only delete their own data.',
-      'MongoDB removal without user context': 'Add user context to MongoDB removals. Ensure users can only remove their own data.',
-      'Role assignment from user input': 'Never assign roles directly from user input. Use server-side role validation.',
-      'Permission assignment from user input': 'Never assign permissions directly from user input. Use server-side permission validation.',
-      'Session manipulation with user input': 'Never manipulate session data with user input. Use server-side session management.',
-      'Session assignment with user input': 'Never assign session data with user input. Use server-side session management.',
-      'PHP session manipulation with user input': 'Never manipulate PHP session data with user input. Use server-side session management.',
-      'PHP database query without authorization': 'Add authorization checks to PHP database queries. Use prepared statements.',
-      'Python session manipulation with user input': 'Never manipulate Python session data with user input. Use server-side session management.',
-      'Python ORM query without authorization': 'Add authorization checks to Python ORM queries. Filter by user context.',
-      'Java session manipulation with user input': 'Never manipulate Java session data with user input. Use server-side session management.',
-      'Java repository query without authorization': 'Add authorization checks to Java repository queries. Filter by user context.'
+      'Protected route without authorization': 'Implement authorization middleware for protected routes. Use role-based access control (RBAC) and route guards.',
+      'Direct object reference without ownership check': 'Verify user ownership before accessing resources. Use user context in queries and implement ownership validation.',
+      'Database query without ownership check': 'Add ownership validation to database queries. Filter by user ID or role and implement proper access controls.',
+      'MongoDB query without ownership check': 'Add ownership validation to MongoDB queries. Filter by user ID or role and implement proper access controls.',
+      'ORM query without ownership check': 'Add ownership validation to ORM queries. Use user context in filters and implement proper access controls.',
+      'File access without authorization': 'Implement file access controls and validate user permissions before file operations. Use secure file handling.',
+      'File write without authorization': 'Implement file write controls and validate user permissions before file operations. Use secure file handling.',
+      'File deletion without authorization': 'Implement file deletion controls and validate user permissions before file operations. Use secure file handling.',
+      'Database update without user context': 'Add user context to database updates. Ensure users can only update their own data and implement proper validation.',
+      'Database deletion without user context': 'Add user context to database deletions. Ensure users can only delete their own data and implement proper validation.',
+      'MongoDB removal without user context': 'Add user context to MongoDB removals. Ensure users can only remove their own data and implement proper validation.',
+      'Role assignment from user input': 'Never assign roles directly from user input. Use server-side role validation and implement proper role management.',
+      'Permission assignment from user input': 'Never assign permissions directly from user input. Use server-side permission validation and implement proper permission management.',
+      'Session manipulation with user input': 'Never manipulate session data with user input. Use server-side session management and implement proper session controls.',
+      'Session assignment with user input': 'Never assign session data with user input. Use server-side session management and implement proper session controls.',
+      'PHP session manipulation with user input': 'Never manipulate PHP session data with user input. Use server-side session management and implement proper session controls.',
+      'PHP database query without authorization': 'Add authorization checks to PHP database queries. Use prepared statements and implement proper access controls.',
+      'Python session manipulation with user input': 'Never manipulate Python session data with user input. Use server-side session management and implement proper session controls.',
+      'Python ORM query without authorization': 'Add authorization checks to Python ORM queries. Filter by user context and implement proper access controls.',
+      'Java session manipulation with user input': 'Never manipulate Java session data with user input. Use server-side session management and implement proper session controls.',
+      'Java repository query without authorization': 'Add authorization checks to Java repository queries. Filter by user context and implement proper access controls.'
     };
     
     let suggestion = suggestions[type as keyof typeof suggestions] || 'Implement proper authorization checks. Verify user ownership, check roles/permissions, and ensure users can only access their own resources.';
     
     if (context.framework) {
-      suggestion += ` For ${context.framework}, consider using framework-specific authorization middleware and access control patterns.`;
+      suggestion += ` For ${context.framework}, consider using framework-specific authorization patterns.`;
       
       if (context.framework === 'express') {
-        suggestion += ' Use express-session and passport.js for authentication and authorization.';
+        suggestion += ' Use express-session, passport.js, and authorization middleware.';
       } else if (context.framework === 'django') {
         suggestion += ' Use Django\'s built-in authentication and permission system.';
       } else if (context.framework === 'laravel') {
         suggestion += ' Use Laravel\'s Gates and Policies for authorization.';
+      } else if (context.framework === 'react') {
+        suggestion += ' Implement client-side route guards and server-side authorization.';
       }
+    }
+    
+    // Context-aware suggestions based on issue type
+    if (context.issueType?.includes('route')) {
+      suggestion += ' Consider implementing route-level authorization middleware.';
+    } else if (context.issueType?.includes('database') || context.issueType?.includes('query')) {
+      suggestion += ' Use parameterized queries and implement data-level authorization.';
+    } else if (context.issueType?.includes('session')) {
+      suggestion += ' Implement secure session management and validation.';
+    } else if (context.issueType?.includes('file')) {
+      suggestion += ' Use secure file handling libraries and implement file-level permissions.';
     }
     
     return suggestion;
