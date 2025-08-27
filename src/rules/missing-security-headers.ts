@@ -1,4 +1,4 @@
-import { BaseRule, FileContent, SecurityIssue } from '../types';
+import { BaseRule, FileContent, SecurityIssue, SeverityLevel } from '../types';
 
 interface SecurityHeadersContext {
   isInComment: boolean;
@@ -14,57 +14,75 @@ interface SecurityHeadersContext {
   configurationType: string | undefined;
 }
 
+interface SecurityHeader {
+  name: string;
+  severity: SeverityLevel;
+  description: string;
+  isLegacy?: boolean;
+  validation: (content: string) => boolean;
+  suggestion: string;
+}
+
 export class MissingSecurityHeadersRule extends BaseRule {
   readonly name = 'missing-security-headers';
   readonly description = 'Detects missing HTTP security headers with context-aware analysis';
   readonly severity = 'medium' as const;
 
-  private readonly securityHeaders = [
+  private readonly securityHeaders: SecurityHeader[] = [
     { 
       name: 'Content-Security-Policy',
-      confidence: 0.9,
+      severity: 'critical',
+      description: 'Critical security header to prevent XSS attacks',
       validation: (content: string) => this.validateCSP(content),
       suggestion: 'Implement Content-Security-Policy to prevent XSS attacks'
     },
     { 
-      name: 'X-Frame-Options',
-      confidence: 0.85,
-      validation: (content: string) => this.validateXFrameOptions(content),
-      suggestion: 'Set X-Frame-Options to prevent clickjacking attacks'
-    },
-    { 
-      name: 'X-Content-Type-Options',
-      confidence: 0.8,
-      validation: (content: string) => this.validateXContentTypeOptions(content),
-      suggestion: 'Set X-Content-Type-Options to nosniff to prevent MIME type sniffing'
-    },
-    { 
-      name: 'X-XSS-Protection',
-      confidence: 0.7,
-      validation: (content: string) => this.validateXXSSProtection(content),
-      suggestion: 'Enable X-XSS-Protection for additional XSS protection'
-    },
-    { 
       name: 'Strict-Transport-Security',
-      confidence: 0.9,
+      severity: 'critical',
+      description: 'Critical security header to enforce HTTPS connections',
       validation: (content: string) => this.validateHSTS(content),
       suggestion: 'Implement HSTS to enforce HTTPS connections'
     },
     { 
+      name: 'X-Frame-Options',
+      severity: 'high',
+      description: 'High priority header to prevent clickjacking attacks',
+      validation: (content: string) => this.validateXFrameOptions(content),
+      suggestion: 'Set X-Frame-Options to prevent clickjacking attacks'
+    },
+    { 
       name: 'Referrer-Policy',
-      confidence: 0.75,
+      severity: 'high',
+      description: 'High priority header to control referrer information',
       validation: (content: string) => this.validateReferrerPolicy(content),
       suggestion: 'Set Referrer-Policy to control referrer information'
     },
     { 
+      name: 'X-Content-Type-Options',
+      severity: 'medium',
+      description: 'Medium priority header to prevent MIME type sniffing',
+      validation: (content: string) => this.validateXContentTypeOptions(content),
+      suggestion: 'Set X-Content-Type-Options to nosniff to prevent MIME type sniffing'
+    },
+    { 
       name: 'Permissions-Policy',
-      confidence: 0.8,
+      severity: 'medium',
+      description: 'Medium priority header to control browser features',
       validation: (content: string) => this.validatePermissionsPolicy(content),
       suggestion: 'Implement Permissions-Policy to control browser features'
     },
     { 
+      name: 'X-XSS-Protection',
+      severity: 'low',
+      description: 'Legacy header for XSS protection (optional)',
+      isLegacy: true,
+      validation: (content: string) => this.validateXXSSProtection(content),
+      suggestion: 'X-XSS-Protection is legacy and optional. Consider using Content-Security-Policy instead'
+    },
+    { 
       name: 'X-Permitted-Cross-Domain-Policies',
-      confidence: 0.6,
+      severity: 'low',
+      description: 'Low priority header to control cross-domain access',
       validation: (content: string) => this.validateXPermittedCrossDomainPolicies(content),
       suggestion: 'Set X-Permitted-Cross-Domain-Policies to control cross-domain access'
     }
@@ -73,136 +91,186 @@ export class MissingSecurityHeadersRule extends BaseRule {
   private readonly serverPatterns = [
     // Express.js patterns
     { 
-      pattern: /app\.(?:get|post|put|delete|patch|use)\s*\(/gi, 
+      pattern: /\bapp\.(?:get|post|put|delete|patch|use)\s*\(/gi, 
       type: 'Express route handler',
-      confidence: 0.9,
-      validation: (text: string) => this.validateExpressPattern(text)
+      framework: 'express'
     },
     { 
-      pattern: /router\.(?:get|post|put|delete|patch|use)\s*\(/gi, 
+      pattern: /\broter\.(?:get|post|put|delete|patch|use)\s*\(/gi, 
       type: 'Express router',
-      confidence: 0.9,
-      validation: (text: string) => this.validateExpressPattern(text)
+      framework: 'express'
     },
     { 
-      pattern: /app\.listen\s*\(/gi, 
+      pattern: /\bapp\.listen\s*\(/gi, 
       type: 'Express server',
-      confidence: 0.95,
-      validation: (text: string) => this.validateExpressPattern(text)
+      framework: 'express'
     },
     
     // Next.js API routes
     { 
-      pattern: /export\s+(?:default\s+)?(?:async\s+)?function\s+handler/gi, 
+      pattern: /\bexport\s+(?:default\s+)?(?:async\s+)?function\s+handler/gi, 
       type: 'Next.js API handler',
-      confidence: 0.85,
-      validation: (text: string) => this.validateNextJSPattern(text)
+      framework: 'nextjs'
     },
     { 
-      pattern: /export\s+(?:const|let|var)\s+\w+\s*=\s*(?:async\s+)?\([^)]*req[^)]*res[^)]*\)/gi, 
+      pattern: /\bexport\s+(?:const|let|var)\s+\w+\s*=\s*(?:async\s+)?\([^)]*req[^)]*res[^)]*\)/gi, 
       type: 'Next.js API function',
-      confidence: 0.85,
-      validation: (text: string) => this.validateNextJSPattern(text)
+      framework: 'nextjs'
     },
     
     // Node.js HTTP server
     { 
-      pattern: /createServer\s*\(\s*(?:async\s+)?\([^)]*req[^)]*res[^)]*\)/gi, 
+      pattern: /\bcreateServer\s*\(\s*(?:async\s+)?\([^)]*req[^)]*res[^)]*\)/gi, 
       type: 'Node.js HTTP server',
-      confidence: 0.9,
-      validation: (text: string) => this.validateNodeJSPattern(text)
+      framework: 'nodejs'
     },
     { 
-      pattern: /http\.createServer/gi, 
+      pattern: /\bhttp\.createServer/gi, 
       type: 'HTTP server creation',
-      confidence: 0.9,
-      validation: (text: string) => this.validateNodeJSPattern(text)
+      framework: 'nodejs'
     },
     
     // Framework response patterns
     { 
-      pattern: /res\.(?:send|json|render|redirect)/gi, 
+      pattern: /\bres\.(?:send|json|render|redirect)/gi, 
       type: 'Response method',
-      confidence: 0.8,
-      validation: (text: string) => this.validateResponsePattern(text)
+      framework: 'express'
     },
     { 
-      pattern: /response\.(?:send|json|render|redirect)/gi, 
+      pattern: /\bresponse\.(?:send|json|render|redirect)/gi, 
       type: 'Response method',
-      confidence: 0.8,
-      validation: (text: string) => this.validateResponsePattern(text)
+      framework: 'general'
     },
     
     // Flask patterns
     { 
-      pattern: /@app\.route/gi, 
+      pattern: /\b@app\.route/gi, 
       type: 'Flask route',
-      confidence: 0.9,
-      validation: (text: string) => this.validateFlaskPattern(text)
+      framework: 'flask'
     },
     { 
-      pattern: /return\s+(?:render_template|jsonify|redirect)/gi, 
+      pattern: /\breturn\s+(?:render_template|jsonify|redirect)/gi, 
       type: 'Flask response',
-      confidence: 0.8,
-      validation: (text: string) => this.validateFlaskPattern(text)
+      framework: 'flask'
     },
     
     // Django patterns
     { 
-      pattern: /def\s+\w+\s*\([^)]*request[^)]*\)/gi, 
+      pattern: /\bdef\s+\w+\s*\([^)]*request[^)]*\)/gi, 
       type: 'Django view function',
-      confidence: 0.9,
-      validation: (text: string) => this.validateDjangoPattern(text)
+      framework: 'django'
     },
     { 
-      pattern: /HttpResponse\s*\(/gi, 
+      pattern: /\bHttpResponse\s*\(/gi, 
       type: 'Django HTTP response',
-      confidence: 0.8,
-      validation: (text: string) => this.validateDjangoPattern(text)
+      framework: 'django'
+    },
+    
+    // Rails patterns
+    { 
+      pattern: /\bclass\s+\w+Controller\s*</gi, 
+      type: 'Rails controller',
+      framework: 'rails'
+    },
+    { 
+      pattern: /\bdef\s+\w+\s*#\s*action/gi, 
+      type: 'Rails action',
+      framework: 'rails'
+    },
+    { 
+      pattern: /\brender\s+(?:json|html|xml)/gi, 
+      type: 'Rails response',
+      framework: 'rails'
+    },
+    
+    // Spring patterns
+    { 
+      pattern: /\b@RestController/gi, 
+      type: 'Spring REST controller',
+      framework: 'spring'
+    },
+    { 
+      pattern: /\b@Controller/gi, 
+      type: 'Spring controller',
+      framework: 'spring'
+    },
+    { 
+      pattern: /\b@GetMapping|\b@PostMapping|\b@PutMapping|\b@DeleteMapping/gi, 
+      type: 'Spring mapping',
+      framework: 'spring'
+    },
+    
+    // ASP.NET patterns
+    { 
+      pattern: /\bpublic\s+class\s+\w+Controller\s*:\s*Controller/gi, 
+      type: 'ASP.NET controller',
+      framework: 'aspnet'
+    },
+    { 
+      pattern: /\bpublic\s+(?:async\s+)?\w+\s+\w+\s*\([^)]*\)/gi, 
+      type: 'ASP.NET action',
+      framework: 'aspnet'
     },
     
     // PHP patterns
     { 
-      pattern: /header\s*\(\s*['"`][^'"`]*['"`]/gi, 
+      pattern: /\bheader\s*\(\s*['"`][^'"`]*['"`]/gi, 
       type: 'PHP header function',
-      confidence: 0.85,
-      validation: (text: string) => this.validatePHPPattern(text)
+      framework: 'php'
+    },
+    
+    // Laravel patterns
+    { 
+      pattern: /\bRoute::(?:get|post|put|delete|patch)/gi, 
+      type: 'Laravel route',
+      framework: 'laravel'
+    },
+    { 
+      pattern: /\breturn\s+(?:response|view|json)/gi, 
+      type: 'Laravel response',
+      framework: 'laravel'
     }
   ];
 
   private readonly safePatterns = [
-    /example/i,
-    /demo/i,
-    /test/i,
-    /sample/i,
-    /placeholder/i,
-    /development/i,
-    /dev/i,
-    /staging/i,
-    /localhost/i,
-    /127\.0\.0\.1/i,
-    /console\.log/i,
-    /console\.warn/i,
-    /console\.error/i,
-    /logger\.(?:log|warn|error|info)/i,
-    /print/i,
-    /echo/i,
-    /printf/i,
-    /System\.out\.println/i,
-    /puts/i,
-    /Console\.WriteLine/i,
-    /comment/i,
-    /note/i,
-    /todo/i,
-    /fixme/i,
-    /secure/i,
-    /safe/i,
-    /protected/i,
-    /defense/i,
-    /guard/i,
-    /prevent/i,
-    /block/i,
-    /restrict/i
+    /\bexample\b/i,
+    /\bdemo\b/i,
+    /\btest\b/i,
+    /\bsample\b/i,
+    /\bplaceholder\b/i,
+    /\bdevelopment\b/i,
+    /\bdev\b/i,
+    /\bstaging\b/i,
+    /\blocalhost\b/i,
+    /\b127\.0\.0\.1\b/i,
+    /\bconsole\.log\b/i,
+    /\bconsole\.warn\b/i,
+    /\bconsole\.error\b/i,
+    /\blogger\.(?:log|warn|error|info)\b/i,
+    /\bprint\b/i,
+    /\becho\b/i,
+    /\bprintf\b/i,
+    /\bSystem\.out\.println\b/i,
+    /\bputs\b/i,
+    /\bConsole\.WriteLine\b/i,
+    /\bcomment\b/i,
+    /\bnote\b/i,
+    /\btodo\b/i,
+    /\bfixme\b/i,
+    /\bsecure\b/i,
+    /\bsafe\b/i,
+    /\bprotected\b/i,
+    /\bdefense\b/i,
+    /\bguard\b/i,
+    /\bprevent\b/i,
+    /\bblock\b/i,
+    /\brestrict\b/i,
+    /\bdocumentation\b/i,
+    /\bconfig\b/i,
+    /\bsettings\b/i,
+    /\bREADME\b/i,
+    /\bCHANGELOG\b/i,
+    /\bLICENSE\b/i
   ];
 
   check(fileContent: FileContent): SecurityIssue[] {
@@ -218,7 +286,7 @@ export class MissingSecurityHeadersRule extends BaseRule {
       return issues;
     }
     
-    // Check for missing security headers
+    // Check for missing security headers and report each separately
     const missingHeaders = this.checkMissingHeaders(fileContent);
     
     if (missingHeaders.length > 0) {
@@ -229,17 +297,19 @@ export class MissingSecurityHeadersRule extends BaseRule {
         
         // Skip if in safe context to prevent false positives
         if (!this.isSafeContext(context)) {
-          const finalConfidence = this.calculateConfidence(missingHeaders, context);
-          
-          if (finalConfidence >= 0.5) {
+          // Report each missing header as a separate issue
+          for (const header of missingHeaders) {
+            const severity = this.determineSeverity(header.severity, context);
+            const suggestion = this.getRemediationMessage(header, context);
+            
             issues.push(this.createIssue(
               fileContent.path,
               location.line,
               location.column,
               location.lineContent,
-              `Missing security headers: ${missingHeaders.map(h => h.name).join(', ')} (confidence: ${Math.round(finalConfidence * 100)}%)`,
-              this.generateSuggestion(missingHeaders, context),
-              finalConfidence >= 0.8 ? 'high' : finalConfidence >= 0.6 ? 'medium' : 'low'
+              `Missing security header: ${header.name} (${header.description})`,
+              suggestion,
+              severity
             ));
           }
         }
@@ -370,6 +440,14 @@ export class MissingSecurityHeadersRule extends BaseRule {
   }
 
   private detectFramework(content: string, language: string): string | undefined {
+    // Check for framework patterns in the content
+    for (const pattern of this.serverPatterns) {
+      if (pattern.pattern.test(content)) {
+        return pattern.framework;
+      }
+    }
+    
+    // Fallback to language-based detection
     if (language === 'javascript' || language === 'typescript') {
       if (content.includes('express') || content.includes('app.get') || content.includes('app.post')) return 'express';
       if (content.includes('react') || content.includes('jsx') || content.includes('tsx')) return 'react';
@@ -385,6 +463,15 @@ export class MissingSecurityHeadersRule extends BaseRule {
     if (language === 'php') {
       if (content.includes('laravel') || content.includes('Laravel')) return 'laravel';
       if (content.includes('symfony') || content.includes('Symfony')) return 'symfony';
+    }
+    if (language === 'ruby') {
+      if (content.includes('rails') || content.includes('Rails')) return 'rails';
+    }
+    if (language === 'java') {
+      if (content.includes('spring') || content.includes('Spring')) return 'spring';
+    }
+    if (language === 'csharp') {
+      if (content.includes('asp.net') || content.includes('ASP.NET')) return 'aspnet';
     }
     return undefined;
   }
@@ -421,8 +508,32 @@ export class MissingSecurityHeadersRule extends BaseRule {
     return this.securityHeaders.some(header => this.hasSecurityHeader(content, header.name));
   }
 
-  private checkMissingHeaders(fileContent: FileContent): Array<{ name: string; confidence: number; suggestion: string }> {
-    const missingHeaders: Array<{ name: string; confidence: number; suggestion: string }> = [];
+  protected override findMatches(content: string, pattern: RegExp): Array<{ match: RegExpMatchArray; line: number; column: number; lineContent: string }> {
+    const matches: Array<{ match: RegExpMatchArray; line: number; column: number; lineContent: string }> = [];
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      
+      let match;
+      const regex = new RegExp(pattern.source, pattern.flags);
+      
+      while ((match = regex.exec(line)) !== null) {
+        matches.push({
+          match,
+          line: i + 1,
+          column: match.index + 1,
+          lineContent: line
+        });
+      }
+    }
+    
+    return matches;
+  }
+
+  private checkMissingHeaders(fileContent: FileContent): SecurityHeader[] {
+    const missingHeaders: SecurityHeader[] = [];
     
     for (const header of this.securityHeaders) {
       if (!this.hasSecurityHeader(fileContent.content, header.name)) {
@@ -479,18 +590,105 @@ export class MissingSecurityHeadersRule extends BaseRule {
     return null;
   }
 
-  private calculateConfidence(missingHeaders: Array<{ name: string; confidence: number; suggestion: string }>, context: SecurityHeadersContext): number {
-    if (missingHeaders.length === 0) return 0;
+  private determineSeverity(headerSeverity: SeverityLevel, context: SecurityHeadersContext): SeverityLevel {
+    // Downgrade severity in development/test contexts instead of skipping
+    if (context.isInTestFile || this.isDevelopmentContext(context)) {
+      switch (headerSeverity) {
+        case 'critical': return 'high';
+        case 'high': return 'medium';
+        case 'medium': return 'low';
+        case 'low': return 'low';
+        default: return headerSeverity;
+      }
+    }
     
-    // Base confidence is average of missing headers
-    let confidence = missingHeaders.reduce((sum, header) => sum + header.confidence, 0) / missingHeaders.length;
+    return headerSeverity;
+  }
+
+  private isDevelopmentContext(context: SecurityHeadersContext): boolean {
+    const devPatterns = [
+      /\bdevelopment\b/i,
+      /\bdev\b/i,
+      /\bstaging\b/i,
+      /\blocalhost\b/i,
+      /\b127\.0\.0\.1\b/i,
+      /\btest\b/i,
+      /\bmock\b/i,
+      /\bdebug\b/i
+    ];
     
-    // Adjust based on context
-    if (context.hasServerCode) confidence *= 1.2; // Increase for server code
-    if (context.configurationType) confidence *= 1.1; // Increase for config files
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    return devPatterns.some(pattern => 
+      pattern.test(context.surroundingCode) || 
+      pattern.test(context.configurationType || '')
+    );
+  }
+
+  private getRemediationMessage(header: SecurityHeader, context: SecurityHeadersContext): string {
+    const framework = context.framework;
     
-    return Math.min(confidence, 1.0);
+    if (header.isLegacy) {
+      return `${header.suggestion} This header is legacy and may not be supported in modern browsers.`;
+    }
+    
+    let suggestion = header.suggestion;
+    
+    if (framework) {
+      suggestion += this.getFrameworkSpecificSuggestion(header.name, framework);
+    }
+    
+    if (context.configurationType) {
+      suggestion += this.getConfigurationSpecificSuggestion(header.name, context.configurationType);
+    }
+    
+    return suggestion;
+  }
+
+  private getFrameworkSpecificSuggestion(headerName: string, framework: string): string {
+    const suggestions: Record<string, Record<string, string>> = {
+      'Content-Security-Policy': {
+        'express': ' Use helmet.js: npm install helmet && app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["\'self\'"] } } }))',
+        'flask': ' Use Flask-Talisman: pip install flask-talisman && talisman.content_security_policy = {"default-src": "\'self\'"}',
+        'django': ' Add to settings.py: SECURE_CONTENT_TYPE_NOSNIFF = True, SECURE_BROWSER_XSS_FILTER = True',
+        'rails': ' Add to application.rb: config.content_security_policy do |policy| policy.default_src :self end',
+        'spring': ' Add to WebSecurityConfig: .headers().contentSecurityPolicy("default-src \'self\'")',
+        'aspnet': ' Add to Startup.cs: app.Use(async (context, next) => { context.Response.Headers.Add("Content-Security-Policy", "default-src \'self\'"); await next(); })'
+      },
+      'Strict-Transport-Security': {
+        'express': ' Use helmet.js: app.use(helmet({ hsts: { maxAge: 31536000, includeSubDomains: true } }))',
+        'flask': ' Use Flask-Talisman: talisman.force_https = True',
+        'django': ' Add to settings.py: SECURE_HSTS_SECONDS = 31536000, SECURE_HSTS_INCLUDE_SUBDOMAINS = True',
+        'rails': ' Add to application.rb: config.force_ssl = true',
+        'spring': ' Add to WebSecurityConfig: .headers().httpStrictTransportSecurity()',
+        'aspnet': ' Add to Startup.cs: app.UseHsts()'
+      },
+      'X-Frame-Options': {
+        'express': ' Use helmet.js: app.use(helmet({ frameguard: { action: "deny" } }))',
+        'flask': ' Use Flask-Talisman: talisman.frame_options = "DENY"',
+        'django': ' Add to settings.py: X_FRAME_OPTIONS = "DENY"',
+        'rails': ' Add to application.rb: config.action_dispatch.default_headers["X-Frame-Options"] = "DENY"',
+        'spring': ' Add to WebSecurityConfig: .headers().frameOptions().deny()',
+        'aspnet': ' Add to Startup.cs: app.Use(async (context, next) => { context.Response.Headers.Add("X-Frame-Options", "DENY"); await next(); })'
+      }
+    };
+    
+    return suggestions[headerName]?.[framework] || ` For ${framework}, implement ${headerName} using framework-specific security middleware.`;
+  }
+
+  private getConfigurationSpecificSuggestion(headerName: string, configType: string): string {
+    const suggestions: Record<string, Record<string, string>> = {
+      'Content-Security-Policy': {
+        'yaml': ` Add to ${configType} config:\n  security:\n    headers:\n      Content-Security-Policy: "default-src 'self'"`,
+        'json': ` Add to ${configType} config:\n  "security": {\n    "headers": {\n      "Content-Security-Policy": "default-src 'self'"\n    }\n  }`,
+        'ini': ` Add to ${configType} config:\n[security]\nContent-Security-Policy = default-src 'self'`
+      },
+      'Strict-Transport-Security': {
+        'yaml': ` Add to ${configType} config:\n  security:\n    headers:\n      Strict-Transport-Security: "max-age=31536000; includeSubDomains"`,
+        'json': ` Add to ${configType} config:\n  "security": {\n    "headers": {\n      "Strict-Transport-Security": "max-age=31536000; includeSubDomains"\n    }\n  }`,
+        'ini': ` Add to ${configType} config:\n[security]\nStrict-Transport-Security = max-age=31536000; includeSubDomains`
+      }
+    };
+    
+    return suggestions[headerName]?.[configType] || ` For ${configType} configuration files, ensure proper file permissions and use secure configuration management.`;
   }
 
   // Validation methods for different security headers
@@ -526,55 +724,5 @@ export class MissingSecurityHeadersRule extends BaseRule {
     return /X-Permitted-Cross-Domain-Policies/i.test(content);
   }
 
-  // Validation methods for server patterns
-  private validateExpressPattern(text: string): boolean {
-    return /express/i.test(text) || /app\./i.test(text) || /router\./i.test(text);
-  }
 
-  private validateNextJSPattern(text: string): boolean {
-    return /next/i.test(text) || /handler/i.test(text);
-  }
-
-  private validateNodeJSPattern(text: string): boolean {
-    return /http/i.test(text) || /createServer/i.test(text);
-  }
-
-  private validateResponsePattern(text: string): boolean {
-    return /res\./i.test(text) || /response\./i.test(text);
-  }
-
-  private validateFlaskPattern(text: string): boolean {
-    return /flask/i.test(text) || /@app\.route/i.test(text);
-  }
-
-  private validateDjangoPattern(text: string): boolean {
-    return /django/i.test(text) || /HttpResponse/i.test(text);
-  }
-
-  private validatePHPPattern(text: string): boolean {
-    return /php/i.test(text) || /header\s*\(/i.test(text);
-  }
-
-  private generateSuggestion(missingHeaders: Array<{ name: string; confidence: number; suggestion: string }>, context: SecurityHeadersContext): string {
-    const suggestions = missingHeaders.map(header => header.suggestion);
-    let suggestion = suggestions.join('. ') + '.';
-    
-    if (context.framework) {
-      suggestion += ` For ${context.framework}, consider using framework-specific security middleware.`;
-      
-      if (context.framework === 'express') {
-        suggestion += ' Use helmet.js: npm install helmet && app.use(helmet())';
-      } else if (context.framework === 'flask') {
-        suggestion += ' Use Flask-Talisman: pip install flask-talisman';
-      } else if (context.framework === 'django') {
-        suggestion += ' Configure security middleware in settings.py';
-      }
-    }
-    
-    if (context.configurationType) {
-      suggestion += ` For ${context.configurationType} configuration files, ensure proper file permissions and use secure configuration management.`;
-    }
-    
-    return suggestion;
-  }
 } 
