@@ -1,4 +1,4 @@
-import { BaseRule, FileContent, SecurityIssue } from '../types';
+import { BaseRule, FileContent, SecurityIssue, SeverityLevel } from '../types';
 
 interface McpSecurityContext {
   isInComment: boolean;
@@ -19,65 +19,90 @@ export class McpServerSecurityRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly insecurePatterns = [
+    // Critical: Authentication and encryption issues
     { 
-      pattern: /(?:^|\s)(?:allow|enable|permit)\s*[:=]\s*["']?\s*(?:all|true|yes|1|any|everyone|public|unrestricted)\s*["']?/gi, 
-      type: 'Insecure MCP Access Control',
-      confidence: 0.9,
-      validation: (text: string) => this.validateAccessControl(text)
-    },
-    { 
-      pattern: /(?:^|\s)(?:deny|disable|block|restrict)\s*[:=]\s*["']?\s*(?:false|no|0|none|empty)\s*["']?/gi, 
-      type: 'Disabled MCP Security',
-      confidence: 0.85,
-      validation: (text: string) => this.validateDisabledSecurity(text)
-    },
-    { 
-      pattern: /(?:^|\s)(?:auth|authentication|authorization)\s*[:=]\s*["']?\s*(?:none|false|disabled|off)\s*["']?/gi, 
+      pattern: /\b(?:auth|authentication|authorization)\s*[:=]\s*["']?\s*(?:none|false|disabled|off)\s*["']?/gi, 
       type: 'Disabled MCP Authentication',
-      confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateDisabledAuth(text)
     },
     { 
-      pattern: /(?:^|\s)(?:cors|origin)\s*[:=]\s*["']?\s*\*\s*["']?/gi, 
-      type: 'Open CORS in MCP',
-      confidence: 0.8,
-      validation: (text: string) => this.validateOpenCors(text)
-    },
-    { 
-      pattern: /(?:^|\s)(?:token|key|secret|password)\s*[:=]\s*["']?\s*(?:test|demo|example|placeholder|123|abc|xyz|password|admin)\s*["']?/gi, 
-      type: 'Weak MCP Credentials',
-      confidence: 0.9,
-      validation: (text: string) => this.validateWeakCredentials(text)
-    },
-    { 
-      pattern: /(?:^|\s)(?:ssl|tls|https)\s*[:=]\s*["']?\s*(?:false|no|0|disabled|off)\s*["']?/gi, 
+      pattern: /\b(?:ssl|tls|https)\s*[:=]\s*["']?\s*(?:false|no|0|disabled|off)\s*["']?/gi, 
       type: 'Disabled MCP Encryption',
-      confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateDisabledEncryption(text)
     },
     { 
-      pattern: /(?:^|\s)(?:port|host|bind)\s*[:=]\s*["']?\s*(?:0\.0\.0\.0|::|localhost|127\.0\.0\.1)\s*["']?/gi, 
+      pattern: /\b(?:token|key|secret|password|api[_-]?key)\s*[:=]\s*["']?\s*(?:test|demo|example|placeholder|123|abc|xyz|password|admin|key|secret|default)\s*["']?/gi, 
+      type: 'Weak MCP Credentials',
+      severity: 'critical' as const,
+      validation: (text: string) => this.validateWeakCredentials(text)
+    },
+    { 
+      pattern: /\b(?:context|contexts|contextFile|contextFiles)\s*[:=]\s*["']?\s*\.\.\/.*\s*["']?/gi, 
+      type: 'Path Traversal in MCP Context',
+      severity: 'critical' as const,
+      validation: (text: string) => this.validatePathTraversal(text)
+    },
+    
+    // High: Access control and binding issues
+    { 
+      pattern: /\b(?:allow|enable|permit)\s*[:=]\s*["']?\s*(?:all|true|yes|1|any|everyone|public|unrestricted)\s*["']?/gi, 
+      type: 'Insecure MCP Access Control',
+      severity: 'high' as const,
+      validation: (text: string) => this.validateAccessControl(text)
+    },
+    { 
+      pattern: /\b(?:deny|disable|block|restrict)\s*[:=]\s*["']?\s*(?:false|no|0|none|empty)\s*["']?/gi, 
+      type: 'Disabled MCP Security',
+      severity: 'high' as const,
+      validation: (text: string) => this.validateDisabledSecurity(text)
+    },
+    { 
+      pattern: /\b(?:port|host|bind)\s*[:=]\s*["']?\s*(?:0\.0\.0\.0|::)\s*["']?/gi, 
       type: 'Insecure MCP Binding',
-      confidence: 0.7,
+      severity: 'high' as const,
       validation: (text: string) => this.validateInsecureBinding(text)
     },
     { 
-      pattern: /(?:^|\s)(?:debug|verbose|log)\s*[:=]\s*["']?\s*(?:true|yes|1|all|detailed)\s*["']?/gi, 
+      pattern: /\b(?:timeout|rate[_-]?limit|throttle)\s*[:=]\s*["']?\s*(?:0|none|unlimited|infinity)\s*["']?/gi, 
+      type: 'No MCP Rate Limiting',
+      severity: 'high' as const,
+      validation: (text: string) => this.validateNoRateLimit(text)
+    },
+    
+    // Medium: CORS and logging issues
+    { 
+      pattern: /\b(?:cors|origin)\s*[:=]\s*["']?\s*\*\s*["']?/gi, 
+      type: 'Open CORS in MCP',
+      severity: 'medium' as const,
+      validation: (text: string) => this.validateOpenCors(text)
+    },
+    { 
+      pattern: /\b(?:debug|verbose|log)\s*[:=]\s*["']?\s*(?:true|yes|1|all|detailed)\s*["']?/gi, 
       type: 'Excessive MCP Logging',
-      confidence: 0.6,
+      severity: 'medium' as const,
       validation: (text: string) => this.validateExcessiveLogging(text)
     },
     { 
-      pattern: /(?:^|\s)(?:timeout|rate[_-]?limit|throttle)\s*[:=]\s*["']?\s*(?:0|none|unlimited|infinity)\s*["']?/gi, 
-      type: 'No MCP Rate Limiting',
-      confidence: 0.75,
-      validation: (text: string) => this.validateNoRateLimit(text)
+      pattern: /\b(?:port|host|bind)\s*[:=]\s*["']?\s*(?:localhost|127\.0\.0\.1)\s*["']?/gi, 
+      type: 'Local MCP Binding',
+      severity: 'medium' as const,
+      validation: (text: string) => this.validateLocalBinding(text)
+    },
+    
+    // Framework-specific MCP patterns
+    { 
+      pattern: /\b(?:mcp[_-]?server|model[_-]?context[_-]?protocol)\s*[:=]\s*["']?\s*(?:true|yes|1|enabled)\s*["']?/gi, 
+      type: 'MCP Server Enabled',
+      severity: 'low' as const,
+      validation: (text: string) => this.validateMcpServerEnabled(text)
     },
     { 
-      pattern: /(?:^|\s)(?:context|contexts|contextFile|contextFiles)\s*[:=]\s*["']?\s*\.\.\/.*\s*["']?/gi, 
-      type: 'Path Traversal in MCP Context',
-      confidence: 0.8,
-      validation: (text: string) => this.validatePathTraversal(text)
+      pattern: /\b(?:context[_-]?path|context[_-]?dir)\s*[:=]\s*["']?\s*[^"']{1,20}\s*["']?/gi, 
+      type: 'Short MCP Context Path',
+      severity: 'medium' as const,
+      validation: (text: string) => this.validateShortContextPath(text)
     }
   ];
 
@@ -156,7 +181,7 @@ export class McpServerSecurityRule extends BaseRule {
       return issues;
     }
     
-    for (const { pattern, type, confidence, validation } of this.insecurePatterns) {
+    for (const { pattern, type, severity, validation } of this.insecurePatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { match, line, column, lineContent } of matches) {
@@ -173,20 +198,21 @@ export class McpServerSecurityRule extends BaseRule {
           continue;
         }
         
-        // Calculate final confidence based on context
-        const finalConfidence = this.calculateConfidence(confidence, context);
+        // Determine final severity based on context
+        const finalSeverity = this.determineSeverity(severity, context);
         
-        if (finalConfidence >= 0.5) {
-          issues.push(this.createIssue(
-            fileContent.path,
-            line,
-            column,
-            lineContent,
-            `MCP security issue: ${type} (confidence: ${Math.round(finalConfidence * 100)}%)`,
-            this.generateSuggestion(type, context),
-            finalConfidence >= 0.8 ? 'high' : finalConfidence >= 0.6 ? 'medium' : 'low'
-          ));
-        }
+        // Determine language for specific remediation
+        const detectedLanguage = this.detectLanguage(fileContent.path);
+
+        issues.push(this.createIssue(
+          fileContent.path,
+          line,
+          column + 1,
+          lineContent,
+          `MCP security issue: ${type}`,
+          this.getRemediationMessage(type, detectedLanguage),
+          finalSeverity
+        ));
       }
     }
 
@@ -348,17 +374,6 @@ export class McpServerSecurityRule extends BaseRule {
     );
   }
 
-  private calculateConfidence(baseConfidence: number, context: McpSecurityContext): number {
-    let confidence = baseConfidence;
-    
-    // Adjust confidence based on context
-    if (context.hasMcpContext) confidence *= 1.2; // Increase for MCP context
-    if (context.configurationType) confidence *= 1.1; // Increase for config files
-    if (context.isInConfiguration) confidence *= 1.1; // Increase for configuration context
-    
-    return Math.min(confidence, 1.0);
-  }
-
   // Validation methods for different security issues
   private validateAccessControl(text: string): boolean {
     const allowKeywords = ['allow', 'enable', 'permit'];
@@ -427,30 +442,190 @@ export class McpServerSecurityRule extends BaseRule {
            traversalPatterns.some(pattern => text.includes(pattern));
   }
 
-  private generateSuggestion(type: string, context: McpSecurityContext): string {
-    const suggestions = {
-      'Insecure MCP Access Control': 'Implement proper access controls with specific permissions. Use role-based access control (RBAC) and principle of least privilege.',
-      'Disabled MCP Security': 'Enable security features and implement proper security controls. Use security-by-default approach.',
-      'Disabled MCP Authentication': 'Enable authentication and implement proper user management. Use strong authentication mechanisms.',
-      'Open CORS in MCP': 'Configure CORS with specific allowed origins. Avoid using wildcard (*) for production environments.',
-      'Weak MCP Credentials': 'Use strong, unique credentials and implement proper credential management. Use environment variables or secure secret stores.',
-      'Disabled MCP Encryption': 'Enable SSL/TLS encryption for all communications. Use strong encryption protocols and certificates.',
-      'Insecure MCP Binding': 'Bind to specific interfaces and use proper network security. Avoid binding to 0.0.0.0 in production.',
-      'Excessive MCP Logging': 'Configure appropriate logging levels for production. Avoid logging sensitive information.',
-      'No MCP Rate Limiting': 'Implement rate limiting and throttling to prevent abuse. Use appropriate timeout values.',
-      'Path Traversal in MCP Context': 'Validate and sanitize file paths. Use absolute paths and implement proper path validation.'
-    };
-    
-    let suggestion = suggestions[type as keyof typeof suggestions] || 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.';
-    
-    if (context.framework) {
-      suggestion += ` For ${context.framework}, consider using framework-specific security middleware and configuration validation.`;
-    }
-    
-    if (context.configurationType) {
-      suggestion += ` For ${context.configurationType} configuration files, ensure proper file permissions and use secure configuration management.`;
-    }
-    
-    return suggestion;
+  private validateLocalBinding(text: string): boolean {
+    const bindingKeywords = ['port', 'host', 'bind'];
+    const localValues = ['localhost', '127.0.0.1'];
+    return bindingKeywords.some(keyword => text.toLowerCase().includes(keyword)) &&
+           localValues.some(value => text.toLowerCase().includes(value));
   }
+
+  private validateMcpServerEnabled(text: string): boolean {
+    const mcpKeywords = ['mcp_server', 'model_context_protocol'];
+    const enabledValues = ['true', 'yes', '1', 'enabled'];
+    return mcpKeywords.some(keyword => text.toLowerCase().includes(keyword)) &&
+           enabledValues.some(value => text.toLowerCase().includes(value));
+  }
+
+  private validateShortContextPath(text: string): boolean {
+    const contextKeywords = ['context_path', 'context_dir'];
+    const pathMatch = text.match(/["']([^"']{1,20})["']/);
+    return contextKeywords.some(keyword => text.toLowerCase().includes(keyword)) && 
+           pathMatch !== null;
+  }
+
+  private determineSeverity(baseSeverity: SeverityLevel, context: McpSecurityContext): SeverityLevel {
+    // Downgrade severity in development/test contexts instead of skipping
+    if (this.isDevelopmentContext(context) || this.isTestFile(context)) {
+      switch (baseSeverity) {
+        case 'critical':
+          return 'high';
+        case 'high':
+          return 'medium';
+        case 'medium':
+          return 'low';
+        case 'low':
+          return 'low';
+        default:
+          return baseSeverity;
+      }
+    }
+    
+    return baseSeverity;
+  }
+
+  private isDevelopmentContext(context: McpSecurityContext): boolean {
+    return context.surroundingCode.includes('development') || 
+           context.surroundingCode.includes('staging') ||
+           context.surroundingCode.includes('localhost') ||
+           context.surroundingCode.includes('127.0.0.1');
+  }
+
+  private isTestFile(context: McpSecurityContext): boolean {
+    return context.isInTestFile;
+  }
+
+  private getRemediationMessage(type: string, language: string): string {
+    const messages: Record<string, Record<string, string>> = {
+      'Disabled MCP Authentication': {
+        'javascript': 'Enable authentication for MCP server. Use JWT tokens, API keys, or OAuth2. Implement proper user management.',
+        'python': 'Enable authentication for MCP server. Use Flask-JWT-Extended, Django REST framework, or FastAPI security.',
+        'php': 'Enable authentication for MCP server. Use JWT tokens or session-based authentication.',
+        'java': 'Enable authentication for MCP server. Use Spring Security or JWT tokens.',
+        'ruby': 'Enable authentication for MCP server. Use Devise, JWT, or custom authentication.',
+        'csharp': 'Enable authentication for MCP server. Use ASP.NET Core Identity or JWT tokens.',
+        'general': 'Enable authentication for MCP server. Use secure authentication mechanisms like JWT tokens or API keys.'
+      },
+      'Disabled MCP Encryption': {
+        'javascript': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'python': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'php': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'java': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'ruby': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'csharp': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.',
+        'general': 'Enable SSL/TLS encryption for MCP server. Use HTTPS with valid certificates.'
+      },
+      'Weak MCP Credentials': {
+        'javascript': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'python': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'php': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'java': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'ruby': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'csharp': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.',
+        'general': 'Use strong, unique credentials for MCP server. Use environment variables or secure secret stores.'
+      },
+      'Path Traversal in MCP Context': {
+        'javascript': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'python': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'php': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'java': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'ruby': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'csharp': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.',
+        'general': 'Validate and sanitize file paths in MCP context. Use absolute paths and implement proper path validation.'
+      },
+      'Insecure MCP Access Control': {
+        'javascript': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'python': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'php': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'java': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'ruby': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'csharp': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.',
+        'general': 'Implement proper access controls for MCP server. Use role-based access control (RBAC) and principle of least privilege.'
+      },
+      'Disabled MCP Security': {
+        'javascript': 'Enable security features for MCP server. Use security-by-default approach.',
+        'python': 'Enable security features for MCP server. Use security-by-default approach.',
+        'php': 'Enable security features for MCP server. Use security-by-default approach.',
+        'java': 'Enable security features for MCP server. Use security-by-default approach.',
+        'ruby': 'Enable security features for MCP server. Use security-by-default approach.',
+        'csharp': 'Enable security features for MCP server. Use security-by-default approach.',
+        'general': 'Enable security features for MCP server. Use security-by-default approach.'
+      },
+      'Insecure MCP Binding': {
+        'javascript': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'python': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'php': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'java': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'ruby': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'csharp': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.',
+        'general': 'Bind MCP server to specific interfaces. Avoid binding to 0.0.0.0 in production.'
+      },
+      'No MCP Rate Limiting': {
+        'javascript': 'Implement rate limiting for MCP server. Use express-rate-limit or similar middleware.',
+        'python': 'Implement rate limiting for MCP server. Use Flask-Limiter or Django REST framework throttling.',
+        'php': 'Implement rate limiting for MCP server. Use rate limiting middleware or Redis.',
+        'java': 'Implement rate limiting for MCP server. Use Spring Boot Actuator or custom rate limiting.',
+        'ruby': 'Implement rate limiting for MCP server. Use Rack::Attack or similar middleware.',
+        'csharp': 'Implement rate limiting for MCP server. Use ASP.NET Core rate limiting middleware.',
+        'general': 'Implement rate limiting for MCP server. Use appropriate timeout values and throttling.'
+      },
+      'Open CORS in MCP': {
+        'javascript': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'python': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'php': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'java': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'ruby': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'csharp': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.',
+        'general': 'Configure CORS for MCP server with specific allowed origins. Avoid using wildcard (*) for production.'
+      },
+      'Excessive MCP Logging': {
+        'javascript': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'python': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'php': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'java': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'ruby': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'csharp': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.',
+        'general': 'Configure appropriate logging levels for MCP server in production. Avoid logging sensitive information.'
+      },
+      'Local MCP Binding': {
+        'javascript': 'Consider binding MCP server to external interfaces for production deployment.',
+        'python': 'Consider binding MCP server to external interfaces for production deployment.',
+        'php': 'Consider binding MCP server to external interfaces for production deployment.',
+        'java': 'Consider binding MCP server to external interfaces for production deployment.',
+        'ruby': 'Consider binding MCP server to external interfaces for production deployment.',
+        'csharp': 'Consider binding MCP server to external interfaces for production deployment.',
+        'general': 'Consider binding MCP server to external interfaces for production deployment.'
+      },
+      'MCP Server Enabled': {
+        'javascript': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'python': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'php': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'java': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'ruby': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'csharp': 'MCP server is enabled. Ensure proper security configuration is in place.',
+        'general': 'MCP server is enabled. Ensure proper security configuration is in place.'
+      },
+      'Short MCP Context Path': {
+        'javascript': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'python': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'php': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'java': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'ruby': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'csharp': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.',
+        'general': 'Use longer, more descriptive context paths for MCP server. Consider using UUIDs or hashed paths.'
+      },
+      'general': {
+        'javascript': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'python': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'php': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'java': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'ruby': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'csharp': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.',
+        'general': 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.'
+      }
+    };
+
+    return messages[type]?.[language] || messages['general']?.[language] || (messages['general'] && messages['general']['general']) || 'Review and secure your MCP server configuration. Implement proper authentication, authorization, and access controls.';
+  }
+
+
 }
