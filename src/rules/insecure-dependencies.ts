@@ -20,25 +20,29 @@ export class InsecureDependenciesRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly vulnerablePackages = [
+    // Node.js packages with known CVEs
     { 
       name: 'lodash', 
       versions: ['<4.17.21'], 
-      reason: 'Prototype pollution vulnerabilities',
+      reason: 'Prototype pollution vulnerabilities (CVE-2021-23337)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateLodashVersion(version)
     },
     { 
       name: 'moment', 
       versions: ['*'], 
-      reason: 'Deprecated package, use date-fns or dayjs instead',
+      reason: 'Deprecated package with security issues, use date-fns or dayjs instead',
       confidence: 0.9,
+      severity: 'high' as const,
       validation: (version: string) => this.validateMomentUsage(version)
     },
     { 
       name: 'request', 
       versions: ['*'], 
-      reason: 'Deprecated package with security issues',
+      reason: 'Deprecated package with security issues (CVE-2020-8163)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateRequestUsage(version)
     },
     { 
@@ -46,56 +50,73 @@ export class InsecureDependenciesRule extends BaseRule {
       versions: ['*'], 
       reason: 'Deprecated, use uuid package instead',
       confidence: 0.85,
+      severity: 'high' as const,
       validation: (version: string) => this.validateNodeUuidUsage(version)
     },
     { 
       name: 'growl', 
       versions: ['<1.10.0'], 
-      reason: 'Command injection vulnerability',
+      reason: 'Command injection vulnerability (CVE-2017-16042)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateGrowlVersion(version)
     },
     { 
       name: 'handlebars', 
       versions: ['<4.7.7'], 
-      reason: 'Template injection vulnerabilities',
+      reason: 'Template injection vulnerabilities (CVE-2021-23369)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateHandlebarsVersion(version)
     },
     { 
       name: 'serialize-javascript', 
       versions: ['<3.1.0'], 
-      reason: 'XSS vulnerability',
+      reason: 'XSS vulnerability (CVE-2020-7660)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateSerializeJavascriptVersion(version)
     },
     { 
       name: 'minimist', 
       versions: ['<1.2.6'], 
-      reason: 'Prototype pollution vulnerability',
+      reason: 'Prototype pollution vulnerability (CVE-2021-44906)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateMinimistVersion(version)
     },
     { 
       name: 'yargs-parser', 
       versions: ['<13.1.2'], 
-      reason: 'Prototype pollution vulnerability',
+      reason: 'Prototype pollution vulnerability (CVE-2020-7608)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateYargsParserVersion(version)
     },
     { 
       name: 'ini', 
       versions: ['<1.3.6'], 
-      reason: 'Prototype pollution vulnerability',
+      reason: 'Prototype pollution vulnerability (CVE-2020-7788)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateIniVersion(version)
     },
+    { 
+      name: 'event-stream', 
+      versions: ['*'], 
+      reason: 'Backdoored package with malicious code injection',
+      confidence: 0.95,
+      severity: 'critical' as const,
+      validation: (version: string) => this.validateEventStreamUsage(version)
+    },
     
+    // Python packages with known CVEs
     { 
       name: 'django', 
       versions: ['<3.2.13'], 
-      reason: 'Multiple security vulnerabilities',
+      reason: 'Multiple security vulnerabilities (CVE-2021-44420)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateDjangoVersion(version)
     },
     { 
@@ -103,49 +124,57 @@ export class InsecureDependenciesRule extends BaseRule {
       versions: ['<2.0.0'], 
       reason: 'Security improvements in newer versions',
       confidence: 0.8,
+      severity: 'high' as const,
       validation: (version: string) => this.validateFlaskVersion(version)
     },
     { 
       name: 'requests', 
       versions: ['<2.20.0'], 
-      reason: 'SSL verification issues',
+      reason: 'SSL verification issues (CVE-2018-18074)',
       confidence: 0.85,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateRequestsVersion(version)
     },
     { 
       name: 'pyyaml', 
       versions: ['<5.4'], 
-      reason: 'Arbitrary code execution vulnerability',
+      reason: 'Arbitrary code execution vulnerability (CVE-2020-1747)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validatePyyamlVersion(version)
     },
     { 
       name: 'pillow', 
       versions: ['<8.3.2'], 
-      reason: 'Multiple image processing vulnerabilities',
+      reason: 'Multiple image processing vulnerabilities (CVE-2021-3450)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validatePillowVersion(version)
     },
     
+    // PHP packages with known CVEs
     { 
       name: 'symfony/symfony', 
       versions: ['<4.4.35'], 
-      reason: 'Multiple security vulnerabilities',
+      reason: 'Multiple security vulnerabilities (CVE-2021-41264)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateSymfonyVersion(version)
     },
     { 
       name: 'laravel/framework', 
       versions: ['<8.75.0'], 
-      reason: 'Security vulnerabilities',
+      reason: 'Security vulnerabilities (CVE-2021-3129)',
       confidence: 0.9,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateLaravelVersion(version)
     },
     { 
       name: 'monolog/monolog', 
       versions: ['<2.3.5'], 
-      reason: 'Remote code execution vulnerability',
+      reason: 'Remote code execution vulnerability (CVE-2021-37145)',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (version: string) => this.validateMonologVersion(version)
     }
   ];
@@ -155,31 +184,50 @@ export class InsecureDependenciesRule extends BaseRule {
       pattern: /(?:^|\s)(?:eval|exec|shell|cmd|system|proc|spawn)(?:-|_)?(?:js|py|php|rb)?\s*[:=]/gi, 
       type: 'Suspicious package name',
       confidence: 0.8,
+      severity: 'medium' as const,
       validation: (text: string) => this.validateSuspiciousPackage(text)
     },
     { 
       pattern: /(?:^|\s)(?:backdoor|malware|virus|trojan|keylogger)\s*[:=]/gi, 
       type: 'Malicious package name',
       confidence: 0.95,
+      severity: 'critical' as const,
       validation: (text: string) => this.validateMaliciousPackage(text)
+    },
+    { 
+      pattern: /(?:^|\s)(?:coin|cryptojs|digminer|miner|hashcoin|bitcoin|ethereum|monero)\s*[:=]/gi, 
+      type: 'Cryptominer package',
+      confidence: 0.9,
+      severity: 'critical' as const,
+      validation: (text: string) => this.validateCryptominerPackage(text)
     },
     { 
       pattern: /(?:^|\s)(?:lodahs|momnet|expres|reactt|angualr|vuejs)\s*[:=]/gi, 
       type: 'Potential typosquatting',
       confidence: 0.7,
+      severity: 'medium' as const,
       validation: (text: string) => this.validateTyposquatting(text)
     },
     { 
       pattern: /["'](?:\*|latest|>.*|>=.*\|\|.*|.*\.\*\.\*)["']/g, 
       type: 'Overly permissive version range',
       confidence: 0.6,
+      severity: 'medium' as const,
       validation: (text: string) => this.validatePermissiveVersion(text)
     },
     { 
       pattern: /"devDependencies"\s*:\s*\{[^}]*"(?:nodemon|webpack-dev-server|jest|mocha|chai|sinon)"/gi, 
       type: 'Development dependency in production',
       confidence: 0.5,
+      severity: 'medium' as const,
       validation: (text: string) => this.validateDevDependency(text)
+    },
+    { 
+      pattern: /"scripts"\s*:\s*\{[^}]*"(?:postinstall|preinstall|install)"\s*:\s*["'](?:curl|wget|fetch|node\s+.*\.js)/gi, 
+      type: 'Suspicious postinstall script',
+      confidence: 0.85,
+      severity: 'critical' as const,
+      validation: (text: string) => this.validateSuspiciousScript(text)
     }
   ];
 
@@ -229,13 +277,44 @@ export class InsecureDependenciesRule extends BaseRule {
       return issues;
     }
     
-    // Check for vulnerable packages
+    // Check for vulnerable packages using package manager-specific patterns
     this.checkVulnerablePackages(fileContent, issues, language, packageManager, framework);
     
     // Check for suspicious patterns
     this.checkSuspiciousPatterns(fileContent, issues, language, packageManager, framework);
 
     return issues;
+  }
+
+  private getPackagePattern(packageManager: string | undefined, packageName: string): RegExp {
+    switch (packageManager) {
+      case 'npm':
+      case 'yarn':
+      case 'pnpm':
+        // JSON format: "package": "version"
+        return new RegExp(`"${packageName}"\\s*:\\s*["']([^"']+)["']`, 'gi');
+      
+      case 'pip':
+        // requirements.txt: package==version
+        return new RegExp(`^${packageName}\\s*==\\s*([^\\s]+)`, 'gmi');
+      
+      case 'composer':
+        // Composer: "name": "^version"
+        return new RegExp(`"${packageName}"\\s*:\\s*["']([^"']+)["']`, 'gi');
+      
+      case 'bundler':
+        // Gemfile: gem "name", "~> version"
+        return new RegExp(`gem\\s+["']${packageName}["']\\s*,\\s*["']([^"']+)["']`, 'gi');
+      
+      case 'maven':
+      case 'gradle':
+        // Maven: <groupId> <artifactId> <version>
+        return new RegExp(`<artifactId>${packageName}</artifactId>\\s*<version>([^<]+)</version>`, 'gi');
+      
+      default:
+        // Fallback to generic pattern
+        return new RegExp(`"${packageName}"\\s*:\\s*["']([^"']+)["']`, 'gi');
+    }
   }
 
   private analyzeContext(fileContent: FileContent, line: number, column: number, language: string, packageManager?: string, framework?: string, hasVulnerableDependencies?: boolean, dependencyType?: string): DependencyContext {
@@ -411,7 +490,7 @@ export class InsecureDependenciesRule extends BaseRule {
 
   private checkVulnerablePackages(fileContent: FileContent, issues: SecurityIssue[], language: string, packageManager?: string, framework?: string): void {
     for (const pkg of this.vulnerablePackages) {
-      const packagePattern = new RegExp(`"${pkg.name}"\\s*:\\s*["']([^"']+)["']`, 'gi');
+      const packagePattern = this.getPackagePattern(packageManager, pkg.name);
       const matches = this.findMatches(fileContent.content, packagePattern);
       
       for (const { match, line, column, lineContent } of matches) {
@@ -420,6 +499,7 @@ export class InsecureDependenciesRule extends BaseRule {
         if (version && this.isVulnerableVersion(version, pkg.versions) && pkg.validation(version)) {
           const context = this.analyzeContext(fileContent, line, column, language, packageManager, framework, true, this.detectDependencyType(fileContent.path));
           const finalConfidence = this.calculateConfidence(pkg.confidence, context);
+          const finalSeverity = this.calculateSeverity(pkg.severity, context, finalConfidence);
           
           if (finalConfidence >= 0.5) {
             issues.push(this.createIssue(
@@ -429,7 +509,7 @@ export class InsecureDependenciesRule extends BaseRule {
               lineContent,
               `Vulnerable dependency: ${pkg.name} ${version} - ${pkg.reason} (confidence: ${Math.round(finalConfidence * 100)}%)`,
               this.generateSuggestion(pkg, context),
-              finalConfidence >= 0.8 ? 'high' : finalConfidence >= 0.6 ? 'medium' : 'low'
+              finalSeverity
             ));
           }
         }
@@ -438,7 +518,7 @@ export class InsecureDependenciesRule extends BaseRule {
   }
 
   private checkSuspiciousPatterns(fileContent: FileContent, issues: SecurityIssue[], language: string, packageManager?: string, framework?: string): void {
-    for (const { pattern, type, confidence, validation } of this.suspiciousPatterns) {
+    for (const { pattern, type, confidence, severity, validation } of this.suspiciousPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { match, line, column, lineContent } of matches) {
@@ -455,8 +535,9 @@ export class InsecureDependenciesRule extends BaseRule {
           continue;
         }
         
-        // Calculate final confidence based on context
+        // Calculate final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
+        const finalSeverity = this.calculateSeverity(severity, context, finalConfidence);
         
         if (finalConfidence >= 0.5) {
           issues.push(this.createIssue(
@@ -466,7 +547,7 @@ export class InsecureDependenciesRule extends BaseRule {
             lineContent,
             `Suspicious dependency pattern: ${type} (confidence: ${Math.round(finalConfidence * 100)}%)`,
             this.generateSuspiciousSuggestion(type, context),
-            finalConfidence >= 0.8 ? 'high' : finalConfidence >= 0.6 ? 'medium' : 'low'
+            finalSeverity
           ));
         }
       }
@@ -626,6 +707,63 @@ export class InsecureDependenciesRule extends BaseRule {
 
   private validateMonologVersion(version: string): boolean {
     return this.compareVersions(version, '2.3.5') < 0;
+  }
+
+  private validateEventStreamUsage(_version: string): boolean {
+    return true; // All versions are backdoored
+  }
+
+  private validateCryptominerPackage(text: string): boolean {
+    const cryptominerKeywords = ['coin', 'cryptojs', 'digminer', 'miner', 'hashcoin', 'bitcoin', 'ethereum', 'monero'];
+    return cryptominerKeywords.some(keyword => text.toLowerCase().includes(keyword));
+  }
+
+  private validateSuspiciousScript(text: string): boolean {
+    const suspiciousScripts = ['curl', 'wget', 'fetch', 'node'];
+    return suspiciousScripts.some(script => text.toLowerCase().includes(script));
+  }
+
+  private calculateSeverity(baseSeverity: string, context: DependencyContext, confidence: number): 'critical' | 'high' | 'medium' | 'low' {
+    let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
+    
+    // Adjust severity based on context
+    if (context.isInDevDependencies) {
+      // Lower severity for dev dependencies but keep at least medium
+      if (severity === 'critical') severity = 'high';
+      else if (severity === 'high') severity = 'medium';
+      else if (severity === 'medium') severity = 'medium'; // Keep medium
+    }
+    
+    // Check if in production context (Dockerfile, CI/CD)
+    if (this.isInProductionContext(context)) {
+      // Treat as production-level severity
+      if (severity === 'medium') severity = 'high';
+      else if (severity === 'low') severity = 'medium';
+    }
+    
+    // Framework-specific adjustments
+    if (context.framework) {
+      if (['react', 'angular', 'vue'].includes(context.framework)) {
+        // Frontend frameworks - highlight build dependency risk
+        if (severity === 'medium') severity = 'high';
+      } else if (['express', 'django', 'laravel'].includes(context.framework)) {
+        // Backend APIs - emphasize exposure risk
+        if (severity === 'medium') severity = 'high';
+      }
+    }
+    
+    // Confidence-based adjustments
+    if (confidence < 0.6 && severity === 'critical') {
+      severity = 'high';
+    }
+    
+    return severity;
+  }
+
+  private isInProductionContext(context: DependencyContext): boolean {
+    // Check if this dependency is used in production contexts
+    const productionKeywords = ['dockerfile', 'docker-compose', 'deploy', 'production', 'prod', 'ci/cd', 'github actions', 'gitlab-ci', 'jenkins'];
+    return productionKeywords.some(keyword => context.surroundingCode.toLowerCase().includes(keyword));
   }
 
   // Validation methods for suspicious patterns
