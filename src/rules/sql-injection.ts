@@ -1,4 +1,4 @@
-import { BaseRule, FileContent, SecurityIssue } from '../types';
+import { BaseRule, FileContent, SecurityIssue, SeverityLevel } from '../types';
 
 interface SqlInjectionContext {
   isInComment: boolean;
@@ -13,52 +13,103 @@ interface SqlInjectionContext {
   isORMUsage: boolean;
 }
 
+interface SqlInjectionPattern {
+  pattern: RegExp;
+  type: string;
+  severity: SeverityLevel;
+  description: string;
+  validation: (text: string) => boolean;
+}
+
 export class SqlInjectionRule extends BaseRule {
   readonly name = 'sql-injection';
   readonly description = 'Detects potential SQL injection vulnerabilities with context-aware analysis';
   readonly severity = 'high' as const;
 
-  private readonly sqlInjectionPatterns = [
-    // High confidence - Direct string concatenation
+  private readonly sqlInjectionPatterns: SqlInjectionPattern[] = [
+    // Critical - Database query with raw concatenation and request input
     { 
-      pattern: /(?:query|sql|execute)\s*\(\s*['"`][^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, 
-      type: 'String concatenation in SQL query',
-      confidence: 0.95,
-      validation: (text: string) => this.validateStringConcatenation(text)
+      pattern: /\b(?:query|sql|execute|CommandText)\s*[:=]\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
+      type: 'Database query with raw concatenation and request input',
+      severity: 'critical',
+      description: 'Critical SQL injection risk: User input directly concatenated into database queries',
+      validation: (text: string) => this.validateTaintedInput(text)
     },
     { 
-      pattern: /['"`](?:SELECT|INSERT|UPDATE|DELETE)\s+[^'"`]*['"`]\s*\+\s*[^'"`\s)]+/gi, 
-      type: 'SQL statement with concatenation',
-      confidence: 0.9,
+      pattern: /\b(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|EXEC)\s+[^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
+      type: 'SQL statement with tainted input concatenation',
+      severity: 'critical',
+      description: 'Critical SQL injection risk: SQL statement with user input concatenation',
       validation: (text: string) => this.validateSqlStatement(text)
     },
     
-    // Medium confidence - Template literals with user input
+    // High - Template literals and string interpolation
     { 
-      pattern: /`(?:SELECT|INSERT|UPDATE|DELETE)\s+[^`]*\$\{[^}]+\}[^`]*`/gi, 
+      pattern: /\b(?:query|sql|execute)\s*[:=]\s*`[^`]*\$\{[^}]+\}[^`]*`/gi, 
       type: 'Template literal SQL with variables',
-      confidence: 0.8,
+      severity: 'high',
+      description: 'High SQL injection risk: Template literals with user input in database queries',
       validation: (text: string) => this.validateTemplateLiteral(text)
     },
     { 
-      pattern: /db\.query\s*\(\s*['"`][^'"`]*\$\{[^}]+\}[^'"`]*['"`]/gi, 
-      type: 'Database query with template literals',
-      confidence: 0.75,
-      validation: (text: string) => this.validateDatabaseQuery(text)
+      pattern: /\bf["`][^`"]*\$\{[^}]*\}[^`"]*["`]/gi, 
+      type: 'Python f-string SQL injection',
+      severity: 'high',
+      description: 'High SQL injection risk: Python f-string with user input in SQL context',
+      validation: (text: string) => this.validateFStringInjection(text)
+    },
+    { 
+      pattern: /\b(?:query|sql|execute)\s*[:=]\s*['"`][^'"`]*\{[^}]*\}[^'"`]*['"`]\.format\(/gi, 
+      type: 'Python format string SQL injection',
+      severity: 'high',
+      description: 'High SQL injection risk: Python .format() with user input in SQL context',
+      validation: (text: string) => this.validateFormatStringInjection(text)
+    },
+    { 
+      pattern: /\b(?:query|sql|execute)\s*[:=]\s*['"`][^'"`]*%s[^'"`]*['"`]\s*%\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
+      type: 'Python %s substitution SQL injection',
+      severity: 'high',
+      description: 'High SQL injection risk: Python %s substitution with user input',
+      validation: (text: string) => this.validatePercentSubstitution(text)
     },
     
-    // Lower confidence - Complex patterns that might be safe
+    // Medium - ORM concatenation and JDBC patterns
     { 
-      pattern: /\.where\s*\(\s*['"`][^'"`]*['"`]\s*\+/gi, 
+      pattern: /\b\.where\s*\(\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
       type: 'ORM where clause with concatenation',
-      confidence: 0.6,
+      severity: 'medium',
+      description: 'Medium SQL injection risk: ORM where clause with user input concatenation',
       validation: (text: string) => this.validateORMQuery(text)
     },
     { 
-      pattern: /WHERE\s+[^'"`\s]+\s*=\s*['"`]?\s*\+\s*[^'"`\s)]+/gi, 
-      type: 'WHERE clause with concatenation',
-      confidence: 0.7,
-      validation: (text: string) => this.validateWhereClause(text)
+      pattern: /\bStatement\s*\.\s*executeQuery\s*\(\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
+      type: 'Java JDBC string concatenation',
+      severity: 'medium',
+      description: 'Medium SQL injection risk: Java JDBC with string concatenation',
+      validation: (text: string) => this.validateJDBCConcatenation(text)
+    },
+    { 
+      pattern: /\bCommandText\s*[:=]\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
+      type: 'C# ADO.NET CommandText concatenation',
+      severity: 'medium',
+      description: 'Medium SQL injection risk: C# ADO.NET CommandText with string concatenation',
+      validation: (text: string) => this.validateADOConcatenation(text)
+    },
+    
+    // Low - Suspicious patterns in migrations/tests
+    { 
+      pattern: /\b(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|EXEC)\s+[^'"`]*['"`]\s*[+]/gi, 
+      type: 'SQL statement with concatenation',
+      severity: 'low',
+      description: 'Low SQL injection risk: SQL statement with concatenation (may be safe in migrations)',
+      validation: (text: string) => this.validateSqlConcatenation(text)
+    },
+    { 
+      pattern: /\b(?:query|sql|execute)\s*[:=]\s*['"`][^'"`]*['"`]\s*[+]/gi, 
+      type: 'Database query with concatenation',
+      severity: 'low',
+      description: 'Low SQL injection risk: Database query with concatenation (may be safe in migrations)',
+      validation: (text: string) => this.validateQueryConcatenation(text)
     }
   ];
 
@@ -93,15 +144,15 @@ export class SqlInjectionRule extends BaseRule {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
     
-    for (const { pattern, type, confidence, validation } of this.sqlInjectionPatterns) {
+    for (const { pattern, type, severity, description, validation } of this.sqlInjectionPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework);
         
-        // Skip if in safe context
-        if (this.isSafeContext(context)) {
+        // Skip if in safe context (but not migrations - we want to flag those with lower severity)
+        if (this.isSafeContext(context) && !context.isInMigration) {
           continue;
         }
         
@@ -110,20 +161,18 @@ export class SqlInjectionRule extends BaseRule {
           continue;
         }
         
-        // Calculate final confidence based on context
-        const finalConfidence = this.calculateConfidence(confidence, context);
+        // Determine final severity based on context
+        const finalSeverity = this.determineSeverity(severity, context);
         
-        if (finalConfidence >= 0.5) {
-          issues.push(this.createIssue(
-            fileContent.path,
-            line,
-            column,
-            lineContent,
-            `Potential SQL injection: ${type} (confidence: ${Math.round(finalConfidence * 100)}%)`,
-            this.generateSuggestion(type, context),
-            finalConfidence >= 0.8 ? 'high' : 'medium'
-          ));
-        }
+        issues.push(this.createIssue(
+          fileContent.path,
+          line,
+          column,
+          lineContent,
+          `Potential SQL injection: ${type} - ${description}`,
+          this.getRemediationMessage(type, context, finalSeverity),
+          finalSeverity
+        ));
       }
     }
 
@@ -149,18 +198,27 @@ export class SqlInjectionRule extends BaseRule {
     };
   }
 
+  private determineSeverity(baseSeverity: SeverityLevel, context: SqlInjectionContext): SeverityLevel {
+    // Downgrade severity in migration/test contexts instead of skipping
+    if (context.isInMigration || context.isInTestFile) {
+      switch (baseSeverity) {
+        case 'critical': return 'high';
+        case 'high': return 'medium';
+        case 'medium': return 'low';
+        case 'low': return 'low';
+        default: return baseSeverity;
+      }
+    }
+    
+    return baseSeverity;
+  }
+
   private isSafeContext(context: SqlInjectionContext): boolean {
     // Safe if in comment
     if (context.isInComment) return true;
     
-    // Safe if in test file
-    if (context.isInTestFile) return true;
-    
     // Safe if in documentation
     if (context.isInDocumentation) return true;
-    
-    // Safe if in migration file
-    if (context.isInMigration) return true;
     
     // Safe if using parameterized queries
     if (context.hasParameterizedQueries) return true;
@@ -267,58 +325,258 @@ export class SqlInjectionRule extends BaseRule {
     return pattern ? lines.some(line => pattern.test(line)) : false;
   }
 
-  private calculateConfidence(baseConfidence: number, context: SqlInjectionContext): number {
-    let confidence = baseConfidence;
-    
-    // Reduce confidence for certain contexts
-    if (context.isORMUsage) confidence *= 0.7;
-    if (context.framework) confidence *= 0.9; // Framework might have built-in protection
-    
-    return Math.min(confidence, 1.0);
-  }
 
-  // Validation methods
-  private validateStringConcatenation(text: string): boolean {
-    return text.includes('+') && (text.includes('req.') || text.includes('request.') || text.includes('input.'));
+
+  // Advanced validation methods for tainted input detection
+  private validateTaintedInput(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return taintedPatterns.some(pattern => pattern.test(text)) && text.includes('+');
   }
 
   private validateSqlStatement(text: string): boolean {
-    return /(SELECT|INSERT|UPDATE|DELETE)/i.test(text) && text.includes('+');
+    const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'EXEC'];
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return sqlKeywords.some(keyword => text.toUpperCase().includes(keyword)) && 
+           taintedPatterns.some(pattern => pattern.test(text)) && 
+           text.includes('+');
   }
 
   private validateTemplateLiteral(text: string): boolean {
-    return text.includes('${') && (text.includes('req.') || text.includes('request.') || text.includes('input.'));
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('${') && taintedPatterns.some(pattern => pattern.test(text));
   }
 
-  private validateDatabaseQuery(text: string): boolean {
-    return text.includes('${') && text.includes('db.');
+  private validateFStringInjection(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('f"') || text.includes("f'") && taintedPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validateFormatStringInjection(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('.format(') && taintedPatterns.some(pattern => pattern.test(text));
+  }
+
+  private validatePercentSubstitution(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('%s') && text.includes('%') && taintedPatterns.some(pattern => pattern.test(text));
   }
 
   private validateORMQuery(text: string): boolean {
-    return text.includes('+') && text.includes('.where');
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('+') && text.includes('.where') && taintedPatterns.some(pattern => pattern.test(text));
   }
 
-  private validateWhereClause(text: string): boolean {
-    return text.includes('WHERE') && text.includes('+');
+  private validateJDBCConcatenation(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('Statement') && text.includes('executeQuery') && 
+           taintedPatterns.some(pattern => pattern.test(text)) && text.includes('+');
   }
 
-  private generateSuggestion(_type: string, context: SqlInjectionContext): string {
-    const baseSuggestion = 'Use parameterized queries or prepared statements instead of string concatenation.';
+  private validateADOConcatenation(text: string): boolean {
+    const taintedPatterns = [
+      /\breq\./i,
+      /\brequest\./i,
+      /\binput\./i,
+      /\bform\./i,
+      /\bqueryParam\./i,
+      /\bbody\./i,
+      /\bparams\./i
+    ];
+    return text.includes('CommandText') && taintedPatterns.some(pattern => pattern.test(text)) && text.includes('+');
+  }
+
+  private validateSqlConcatenation(text: string): boolean {
+    const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'EXEC'];
+    return sqlKeywords.some(keyword => text.toUpperCase().includes(keyword)) && text.includes('+');
+  }
+
+  private validateQueryConcatenation(text: string): boolean {
+    return (text.includes('query') || text.includes('sql') || text.includes('execute')) && text.includes('+');
+  }
+
+  private getRemediationMessage(type: string, context: SqlInjectionContext, severity: SeverityLevel): string {
+    const messages: Record<string, Record<string, string>> = {
+      'Database query with raw concatenation and request input': {
+        'critical': 'CRITICAL: Never concatenate user input directly into database queries. Use parameterized queries or prepared statements. This is a severe security vulnerability.',
+        'high': 'HIGH: Use parameterized queries instead of string concatenation. Replace concatenation with placeholders.',
+        'medium': 'MEDIUM: Consider using parameterized queries for better security.',
+        'low': 'LOW: Review query construction for potential injection vulnerabilities.'
+      },
+      'SQL statement with tainted input concatenation': {
+        'critical': 'CRITICAL: SQL statement with user input concatenation is extremely dangerous. Use parameterized queries immediately.',
+        'high': 'HIGH: Use parameterized queries instead of concatenating user input into SQL statements.',
+        'medium': 'MEDIUM: Consider using parameterized queries for SQL statements.',
+        'low': 'LOW: Review SQL statement construction.'
+      },
+      'Template literal SQL with variables': {
+        'critical': 'CRITICAL: Template literals with user input in SQL are dangerous. Use parameterized queries.',
+        'high': 'HIGH: Avoid template literals with user input in SQL. Use parameterized queries.',
+        'medium': 'MEDIUM: Consider using parameterized queries instead of template literals.',
+        'low': 'LOW: Review template literal usage in SQL.'
+      },
+      'Python f-string SQL injection': {
+        'critical': 'CRITICAL: Never use f-strings with user input in SQL. Use parameterized queries.',
+        'high': 'HIGH: Avoid f-strings with user input in SQL. Use parameterized queries.',
+        'medium': 'MEDIUM: Consider using parameterized queries instead of f-strings.',
+        'low': 'LOW: Review f-string usage in SQL.'
+      },
+      'Python format string SQL injection': {
+        'critical': 'CRITICAL: Never use .format() with user input in SQL. Use parameterized queries.',
+        'high': 'HIGH: Avoid .format() with user input in SQL. Use parameterized queries.',
+        'medium': 'MEDIUM: Consider using parameterized queries instead of .format().',
+        'low': 'LOW: Review .format() usage in SQL.'
+      },
+      'Python %s substitution SQL injection': {
+        'critical': 'CRITICAL: Never use %s substitution with user input in SQL. Use parameterized queries.',
+        'high': 'HIGH: Avoid %s substitution with user input in SQL. Use parameterized queries.',
+        'medium': 'MEDIUM: Consider using parameterized queries instead of %s substitution.',
+        'low': 'LOW: Review %s substitution usage in SQL.'
+      },
+      'ORM where clause with concatenation': {
+        'critical': 'CRITICAL: ORM where clauses with user input concatenation are dangerous. Use parameterized ORM methods.',
+        'high': 'HIGH: Use parameterized ORM methods instead of concatenation in where clauses.',
+        'medium': 'MEDIUM: Consider using parameterized ORM methods.',
+        'low': 'LOW: Review ORM where clause construction.'
+      },
+      'Java JDBC string concatenation': {
+        'critical': 'CRITICAL: JDBC with string concatenation is dangerous. Use PreparedStatement with placeholders.',
+        'high': 'HIGH: Use PreparedStatement with placeholders instead of string concatenation.',
+        'medium': 'MEDIUM: Consider using PreparedStatement for JDBC queries.',
+        'low': 'LOW: Review JDBC query construction.'
+      },
+      'C# ADO.NET CommandText concatenation': {
+        'critical': 'CRITICAL: ADO.NET CommandText with concatenation is dangerous. Use parameterized queries.',
+        'high': 'HIGH: Use parameterized queries instead of CommandText concatenation.',
+        'medium': 'MEDIUM: Consider using parameterized queries with ADO.NET.',
+        'low': 'LOW: Review ADO.NET query construction.'
+      }
+    };
+    
+    let suggestion = messages[type]?.[severity] || 'Use parameterized queries or prepared statements instead of string concatenation.';
     
     if (context.framework) {
-      const frameworkSuggestions = {
-        'sequelize': 'Use Sequelize parameterized queries: Model.findOne({ where: { id: req.params.id } })',
-        'prisma': 'Use Prisma parameterized queries: prisma.user.findFirst({ where: { id: req.params.id } })',
-        'typeorm': 'Use TypeORM parameterized queries: repository.findOne({ where: { id: req.params.id } })',
-        'mongoose': 'Use Mongoose parameterized queries: User.findOne({ _id: req.params.id })',
-        'sqlalchemy': 'Use SQLAlchemy parameterized queries: session.query(User).filter(User.id == user_id)',
-        'django': 'Use Django ORM: User.objects.filter(id=user_id)'
-      };
-      
-      const frameworkSuggestion = frameworkSuggestions[context.framework as keyof typeof frameworkSuggestions];
-      return `${baseSuggestion} ${frameworkSuggestion}`;
+      suggestion += this.getFrameworkSpecificAdvice(context.framework, type);
     }
     
-    return `${baseSuggestion} Replace concatenation with placeholders (?, $1, :param) and pass values as parameters.`;
+    if (context.language) {
+      suggestion += this.getLanguageSpecificAdvice(context.language, type);
+    }
+    
+    return suggestion;
+  }
+
+  private getFrameworkSpecificAdvice(framework: string, type: string): string {
+    const advice: Record<string, Record<string, string>> = {
+      'sequelize': {
+        'Database query with raw concatenation and request input': ' For Sequelize, use: Model.findOne({ where: { id: req.params.id } })',
+        'ORM where clause with concatenation': ' For Sequelize, use parameterized where clauses: { where: { column: value } }'
+      },
+      'prisma': {
+        'Database query with raw concatenation and request input': ' For Prisma, use: prisma.user.findFirst({ where: { id: req.params.id } })',
+        'ORM where clause with concatenation': ' For Prisma, use parameterized queries: { where: { column: value } }'
+      },
+      'typeorm': {
+        'Database query with raw concatenation and request input': ' For TypeORM, use: repository.findOne({ where: { id: req.params.id } })',
+        'ORM where clause with concatenation': ' For TypeORM, use parameterized queries: { where: { column: value } }'
+      },
+      'sqlalchemy': {
+        'Database query with raw concatenation and request input': ' For SQLAlchemy, use: session.query(User).filter(User.id == user_id)',
+        'Python f-string SQL injection': ' For SQLAlchemy, use parameterized queries: session.query(User).filter(User.id == user_id)'
+      },
+      'django': {
+        'Database query with raw concatenation and request input': ' For Django, use: User.objects.filter(id=user_id)',
+        'Python format string SQL injection': ' For Django, use ORM: User.objects.filter(id=user_id)'
+      }
+    };
+    
+    return advice[framework]?.[type] || ` For ${framework}, use framework-specific parameterized query methods.`;
+  }
+
+  private getLanguageSpecificAdvice(language: string, type: string): string {
+    const advice: Record<string, Record<string, string>> = {
+      'python': {
+        'Python f-string SQL injection': ' In Python, use parameterized queries with libraries like psycopg2, sqlite3, or ORMs.',
+        'Python format string SQL injection': ' In Python, use parameterized queries with libraries like psycopg2, sqlite3, or ORMs.',
+        'Python %s substitution SQL injection': ' In Python, use parameterized queries with libraries like psycopg2, sqlite3, or ORMs.'
+      },
+      'javascript': {
+        'Template literal SQL with variables': ' In JavaScript, use parameterized queries with libraries like mysql2, pg, or ORMs.',
+        'Database query with raw concatenation and request input': ' In JavaScript, use parameterized queries with libraries like mysql2, pg, or ORMs.'
+      },
+      'java': {
+        'Java JDBC string concatenation': ' In Java, use PreparedStatement with placeholders (?) and setParameter methods.',
+        'Database query with raw concatenation and request input': ' In Java, use PreparedStatement with placeholders (?) and setParameter methods.'
+      },
+      'csharp': {
+        'C# ADO.NET CommandText concatenation': ' In C#, use SqlCommand with parameters (@param) and AddParameter methods.',
+        'Database query with raw concatenation and request input': ' In C#, use SqlCommand with parameters (@param) and AddParameter methods.'
+      }
+    };
+    
+    return advice[language]?.[type] || ` In ${language}, use language-specific parameterized query methods.`;
   }
 } 
