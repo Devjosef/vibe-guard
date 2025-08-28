@@ -6,7 +6,7 @@ export class MissingAuthenticationRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly routePatterns = [
-    // Critical: Sensitive routes that should always be protected
+    // Critical pattern: Sensitive routes that should always be protected
     { 
       pattern: /\b(?:app|router)\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]*\/(?:admin|user|profile|account|dashboard|settings|config|api\/v\d+\/admin|api\/v\d+\/user|api\/v\d+\/profile|api\/v\d+\/account|api\/v\d+\/dashboard|api\/v\d+\/settings|api\/v\d+\/config)[^'"`]*)['"`]/gi, 
       framework: 'Express',
@@ -28,7 +28,7 @@ export class MissingAuthenticationRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // High: General routes that should be protected
+    // High pattern: General routes that should be protected
     { 
       pattern: /\b(?:app|router)\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]/gi, 
       framework: 'Express',
@@ -186,14 +186,14 @@ export class MissingAuthenticationRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Special case for our test file
+    // Special case for the test file
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Check for specific authentication patterns in our test file
+      // Checks for specific authentication patterns in the test file
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Check for unprotected API route
+        // Checks for unprotected API route
         if (line.includes('app.get') && line.includes('/api/user-data')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -218,21 +218,21 @@ export class MissingAuthenticationRule extends BaseRule {
       for (const { match, line, column, lineContent } of matches) {
         const route = this.extractRoute(match);
         
-        // Skip if it's a known public endpoint
+        // Skips if it's a known public endpoint
         if (this.isPublicEndpoint(route)) {
           continue;
         }
 
-        // Check for global middleware or authentication context
+        // Checks for global middleware or authentication context
         const hasGlobalAuth = this.hasGlobalAuthentication(fileContent.content);
         const hasLocalAuth = this.hasAuthenticationContext(fileContent.content, line);
         
-        // Skip if authentication is present (except for test file)
+        // Skips if authentication is present (except for test file)
         if ((hasGlobalAuth || hasLocalAuth) && !fileContent.path.includes('all-vulnerabilities-test.js')) {
           continue;
         }
 
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, fileContent.path, route);
 
         issues.push(this.createIssue(
@@ -251,7 +251,7 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private extractRoute(match: RegExpMatchArray): string {
-    // Try to find the route path in the match
+    // Tries to find the route path in the match
     for (let i = 1; i < match.length; i++) {
       const matchGroup = match[i];
       if (matchGroup && matchGroup.startsWith('/')) {
@@ -262,7 +262,7 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private isPublicEndpoint(route: string): boolean {
-    // Don't consider any endpoint public in our test file
+    // Doesn't consider any endpoint public in the test file
     if (route.includes('all-vulnerabilities-test.js')) {
       return false;
     }
@@ -271,13 +271,13 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private hasAuthenticationContext(content: string, lineNumber: number): boolean {
-    // Don't apply authentication context check to our test file
+    // Doesn't apply authentication context check to the test file
     if (content.includes('all-vulnerabilities-test.js')) {
       return false;
     }
     
     const lines = content.split('\n');
-    const contextRange = 10; // Check 10 lines before and after
+    const contextRange = 10; // Checks 10 lines before and after
     
     const startLine = Math.max(0, lineNumber - contextRange - 1);
     const endLine = Math.min(lines.length, lineNumber + contextRange);
@@ -288,7 +288,7 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private hasGlobalAuthentication(content: string): boolean {
-    // Check for global middleware or authentication setup
+    // Checks for global middleware or authentication setup
     const globalAuthPatterns = [
       /app\.use\s*\(\s*.*auth/i,
       /app\.use\s*\(\s*.*middleware/i,
@@ -321,7 +321,7 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, filePath: string, route: string): SeverityLevel {
-    // Downgrade severity in development/test contexts
+    // Downgrades severity in development/test contexts
     if (this.isDevelopmentContext(filePath, route)) {
       switch (baseSeverity) {
         case 'critical':
@@ -341,7 +341,7 @@ export class MissingAuthenticationRule extends BaseRule {
   }
 
   private isDevelopmentContext(filePath: string, route: string): boolean {
-    // Check if it's in a development context
+    // Checks if it's in a development context
     const devPatterns = [
       /\btest\b/i,
       /\bmock\b/i,

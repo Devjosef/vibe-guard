@@ -19,7 +19,7 @@ export class McpServerSecurityRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly insecurePatterns = [
-    // Critical: Authentication and encryption issues
+    // Critical pattern: Authentication and encryption issues
     { 
       pattern: /\b(?:auth|authentication|authorization)\s*[:=]\s*["']?\s*(?:none|false|disabled|off)\s*["']?/gi, 
       type: 'Disabled MCP Authentication',
@@ -45,7 +45,7 @@ export class McpServerSecurityRule extends BaseRule {
       validation: (text: string) => this.validatePathTraversal(text)
     },
     
-    // High: Access control and binding issues
+    // High pattern: Access control and binding issues
     { 
       pattern: /\b(?:allow|enable|permit)\s*[:=]\s*["']?\s*(?:all|true|yes|1|any|everyone|public|unrestricted)\s*["']?/gi, 
       type: 'Insecure MCP Access Control',
@@ -71,7 +71,7 @@ export class McpServerSecurityRule extends BaseRule {
       validation: (text: string) => this.validateNoRateLimit(text)
     },
     
-    // Medium: CORS and logging issues
+    // Medium pattern: CORS and logging issues
     { 
       pattern: /\b(?:cors|origin)\s*[:=]\s*["']?\s*\*\s*["']?/gi, 
       type: 'Open CORS in MCP',
@@ -91,7 +91,7 @@ export class McpServerSecurityRule extends BaseRule {
       validation: (text: string) => this.validateLocalBinding(text)
     },
     
-    // Framework-specific MCP patterns
+    // Framework: Specific MCP patterns
     { 
       pattern: /\b(?:mcp[_-]?server|model[_-]?context[_-]?protocol)\s*[:=]\s*["']?\s*(?:true|yes|1|enabled)\s*["']?/gi, 
       type: 'MCP Server Enabled',
@@ -176,7 +176,7 @@ export class McpServerSecurityRule extends BaseRule {
     const configurationType = this.detectConfigurationType(fileContent.path);
     const hasMcpContext = this.hasMcpContext(fileContent.content);
     
-    // Skip if no MCP context detected and not a configuration file
+    // Skips if no MCP context detected and not a configuration file
     if (!hasMcpContext && !configurationType) {
       return issues;
     }
@@ -188,20 +188,20 @@ export class McpServerSecurityRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasMcpContext, configurationType);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the security issue
+        // Validates the security issue
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, context);
         
-        // Determine language for specific remediation
+        // Determines language for specific remediation
         const detectedLanguage = this.detectLanguage(fileContent.path);
 
         issues.push(this.createIssue(
@@ -239,21 +239,17 @@ export class McpServerSecurityRule extends BaseRule {
   }
 
   private isSafeContext(context: McpSecurityContext): boolean {
-    // Safe if in comment
+    
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if using security-related keywords
     if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
     
-    // Safe if in development/staging context
     if (context.surroundingCode.includes('development') || 
         context.surroundingCode.includes('staging') ||
         context.surroundingCode.includes('localhost')) {
@@ -374,7 +370,7 @@ export class McpServerSecurityRule extends BaseRule {
     );
   }
 
-  // Validation methods for different security issues
+  // Validation methods!
   private validateAccessControl(text: string): boolean {
     const allowKeywords = ['allow', 'enable', 'permit'];
     const insecureValues = ['all', 'true', 'yes', '1', 'any', 'everyone', 'public', 'unrestricted'];
@@ -464,7 +460,7 @@ export class McpServerSecurityRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, context: McpSecurityContext): SeverityLevel {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(context) || this.isTestFile(context)) {
       switch (baseSeverity) {
         case 'critical':

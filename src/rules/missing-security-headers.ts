@@ -281,12 +281,12 @@ export class MissingSecurityHeadersRule extends BaseRule {
     const hasServerCode = this.hasServerCode(fileContent.content);
     const hasSecurityHeaders = this.hasSecurityHeaders(fileContent.content);
     
-    // Skip if no server code detected and not a configuration file
+    // Skips if no server code detected and not a configuration file
     if (!hasServerCode && !configurationType) {
       return issues;
     }
     
-    // Check for missing security headers and report each separately
+    // Checks for missing security headers and reports each separately
     const missingHeaders = this.checkMissingHeaders(fileContent);
     
     if (missingHeaders.length > 0) {
@@ -295,9 +295,9 @@ export class MissingSecurityHeadersRule extends BaseRule {
       if (location) {
         const context = this.analyzeContext(fileContent, location.line, location.column, language, framework, hasServerCode, hasSecurityHeaders, configurationType);
         
-        // Skip if in safe context to prevent false positives
+        // Skips if in safe context to prevent false positives
         if (!this.isSafeContext(context)) {
-          // Report each missing header as a separate issue
+          // Reports each missing header as a separate issue
           for (const header of missingHeaders) {
             const severity = this.determineSeverity(header.severity, context);
             const suggestion = this.getRemediationMessage(header, context);
@@ -389,16 +389,13 @@ export class MissingSecurityHeadersRule extends BaseRule {
   }
 
   private isSafeContext(context: SecurityHeadersContext): boolean {
-    // Safe if in comment
+    
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if using security-related keywords
     if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
@@ -440,7 +437,7 @@ export class MissingSecurityHeadersRule extends BaseRule {
   }
 
   private detectFramework(content: string, language: string): string | undefined {
-    // Check for framework patterns in the content
+    // Checks for framework patterns in the content
     for (const pattern of this.serverPatterns) {
       if (pattern.pattern.test(content)) {
         return pattern.framework;
@@ -591,7 +588,7 @@ export class MissingSecurityHeadersRule extends BaseRule {
   }
 
   private determineSeverity(headerSeverity: SeverityLevel, context: SecurityHeadersContext): SeverityLevel {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (context.isInTestFile || this.isDevelopmentContext(context)) {
       switch (headerSeverity) {
         case 'critical': return 'high';
@@ -691,7 +688,7 @@ export class MissingSecurityHeadersRule extends BaseRule {
     return suggestions[headerName]?.[configType] || ` For ${configType} configuration files, ensure proper file permissions and use secure configuration management.`;
   }
 
-  // Validation methods for different security headers
+  // Validation methods!
   private validateCSP(content: string): boolean {
     return /Content-Security-Policy/i.test(content);
   }

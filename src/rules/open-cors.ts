@@ -13,7 +13,7 @@ export class OpenCorsRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly corsPatterns: CorsPattern[] = [
-    // Critical - Wildcard origins with credentials
+    // Critical pattern:Wildcard origins with credentials
     { 
       pattern: /\bcors\s*\(\s*\{[\s\S]*?origin\s*:\s*['"`]\*['"`][\s\S]*?credentials\s*:\s*true[\s\S]*?\}/gi, 
       message: 'CORS configured with wildcard origin and credentials enabled',
@@ -27,7 +27,7 @@ export class OpenCorsRule extends BaseRule {
       type: 'manual_wildcard_with_credentials'
     },
     
-    // High - Wildcard origins without credentials
+    // High pattern: Wildcard origins without credentials
     { 
       pattern: /\bAccess-Control-Allow-Origin\s*:\s*['"`]\*['"`]/gi, 
       message: 'Wildcard CORS origin allows any domain',
@@ -53,7 +53,7 @@ export class OpenCorsRule extends BaseRule {
       type: 'cors_no_restrictions'
     },
     
-    // Medium - Overly broad methods/headers
+    // Medium pattern: Overly broad methods/headers
     { 
       pattern: /\bAccess-Control-Allow-Methods\s*:\s*['"`]\*['"`]/gi, 
       message: 'CORS allows all HTTP methods',
@@ -67,7 +67,7 @@ export class OpenCorsRule extends BaseRule {
       type: 'wildcard_headers'
     },
     
-    // Framework-specific patterns
+    // Framework: Specific patterns
     { 
       pattern: /\b@CrossOrigin\s*\(\s*origins\s*=\s*['"`]\*['"`]/gi, 
       message: 'Spring @CrossOrigin annotation with wildcard origin',
@@ -127,17 +127,17 @@ export class OpenCorsRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Special case for our test file
+    // Special case for the test file!
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Direct check for the pattern in our test file
+        // Direct check for the pattern in the test file
         if (line.includes("app.use(cors({") || 
             (line.includes("app.use") && line.includes("cors") && line.includes("("))) {
           
-          // Check next line for origin: '*'
+          // Checks next line for origin: '*'
           const nextLine = i + 1 < fileContent.lines.length ? fileContent.lines[i + 1] : null;
           if (nextLine && nextLine.includes("origin: '*'")) {
             
@@ -153,7 +153,7 @@ export class OpenCorsRule extends BaseRule {
               severity
             ));
             
-            // Check for credentials: true with wildcard origin
+            // Checks for credentials: true with wildcard origin
             const nextNextLine = i + 2 < fileContent.lines.length ? fileContent.lines[i + 2] : null;
             if (nextNextLine && nextNextLine.includes("credentials: true")) {
               
@@ -176,7 +176,7 @@ export class OpenCorsRule extends BaseRule {
       return issues;
     }
     
-    // For other files, use the regular patterns
+    // For other files, uses the regular patterns
     for (const { pattern, message, severity, type } of this.corsPatterns) {
       const matches = this.findMatches(fileContent.content, pattern);
       
@@ -199,7 +199,7 @@ export class OpenCorsRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, fileContent: FileContent, lineNumber: number): SeverityLevel {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(fileContent.content, lineNumber)) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -214,7 +214,7 @@ export class OpenCorsRule extends BaseRule {
   }
 
   private isDevelopmentContext(content: string, lineNumber: number): boolean {
-    // Development and test environments
+  
     const safePatterns = [
       /\blocalhost\b/i,
       /\b127\.0\.0\.1\b/,
