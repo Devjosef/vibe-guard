@@ -56,8 +56,6 @@ program
   .option('--include <patterns...>', 'Include patterns')
   .action(handleScan);
 
-// Default action - moved to end to avoid conflicts with commands
-
 program
   .command('rules')
   .description('List all available security rules')
@@ -139,13 +137,11 @@ program
     console.log(chalk.blue.bold('🎯 Vibe-Guard Security Demo\n'));
     console.log(chalk.white('Creating demo files with security vulnerabilities...\n'));
     
-    // Create demo files with vulnerabilities
     const demoDir = './vibe-guard-demo';
     if (!fs.existsSync(demoDir)) {
       fs.mkdirSync(demoDir);
     }
     
-    // Demo file with XSS vulnerability
     const xssDemo = `${demoDir}/vulnerable-app.js`;
     fs.writeFileSync(xssDemo, `
 // Demo file with XSS vulnerability
@@ -241,7 +237,6 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-// Default action for when no command is specified
 program
   .argument('[target]', 'File or directory to scan')
   .option('-f, --format <format>', 'Output format (table, json, sarif, html)')
