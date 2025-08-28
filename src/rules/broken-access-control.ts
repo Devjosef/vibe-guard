@@ -21,7 +21,7 @@ export class BrokenAccessControlRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly accessControlPatterns = [
-    // Missing authorization checks in routes: tighter patterns
+    // Missing authorization checks in routes: Tighter patterns
     { 
       pattern: /app\.(?:get|post|put|delete|patch)\s*\(\s*['"`][^'"`]*\/(?:admin|user|api|dashboard|settings|profile|account|billing|payment|order)[^'"`]*['"`]\s*,\s*(?!.*(?:auth|login|verify|middleware|authorize|permission|guard|protect))/gi, 
       type: 'Protected route without authorization',
@@ -30,7 +30,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validateProtectedRoute(text)
     },
     
-    // Direct object references without ownership checks:  tighter patterns
+    // Direct object references without ownership checks: Tighter patterns
     { 
       pattern: /findById\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'Direct object reference without ownership check',
@@ -60,7 +60,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validateORMQuery(text)
     },
     
-    // File access without authorization: tighter patterns
+    // File access without authorization: Tighter patterns
     { 
       pattern: /readFile\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^)]*\)/gi, 
       type: 'File access without authorization',
@@ -83,7 +83,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validateFileDeletion(text)
     },
     
-    // Database operations without user context - tighter patterns
+    // Database operations without user context: Tighter patterns
     { 
       pattern: /\.update\s*\(\s*\{[^}]*\},\s*\{[^}]*id\s*:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)[^}]*\}/gi, 
       type: 'Database update without user context',
@@ -106,7 +106,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validateMongoDBRemoval(text)
     },
     
-    // Role-based access control missing: tighter patterns
+    // Role-based access control missing: Tighter patterns
     { 
       pattern: /(?:admin|user|role)\s*[:=]\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Role assignment from user input',
@@ -122,7 +122,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validatePermissionAssignment(text)
     },
     
-    // Session manipulation: tighter patterns
+    // Session manipulation: Tighter patterns
     { 
       pattern: /req\.session\.(?:user|role|admin)\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Session manipulation with user input',
@@ -138,7 +138,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validateSessionAssignment(text)
     },
     
-    // PHP patterns: tighter
+    // PHP patterns: Tighter patterns
     { 
       pattern: /\$_SESSION\[(?:user|role|admin)\]\s*=\s*(?:\$_GET|\$_POST|\$_REQUEST)/gi, 
       type: 'PHP session manipulation with user input',
@@ -154,7 +154,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validatePHPDatabaseQuery(text)
     },
     
-    // Python patterns: tighter
+    // Python patterns: Tighter patterns
     { 
       pattern: /session\[(?:user|role|admin)\]\s*=\s*(?:request\.|flask\.request\.)/gi, 
       type: 'Python session manipulation with user input',
@@ -170,7 +170,7 @@ export class BrokenAccessControlRule extends BaseRule {
       validation: (text: string) => this.validatePythonORMQuery(text)
     },
     
-    // Java patterns: tighter
+    // Java patterns: Tighter patterns
     { 
       pattern: /session\.setAttribute\s*\(\s*['"`](?:user|role|admin)['"`]\s*,\s*(?:request\.getParameter|request\.getAttribute)/gi, 
       type: 'Java session manipulation with user input',
@@ -187,7 +187,7 @@ export class BrokenAccessControlRule extends BaseRule {
     }
   ];
 
-  // Multi-line comment patterns
+  // Multi line comment patterns!
   private readonly multiLineCommentPatterns = [
     /\/\*[\s\S]*?\*\//g,  // JavaScript/TypeScript multi-line comments
     /""".*?"""/gs,        // Python docstrings
@@ -198,7 +198,7 @@ export class BrokenAccessControlRule extends BaseRule {
   ];
 
   private readonly authorizationPatterns = [
-    // Specific authorization check patterns - only match actual middleware/auth calls
+    // Specific authorization check patterns: Only match actual middleware/auth calls
     /auth\s*\(/i,
     /authorize\s*\(/i,
     /permission\s*\(/i,
@@ -227,7 +227,7 @@ export class BrokenAccessControlRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Development and testing patterns
+    // Development and testing patterns:
     /example/i,
     /demo/i,
     /test/i,
@@ -253,7 +253,7 @@ export class BrokenAccessControlRule extends BaseRule {
     /todo/i,
     /fixme/i,
     
-    // Documentation and examples
+    // Documentation and examples:
     /documentation/i,
     /docs?/i,
     /readme/i,
@@ -263,7 +263,7 @@ export class BrokenAccessControlRule extends BaseRule {
     /tutorial/i,
     /guide/i,
     
-    // Test files and directories
+    // Test files and directories:
     /test[_-]?files?/i,
     /test[_-]?data/i,
     /test[_-]?cases/i,
@@ -272,7 +272,7 @@ export class BrokenAccessControlRule extends BaseRule {
     /\.test\./i,
     /\.spec\./i,
     
-    // Configuration and setup
+    // Configuration and setup:
     /config[_-]?example/i,
     /setup[_-]?example/i,
     /template[_-]?example/i
@@ -293,17 +293,17 @@ export class BrokenAccessControlRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasAuthorizationChecks, hasAuthentication, isProtectedRoute, type);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the access control issue
+        // Validates the access control issue
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Calculate final confidence and severity based on context
+        // Calculates final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         const finalSeverity = this.calculateSeverity(severity, context);
         
@@ -346,25 +346,18 @@ export class BrokenAccessControlRule extends BaseRule {
   }
 
   private isSafeContext(context: AccessControlContext): boolean {
-    // Safe if in comment
+
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if in development context
     if (context.isInDevelopment) return true;
     
-    // Safe if using false positive patterns (but don't suppress valid insecure code)
     if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
-    
-    // Only reduce confidence for authorization checks, don't suppress entirely
-    // This prevents suppressing valid insecure code just because "secure" appears
     
     return false;
   }
@@ -372,7 +365,7 @@ export class BrokenAccessControlRule extends BaseRule {
   private isInComment(line: string, language: string, fullContent: string, lineNumber: number): boolean {
     const trimmed = line.trim();
     
-    // Check for single-line comments
+    // Checks for single line comments
     if (language === 'javascript' || language === 'typescript') {
       if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return true;
     }
@@ -383,19 +376,19 @@ export class BrokenAccessControlRule extends BaseRule {
       if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#')) return true;
     }
     
-    // Check for multi-line comments
+    // Checks for multi line comments
     const beforeContent = fullContent.split('\n').slice(0, lineNumber).join('\n');
     
     for (const pattern of this.multiLineCommentPatterns) {
       const matches = beforeContent.match(pattern);
       if (matches && matches.length > 0) {
-        // Check if the current line is within a multi-line comment
+        // Checks if the current line is within a multi line comment
         const lastMatch = matches[matches.length - 1];
         if (lastMatch) {
           const lastMatchIndex = beforeContent.lastIndexOf(lastMatch);
           const commentEndIndex = lastMatchIndex + lastMatch.length;
           
-          // If we're still within the comment, return true
+          // If we're still within the comment, returns true
           if (commentEndIndex >= beforeContent.length) {
             return true;
           }
@@ -476,10 +469,10 @@ export class BrokenAccessControlRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: AccessControlContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasAuthorizationChecks) confidence *= 0.6; // Reduce if auth checks present
-    if (context.hasAuthentication) confidence *= 0.8; // Reduce if auth present
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasAuthorizationChecks) confidence *= 0.6; // Reduces if auth checks present
+    if (context.hasAuthentication) confidence *= 0.8; // Reduces if auth present
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
@@ -487,7 +480,7 @@ export class BrokenAccessControlRule extends BaseRule {
   private calculateSeverity(baseSeverity: 'critical' | 'high' | 'medium', context: AccessControlContext): 'critical' | 'high' | 'medium' {
     let severity = baseSeverity;
     
-    // Never downgrade critical issues below medium
+    // Never downgrades critical issues below medium
     if (baseSeverity === 'critical') {
       if (context.hasAuthorizationChecks) severity = 'high';
       if (context.hasAuthentication) severity = 'high';
@@ -554,7 +547,7 @@ export class BrokenAccessControlRule extends BaseRule {
     return quotes % 2 === 1;
   }
 
-  // Validation methods for different access control issues
+  // Validation methods for different access control issues!
   private validateProtectedRoute(text: string): boolean {
     const protectedKeywords = ['admin', 'user', 'api', 'dashboard', 'settings', 'profile', 'account', 'billing', 'payment', 'order'];
     return protectedKeywords.some(keyword => text.toLowerCase().includes(keyword));
@@ -693,7 +686,7 @@ export class BrokenAccessControlRule extends BaseRule {
       }
     }
     
-    // Context-aware suggestions based on issue type
+    // Context aware suggestions based on issue type!
     if (context.issueType?.includes('route')) {
       suggestion += ' Consider implementing route-level authorization middleware.';
     } else if (context.issueType?.includes('database') || context.issueType?.includes('query')) {

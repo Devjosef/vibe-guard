@@ -20,7 +20,7 @@ export class DirectoryTraversalRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly traversalPatterns = [
-    // Direct path traversal patterns - tighter patterns
+    // Direct path traversal patterns: Tighter patterns
     { 
       pattern: /(?:readFile|writeFile|createReadStream|createWriteStream|unlink|rmdir|mkdir|stat|access)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/gi, 
       type: 'File operation with user input',
@@ -29,7 +29,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validateFileOperation(text)
     },
     
-    // Express static file serving - tighter patterns
+    // Express static file serving: Tighter patterns
     { 
       pattern: /express\.static\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/gi, 
       type: 'Express static serving with user input',
@@ -45,7 +45,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validateExpressSendFile(text)
     },
     
-    // Path concatenation - tighter patterns
+    // Path concatenation: Tighter patterns
     { 
       pattern: /['"`][^'"`]*\/['"`]\s*\+\s*(?:req\.|request\.|input\.|params\.|query\.)/gi, 
       type: 'Path concatenation with user input',
@@ -61,7 +61,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validateTemplateLiteralPath(text)
     },
     
-    // Dangerous path patterns (but not in imports/requires) - tighter
+    // Dangerous path patterns (but not in imports/requires): Tighter patterns
     { 
       pattern: /(?<!(?:import|require|from)\s+['"`][^'"`]*)\.\.\//g, 
       type: 'Hardcoded directory traversal sequence',
@@ -70,7 +70,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validateHardcodedTraversal(text)
     },
     
-    // Framework-specific patterns - tighter
+    // Framework specific patterns: Tighter patterns
     { 
       pattern: /File\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/gi, 
       type: 'File constructor with user input',
@@ -100,7 +100,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validatePHPFileGetContents(text)
     },
     
-    // Python patterns - tighter
+    // Python patterns: Tighter patterns
     { 
       pattern: /open\s*\(\s*(?:request\.|flask\.request\.)[^)]*\)/gi, 
       type: 'Python file open with user input',
@@ -116,7 +116,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validatePythonPathJoin(text)
     },
     
-    // Node.js path operations - tighter
+    // Node.js path operations: Tighter patterns
     { 
       pattern: /path\.join\s*\([^)]*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/gi, 
       type: 'Path join without normalization',
@@ -125,7 +125,7 @@ export class DirectoryTraversalRule extends BaseRule {
       validation: (text: string) => this.validatePathJoin(text)
     },
     
-    // Include/require with user input - keep these as they're dangerous
+    // Include/require with user input: Keep these as they're dangerous
     { 
       pattern: /(?:require|import)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/gi, 
       type: 'Module import with user input',
@@ -142,7 +142,7 @@ export class DirectoryTraversalRule extends BaseRule {
     }
   ];
 
-  // Multi-line comment patterns
+  // Multi line comment patterns
   private readonly multiLineCommentPatterns = [
     /\/\*[\s\S]*?\*\//g,  // JavaScript/TypeScript multi-line comments
     /""".*?"""/gs,        // Python docstrings
@@ -153,7 +153,7 @@ export class DirectoryTraversalRule extends BaseRule {
   ];
 
   private readonly safePatterns = [
-    // Only suppress when sanitizers actually wrap path variables
+    // Only suppresses when sanitizers actually wrap path variables
     /path\.resolve\s*\(\s*[^)]*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/i,
     /path\.normalize\s*\(\s*[^)]*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/i,
     /path\.basename\s*\(\s*[^)]*(?:req\.|request\.|input\.|params\.|query\.)[^)]*\)/i,
@@ -174,7 +174,7 @@ export class DirectoryTraversalRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Development and testing patterns
+    // Development and testing patterns: 
     /example/i,
     /demo/i,
     /test/i,
@@ -220,12 +220,12 @@ export class DirectoryTraversalRule extends BaseRule {
     const hasValidation = this.hasValidation(fileContent.content);
 
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Check for specific directory traversal patterns in our test file
+      // Checks for specific directory traversal patterns in the test file
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Check for fs.readFile with user input from query
+        // Checks for fs.readFile with user input from query
         if (line.includes('fs.readFile(filePath') && fileContent.content.includes('req.query.filename')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -237,7 +237,7 @@ export class DirectoryTraversalRule extends BaseRule {
           ));
         }
         
-        // Check for direct path assignment from user input
+        // Checks for direct path assignment from user input
         if (line.includes('const filePath = req.query.filename')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -261,17 +261,17 @@ export class DirectoryTraversalRule extends BaseRule {
       for (const { line, column, lineContent } of matches) {
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasPathSanitization, hasValidation, type);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the traversal issue
+        // Validates the traversal issue
         if (!validation(lineContent)) {
           continue;
         }
         
-        // Calculate final confidence and severity based on context
+        // Calculates final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         const finalSeverity = this.calculateSeverity(severity, context);
         
@@ -292,7 +292,7 @@ export class DirectoryTraversalRule extends BaseRule {
     return issues;
   }
 
-  // Context analysis methods
+  // Context analysis methods: Expanded coverage
   private detectLanguage(filePath: string): string {
     const ext = filePath.split('.').pop()?.toLowerCase();
     const languageMap: Record<string, string> = {
@@ -371,24 +371,19 @@ export class DirectoryTraversalRule extends BaseRule {
   }
 
   private isSafeContext(context: TraversalContext): boolean {
-    // Safe if in comment
+    
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if in development context
     if (context.isInDevelopment) return true;
-    
-    // Safe if using false positive patterns
+  
     if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
-    
-    // Safe if using proper path sanitization
+  
     if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
@@ -399,7 +394,7 @@ export class DirectoryTraversalRule extends BaseRule {
   private isInComment(line: string, language: string, fullContent: string, lineNumber: number): boolean {
     const trimmed = line.trim();
     
-    // Check for single-line comments
+    // Checks for single line comments
     if (language === 'javascript' || language === 'typescript') {
       if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return true;
     }
@@ -410,19 +405,19 @@ export class DirectoryTraversalRule extends BaseRule {
       if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('#')) return true;
     }
     
-    // Check for multi-line comments
+    // Checks for multi line comments
     const beforeContent = fullContent.split('\n').slice(0, lineNumber).join('\n');
     
     for (const pattern of this.multiLineCommentPatterns) {
       const matches = beforeContent.match(pattern);
       if (matches && matches.length > 0) {
-        // Check if the current line is within a multi-line comment
+        // Checks if the current line is within a multi line comment
         const lastMatch = matches[matches.length - 1];
         if (lastMatch) {
           const lastMatchIndex = beforeContent.lastIndexOf(lastMatch);
           const commentEndIndex = lastMatchIndex + lastMatch.length;
           
-          // If we're still within the comment, return true
+          // If we're still within the comment, returns true
           if (commentEndIndex >= beforeContent.length) {
             return true;
           }
@@ -477,10 +472,10 @@ export class DirectoryTraversalRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: TraversalContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasPathSanitization) confidence *= 0.5; // Reduce if path sanitization present
-    if (context.hasValidation) confidence *= 0.7; // Reduce if validation present
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasPathSanitization) confidence *= 0.5; // Reduces if path sanitization present
+    if (context.hasValidation) confidence *= 0.7; // Reduces if validation present
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
@@ -488,7 +483,7 @@ export class DirectoryTraversalRule extends BaseRule {
   private calculateSeverity(baseSeverity: 'critical' | 'high' | 'medium', context: TraversalContext): 'critical' | 'high' | 'medium' {
     let severity = baseSeverity;
     
-    // Adjust severity based on context
+    // Adjusts severity based on context
     if (context.hasPathSanitization) {
       if (severity === 'critical') severity = 'high';
       if (severity === 'high') severity = 'medium';
@@ -543,7 +538,7 @@ export class DirectoryTraversalRule extends BaseRule {
     return suggestion;
   }
 
-  // Validation methods for different traversal patterns
+  // Validation methods for different traversal patterns!
   private validateFileOperation(text: string): boolean {
     const fileOps = ['readFile', 'writeFile', 'createReadStream', 'createWriteStream', 'unlink', 'rmdir', 'mkdir', 'stat', 'access'];
     const userInputs = ['req.', 'request.', 'input.', 'params.', 'query.'];
