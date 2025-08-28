@@ -19,7 +19,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   readonly severity = 'critical' as const;
 
   private readonly sensitivePatterns = [
-    // Database connections - expanded coverage
+    // Database connections: Expanded coverage
     { 
       pattern: /(?:database_url|db_url|connection_string)\s*[:=]\s*['"`]([^'"`\s]+)['"`]/gi, 
       type: 'Database Connection',
@@ -35,7 +35,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateDatabaseURL(text)
     },
     
-    // JDBC, MSSQL, Oracle patterns
+    // JDBC, MSSQL, Oracle patterns: Expanded coverage
     { 
       pattern: /jdbc:(?:mysql|postgresql|oracle|sqlserver|mssql):\/\/[^'"`\s]+/gi, 
       type: 'JDBC Connection String',
@@ -51,7 +51,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateDatabaseConfig(text)
     },
     
-    // Encryption keys - expanded coverage
+    // Encryption keys: Expanded coverage
     { 
       pattern: /(?:encryption_key|secret_key|private_key)\s*[:=]\s*['"`]([a-zA-Z0-9+/=]{20,})['"`]/gi, 
       type: 'Encryption Key',
@@ -67,7 +67,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validatePrivateKey(text)
     },
     
-    // Generic high-entropy keys
+    // Generic high entropy keys: Expanded coverage
     { 
       pattern: /(?:key|secret|token)\s*[:=]\s*['"`]([a-zA-Z0-9+/=_-]{32,})['"`]/gi, 
       type: 'High-Entropy Secret',
@@ -76,7 +76,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateHighEntropySecret(text)
     },
     
-    // Configuration secrets
+    // Configuration secrets: Expanded coverage
     { 
       pattern: /(?:app_secret|session_secret|jwt_secret)\s*[:=]\s*['"`]([^'"`\s]{16,})['"`]/gi, 
       type: 'Application Secret',
@@ -92,7 +92,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateCryptographicSalt(text)
     },
     
-    // Third-party service keys - expanded coverage
+    // Third-party service keys: Expanded coverage
     { 
       pattern: /(?:stripe_secret|stripe_key)\s*[:=]\s*['"`](sk_[a-zA-Z0-9_]+)['"`]/gi, 
       type: 'Stripe Secret Key',
@@ -115,7 +115,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateTwilioToken(text)
     },
     
-    // AWS, Azure, GCP patterns
+    // AWS, Azure, GCP patterns: Expanded coverage
     { 
       pattern: /(?:aws_access_key|aws_secret_key|azure_key|gcp_key)\s*[:=]\s*['"`]([a-zA-Z0-9+/=]{20,})['"`]/gi, 
       type: 'Cloud Provider Key',
@@ -124,7 +124,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateCloudProviderKey(text)
     },
     
-    // Generic API keys
+    // Generic API keys: Expanded coverage
     { 
       pattern: /(?:api_key|apikey)\s*[:=]\s*['"`](sk_[a-zA-Z0-9_]+)['"`]/gi, 
       type: 'API Key',
@@ -133,7 +133,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateAPIKey(text)
     },
     
-    // Generic sensitive patterns
+    // Generic sensitive patterns: Expanded coverage
     { 
       pattern: /(?:admin_password|root_password|db_password)\s*[:=]\s*['"`]([^'"`\s]{6,})['"`]/gi, 
       type: 'Admin Password',
@@ -149,7 +149,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateWebhookSecret(text)
     },
     
-    // Configuration file patterns
+    // Configuration file patterns: Expanded coverage
     { 
       pattern: /password\s*[:=]\s*['"`](?!.*(?:password|secret|key|token))[^'"`\s]{8,}['"`]/gi, 
       type: 'Configuration Password',
@@ -159,7 +159,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     }
   ];
 
-  // Multi-line comment patterns
+  // Multi line comment patterns: Expanded coverage
   private readonly multiLineCommentPatterns = [
     /\/\*[\s\S]*?\*\//g,  // JavaScript/TypeScript multi-line comments
     /""".*?"""/gs,        // Python docstrings
@@ -170,7 +170,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Common false positive patterns
+    // Common false positive patterns: Expanded coverage
     /example/i,
     /sample/i,
     /demo/i,
@@ -221,7 +221,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     const framework = this.detectFramework(fileContent.content, language);
     const hasEnvironmentVariables = this.hasEnvironmentVariables(fileContent.content);
 
-    // Focus on configuration files and certain code files
+    // Focuses on configuration files and certain code files
     if (!this.isSensitiveFile(fileContent.path)) {
       return issues;
     }
@@ -233,17 +233,17 @@ export class HardcodedSensitiveDataRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasEnvironmentVariables, type);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the sensitive data issue
+        // Validates the sensitive data issue
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Calculate final confidence and severity based on context
+        // Calculates final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         const finalSeverity = this.calculateSeverity(severity, context);
         
@@ -264,7 +264,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     return issues;
   }
 
-  // Context analysis methods
+  // Context analysis methods: Expanded coverage
   private detectLanguage(filePath: string): string {
     const ext = filePath.split('.').pop()?.toLowerCase();
     const languageMap: Record<string, string> = {
@@ -336,19 +336,15 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   }
 
   private isSafeContext(context: SensitiveDataContext): boolean {
-    // Safe if in comment
+    
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if in development context
     if (context.isInDevelopment) return true;
     
-    // Safe if using false positive patterns
     if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
@@ -359,7 +355,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   private isInComment(line: string, language: string, fullContent: string, lineNumber: number): boolean {
     const trimmed = line.trim();
     
-    // Check for single-line comments
+    // Checks for single line comments
     if (language === 'javascript' || language === 'typescript') {
       if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return true;
     }
@@ -373,19 +369,19 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       if (trimmed.startsWith('#')) return true;
     }
     
-    // Check for multi-line comments
+    // Checks for multi line comments
     const beforeContent = fullContent.split('\n').slice(0, lineNumber).join('\n');
     
     for (const pattern of this.multiLineCommentPatterns) {
       const matches = beforeContent.match(pattern);
       if (matches && matches.length > 0) {
-        // Check if the current line is within a multi-line comment
+        // Checks if the current line is within a multi line comment
         const lastMatch = matches[matches.length - 1];
         if (lastMatch) {
           const lastMatchIndex = beforeContent.lastIndexOf(lastMatch);
           const commentEndIndex = lastMatchIndex + lastMatch.length;
           
-          // If we're still within the comment, return true
+          // If we're still within the comment, returns true
           if (commentEndIndex >= beforeContent.length) {
             return true;
           }
@@ -441,9 +437,9 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: SensitiveDataContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasEnvironmentVariables) confidence *= 0.8; // Reduce if env vars present
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasEnvironmentVariables) confidence *= 0.8; // Reduces if env vars present
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
@@ -451,7 +447,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
   private calculateSeverity(baseSeverity: 'critical' | 'high' | 'medium', context: SensitiveDataContext): 'critical' | 'high' | 'medium' {
     let severity = baseSeverity;
     
-    // Adjust severity based on context
+    // Adjusts severity based on context
     if (context.hasEnvironmentVariables) {
       if (severity === 'critical') severity = 'high';
     }
@@ -541,7 +537,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
     return `${start}${middle}${end}`;
   }
 
-  // Validation methods for different sensitive data patterns
+  // Validation methods for different sensitive data patterns: Expanded coverage
   private validateDatabaseConnection(text: string): boolean {
     return /(?:database_url|db_url|connection_string)\s*[:=]/.test(text);
   }
