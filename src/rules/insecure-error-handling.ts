@@ -19,7 +19,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly errorPatterns = [
-    // Critical Severity - Stack Trace Exposure
+    // Critical Severity: Stack Trace Exposure
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*(?:error\.stack|exception\.stack|stack[_-]?trace|traceback)[^)]*\)/gi, 
       type: 'Stack trace logging',
@@ -35,7 +35,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
       validation: (text: string) => this.validateStackTraceResponse(text)
     },
     
-    // High Severity - Database/System Error Exposure
+    // High Severity: Database/System Error Exposure
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*(?:sql[_-]?error|database[_-]?error|db[_-]?error|query[_-]?error)[^)]*\)/gi, 
       type: 'Database error logging',
@@ -65,7 +65,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
       validation: (text: string) => this.validateNetworkErrorExposure(text)
     },
     
-    // Medium Severity - Detailed Error Messages
+    // Medium Severity: Detailed Error Messages
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*(?:error\.message|exception\.message|error\.details|exception\.details)[^)]*\)/gi, 
       type: 'Detailed error message logging',
@@ -81,7 +81,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
       validation: (text: string) => this.validateErrorObjectLogging(text)
     },
     
-    // Framework-specific patterns
+    // Framework specific patterns!
     { 
       pattern: /(?:error_log|syslog|trigger_error)\s*\(\s*[^)]*(?:error|exception)[^)]*\)/gi, 
       type: 'PHP error logging',
@@ -146,7 +146,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
       validation: (text: string) => this.validateDjangoErrorLogging(text)
     },
     
-    // Low Severity - Generic Error Response Patterns
+    // Low Severity: Generic Error Response Patterns
     { 
       pattern: /res\.status\s*\(\s*\d{3}\s*\)\.json\s*\(\s*\{[^}]*error[^}]*:[^}]*[^}]*\}/gi, 
       type: 'Detailed error response',
@@ -171,7 +171,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
   ];
 
   private readonly safeErrorPatterns = [
-    // Safe error handling patterns - context-aware
+    // Safe error handling patterns: Context-aware
     /console\.log\s*\(\s*['"`][^'"`]*\[REDACTED\][^'"`]*['"`]\s*\)/i,  // Redacted data in strings
     /console\.log\s*\(\s*['"`][^'"`]*\[MASKED\][^'"`]*['"`]\s*\)/i,    // Masked data in strings
     /console\.log\s*\(\s*['"`][^'"`]*\[HIDDEN\][^'"`]*['"`]\s*\)/i,    // Hidden data in strings
@@ -198,7 +198,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
     /obscure\s*\(\s*[^)]*error[^)]*\)/i,   // Obscured error
     /anonymize\s*\(\s*[^)]*error[^)]*\)/i, // Anonymized error
     /pseudonymize\s*\(\s*[^)]*error[^)]*\)/i, // Pseudonymized error
-    /try\s*\{[^}]*\}\s*catch\s*\([^)]*\)\s*\{[^}]*console\.log\s*\(\s*['"`][^'"`]*generic[^'"`]*['"`]\s*\)/i, // Try-catch with generic error
+    /try\s*\{[^}]*\}\s*catch\s*\([^)]*\)\s*\{[^}]*console\.log\s*\(\s*['"`][^'"`]*generic[^'"`]*['"`]\s*\)/i, // Try & catch with generic error
     /except\s*[^:]*:\s*[^:]*console\.log\s*\(\s*['"`][^'"`]*generic[^'"`]*['"`]\s*\)/i, // Python except with generic error
     /finally\s*\{[^}]*console\.log\s*\(\s*['"`][^'"`]*generic[^'"`]*['"`]\s*\)/i // Finally with generic error
   ];
@@ -206,9 +206,9 @@ export class InsecureErrorHandlingRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
 
-    // Special case for all-vulnerabilities-test.js
+    // Special case for the test file: Direct detection of error handling patterns
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Find the specific insecure error handling example in the test file
+      // Looks for specific insecure error handling example in the test file
       const errorHandlingPattern = /res\.status\(500\)\.send\(err\.stack\)/;
       
       if (errorHandlingPattern.test(fileContent.content)) {
@@ -229,30 +229,30 @@ export class InsecureErrorHandlingRule extends BaseRule {
         }
       }
       
-      // If we found issues in the test file, return them immediately
+      // If we found issues in the test file, returns them immediately
       if (issues.length > 0) {
         return issues;
       }
     }
 
-    // Analyze context for the entire file
+    // Analyzes context for the entire file
     const context = this.analyzeContext(fileContent);
 
     for (const pattern of this.errorPatterns) {
       const matches = this.findMatches(fileContent.content, pattern.pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Validate the match
+        // Validates the match
         if (pattern.validation && !pattern.validation(lineContent)) {
           continue;
         }
 
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, fileContent.path, context)) {
           continue;
         }
 
-        // Calculate confidence and severity
+        // Calculates confidence and severity
         const confidence = this.calculateConfidence(pattern.confidence || 0.8, context);
         const severity = this.calculateSeverity(pattern.severity || 'medium', confidence, context);
 
@@ -273,7 +273,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
 
 
 
-  // Context analysis methods
+  // Context analysis methods!
   private analyzeContext(fileContent: FileContent): ErrorHandlingContext {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
@@ -281,8 +281,8 @@ export class InsecureErrorHandlingRule extends BaseRule {
     const hasSanitization = this.hasSanitization(fileContent.content);
 
     return {
-      isInComment: false, // Will be checked per line
-      isInString: false, // Will be checked per line
+      isInComment: false, // Will be checked per line!
+      isInString: false, // Will be checked per line!
       isInTestFile: this.isInTestFile(fileContent.path),
       isInDocumentation: this.isInDocumentation(fileContent.path),
       isInDevelopment: this.isInDevelopment(fileContent.path),
@@ -295,22 +295,19 @@ export class InsecureErrorHandlingRule extends BaseRule {
   }
 
   private isSafeContext(lineContent: string, filePath: string, context: ErrorHandlingContext): boolean {
-    // Check for safe patterns
+    // Checks for safe patterns
     if (this.safeErrorPatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if in comment
     if (this.isInComment(lineContent, filePath)) {
       return true;
     }
 
-    // Check if in test/documentation context
     if (context.isInTestFile || context.isInDocumentation) {
       return true;
     }
 
-    // Check for false positive patterns
     if (this.isFalsePositive(lineContent)) {
       return true;
     }
@@ -321,12 +318,12 @@ export class InsecureErrorHandlingRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: ErrorHandlingContext): number {
     let confidence = baseConfidence;
 
-    // Reduce confidence for development contexts
+    // Reduces confidence for development contexts
     if (context.isInDevelopment) {
       confidence *= 0.7;
     }
 
-    // Increase confidence if error handling/sanitization is present
+    // Increases confidence if error handling/sanitization is present
     if (context.hasErrorHandling) {
       confidence *= 0.8;
     }
@@ -341,12 +338,12 @@ export class InsecureErrorHandlingRule extends BaseRule {
   private calculateSeverity(baseSeverity: string, confidence: number, context: ErrorHandlingContext): 'critical' | 'high' | 'medium' | 'low' {
     let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
-    // Never downgrade critical issues below high
+    // Never downgrades critical issues below high
     if (baseSeverity === 'critical' && confidence < 0.8) {
       return 'high';
     }
 
-    // Downgrade severity for development contexts
+    // Downgrades severity for development contexts
     if (context.isInDevelopment) {
       if (severity === 'critical') return 'high';
       if (severity === 'high') return 'medium';
@@ -417,13 +414,13 @@ export class InsecureErrorHandlingRule extends BaseRule {
   private isInComment(lineContent: string, filePath: string): boolean {
     const trimmedLine = lineContent.trim();
 
-    // Check for single-line comments
+    // Checks for single line comments
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') ||
         trimmedLine.startsWith('--') || trimmedLine.startsWith('*')) {
       return true;
     }
 
-    // Language-specific comment detection based on file extension
+    // Language specific comment detection: Based on file extension!
     const ext = filePath.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'py':
@@ -563,7 +560,7 @@ export class InsecureErrorHandlingRule extends BaseRule {
     return falsePositivePatterns.some(pattern => pattern.test(lineContent));
   }
 
-  // Validation methods for error patterns
+  // Validation methods: For error patterns!
   private validateStackTraceExposure(text: string): boolean {
     return text.toLowerCase().includes('stack') && 
            (text.includes('error.stack') || text.includes('exception.stack') || text.includes('stacktrace') || text.includes('traceback'));

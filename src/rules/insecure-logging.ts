@@ -6,7 +6,7 @@ export class InsecureLoggingRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly sensitiveLoggingPatterns = [
-    // Password logging patterns - with word boundaries
+    // Password logging patterns: With word boundaries
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:password|passwd|pwd)\b[^)]*\)/gi, 
       type: 'Password logging',
@@ -18,7 +18,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // API key logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:api[_-]?key|apikey|secret[_-]?key|secretkey|access[_-]?token|accesstoken)\b[^)]*\)/gi, 
       type: 'API key logging',
@@ -30,14 +30,14 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // Database credentials logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:database_url|db_url|connection_string|mongodb|mysql|postgres|redis)\b[^)]*\)/gi, 
       type: 'Database credentials logging',
       severity: 'high' as const
     },
     
-    // JWT token logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*eyJ[a-zA-Z0-9_\-]*\.eyJ[a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]*[^)]*\)/gi, 
       type: 'JWT token logging',
@@ -49,7 +49,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // Credit card logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:credit[_-]?card|card[_-]?number|cc[_-]?num)\b[^)]*\)/gi, 
       type: 'Credit card logging',
@@ -61,7 +61,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // Social security number logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:ssn|social[_-]?security)\b[^)]*\)/gi, 
       type: 'SSN logging',
@@ -73,7 +73,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // Full request body logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:req\.body|request\.body|body)\b[^)]*\)/gi, 
       type: 'Full request body logging',
@@ -85,21 +85,21 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
     
-    // Session data logging - with word boundaries
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:req\.session|session|session\[|session\.get)\b[^)]*\)/gi, 
       type: 'Session data logging',
       severity: 'high' as const
     },
     
-    // Headers logging - with word boundaries
+   
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:req\.headers|headers|authorization|authorization[_-]?header)\b[^)]*\)/gi, 
       type: 'Authorization headers logging',
       severity: 'high' as const
     },
     
-    // PHP patterns - with word boundaries
+    
     { 
       pattern: /(?:error_log|syslog|trigger_error)\s*\(\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'PHP sensitive data logging',
@@ -111,7 +111,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
     
-    // Python patterns - with word boundaries
+    
     { 
       pattern: /(?:logging\.|logger\.)(?:debug|info|warning|error|critical)\s*\(\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'Python sensitive data logging',
@@ -123,7 +123,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
     
-    // Java patterns - with word boundaries
+    
     { 
       pattern: /(?:log\.|logger\.)(?:debug|info|warn|error|fatal)\s*\(\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'Java sensitive data logging',
@@ -135,7 +135,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
 
-    // Rails patterns - with word boundaries
+    
     { 
       pattern: /(?:Rails\.logger|logger)\.(?:debug|info|warn|error|fatal)\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'Rails sensitive data logging',
@@ -147,7 +147,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
 
-    // Django patterns - with word boundaries
+    
     { 
       pattern: /(?:logger|logging)\.(?:debug|info|warning|error|critical)\s*\(\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'Django sensitive data logging',
@@ -159,7 +159,7 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'high' as const
     },
 
-    // Spring patterns - with word boundaries
+    
     { 
       pattern: /(?:log\.|logger\.|LogFactory\.getLog|LoggerFactory\.getLogger)\.(?:debug|info|warn|error|fatal)\s*\(\s*[^)]*\b(?:password|passwd|pwd|api[_-]?key|secret|token)\b[^)]*\)/gi, 
       type: 'Spring sensitive data logging',
@@ -180,14 +180,14 @@ export class InsecureLoggingRule extends BaseRule {
       severity: 'medium' as const
     },
     
-    // Stack trace logging
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:stack|trace|error\.stack|exception\.stack)\b[^)]*\)/gi, 
       type: 'Stack trace logging',
       severity: 'medium' as const
     },
     
-    // Error details logging
+    
     { 
       pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*\b(?:error\.message|error\.details|exception\.message|exception\.details)\b[^)]*\)/gi, 
       type: 'Detailed error logging',
@@ -195,7 +195,7 @@ export class InsecureLoggingRule extends BaseRule {
     }
   ];
 
-  // Restricted safe patterns - only strong markers
+  // Restricted safe patterns: Only strong markers!
   private readonly safeLoggingPatterns = [
     /\[REDACTED\]/i,
     /\[MASKED\]/i,
@@ -228,7 +228,7 @@ export class InsecureLoggingRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // False positive patterns - with word boundaries
+    // False positive patterns: With word boundaries
     /\bexample\b/i,
     /\bdemo\b/i,
     /\btest\b/i,
@@ -344,7 +344,7 @@ export class InsecureLoggingRule extends BaseRule {
 
     // Special case for all-vulnerabilities-test.js
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Find the specific insecure logging examples in the test file
+      // Finds the specific insecure logging examples in the test file
       const passwordLoggingPattern = /console\.log\("User password: " \+ user\.password\)/;
       const creditCardLoggingPattern = /logger\.info\("Credit card: " \+ payment\.cardNumber\)/;
       
@@ -383,33 +383,33 @@ export class InsecureLoggingRule extends BaseRule {
         }
       }
       
-      // If we found issues in the test file, return them immediately
+      // If it found issues in the test file, return them immediately
       if (issues.length > 0) {
         return issues;
       }
     }
 
-    // Check for sensitive data logging with multi-line support
+    // Checks for sensitive data logging with multi-line support
     for (const { pattern, type, severity } of this.sensitiveLoggingPatterns) {
       const matches = this.findMatchesWithMultiLine(fileContent.content, pattern);
       
       for (const { line, column, lineContent, context } of matches) {
-        // Skip if the line contains safe logging patterns
+        // Skips if the line contains safe logging patterns
         if (this.hasSafeLoggingPatterns(lineContent)) {
           continue;
         }
 
-        // Skip if it's in a comment or test file (except for all-vulnerabilities-test.js)
+        // Skips if it's in a comment or test file (except for all-vulnerabilities-test.js)
         if (this.isCommentOrTest(lineContent, fileContent.path)) {
           continue;
         }
 
-        // Skip false positives (except for all-vulnerabilities-test.js)
+        // Skips false positives (except for all-vulnerabilities-test.js)
         if (!fileContent.path.includes('all-vulnerabilities-test.js') && this.isFalsePositive(lineContent)) {
           continue;
         }
 
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, context, fileContent.path);
 
         issues.push(this.createIssue(
@@ -424,17 +424,17 @@ export class InsecureLoggingRule extends BaseRule {
       }
     }
 
-    // Check for excessive debug logging with multi-line support
+    // Checks for excessive debug logging with multi-line support
     for (const { pattern, type, severity } of this.debugLoggingPatterns) {
       const matches = this.findMatchesWithMultiLine(fileContent.content, pattern);
       
       for (const { line, column, lineContent, context } of matches) {
-        // Skip if it's in a comment or test file (except for all-vulnerabilities-test.js)
+        // Skips if it's in a comment or test file (except for all-vulnerabilities-test.js)
         if (this.isCommentOrTest(lineContent, fileContent.path)) {
           continue;
         }
 
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, context, fileContent.path);
 
         issues.push(this.createIssue(
@@ -457,12 +457,12 @@ export class InsecureLoggingRule extends BaseRule {
   }
 
   private isCommentOrTest(line: string, filePath: string): boolean {
-    // Don't skip all-vulnerabilities-test.js
+    // Doesn't skip all-vulnerabilities-test.js
     if (filePath.includes('all-vulnerabilities-test.js')) {
       return false;
     }
     
-    // Check if line is a comment
+    // Checks if line is a comment
     const commentPatterns = [
       /^\s*\/\//,  // JavaScript comment
       /^\s*#/,     // Python/Shell comment
@@ -477,7 +477,7 @@ export class InsecureLoggingRule extends BaseRule {
       return true;
     }
 
-    // Check if it's a test file
+    // Checks if it's a test file
     const testPatterns = [
       /test/i,
       /spec/i,
@@ -494,7 +494,7 @@ export class InsecureLoggingRule extends BaseRule {
   }
 
   private isDevelopmentContext(context: string): boolean {
-    // Check if it's in a development context
+    // Checks if it's in a development context
     const devPatterns = [
       /\bdevelopment\b/i,
       /\bdev\b/i,
@@ -512,7 +512,7 @@ export class InsecureLoggingRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: 'critical' | 'high' | 'medium' | 'low', context: string, filePath: string): 'critical' | 'high' | 'medium' | 'low' {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(context) || this.isTestFile(filePath)) {
       switch (baseSeverity) {
         case 'critical':
@@ -586,12 +586,12 @@ export class InsecureLoggingRule extends BaseRule {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (!line) continue; // Skip undefined lines
+      if (!line) continue; // Skips undefined lines
       
       let match;
       
       while ((match = pattern.exec(line)) !== null) {
-        // Get context (previous and next lines)
+        // Gets context (previous and next lines)
         const contextLines = [];
         for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) {
           const contextLine = lines[j];

@@ -19,7 +19,7 @@ export class InsecureHttpRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly httpPatterns = [
-    // Critical Severity - Server and API endpoints
+    // Critical Severity: Server and API endpoints
     { 
       pattern: /(?:api_url|endpoint|base_url|apiEndpoint|baseUrl|apiUrl)\s*[:=]\s*['"`]http:\/\/[^'"`\s]+['"`]/gi, 
       type: 'HTTP API Endpoint',
@@ -56,7 +56,7 @@ export class InsecureHttpRule extends BaseRule {
       validation: (text: string) => this.validateHttpModuleImport(text)
     },
     
-    // High Severity - Configuration and server binding
+    // High Severity: Configuration and server binding
     { 
       pattern: /(?:protocol|scheme)\s*[:=]\s*['"`]http['"`]/gi, 
       type: 'HTTP Protocol Configuration',
@@ -93,7 +93,7 @@ export class InsecureHttpRule extends BaseRule {
       validation: (text: string) => this.validateInsecureCookieSecurity(text)
     },
     
-    // Medium Severity - Mixed content and framework-specific
+    // Medium Severity: Mixed content and framework-specific
     { 
       pattern: /src\s*=\s*['"`]http:\/\/[^'"`\s]+['"`]/gi, 
       type: 'Mixed Content Resource',
@@ -123,7 +123,7 @@ export class InsecureHttpRule extends BaseRule {
       validation: (text: string) => this.validatePermissiveHostConfig(text)
     },
     
-    // Low Severity - Generic HTTP URLs
+    // Low Severity: Generic HTTP URLs
     { 
       pattern: /['"`]http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)[^'"`\s]+['"`]/gi, 
       type: 'HTTP URL',
@@ -134,7 +134,7 @@ export class InsecureHttpRule extends BaseRule {
   ];
 
   private readonly safePatterns = [
-    // Development and test environments - more robust detection
+    // Development and test environments: More robust detection
     /localhost/i,
     /127\.0\.0\.1/,
     /0\.0\.0\.0/,
@@ -194,7 +194,7 @@ export class InsecureHttpRule extends BaseRule {
   ];
 
   private readonly multiLineCommentPatterns = [
-    // Multi-line comment patterns for different languages
+    // Multi-line comment patterns: For different languages
     /\/\*[\s\S]*?\*\//g,  // JavaScript/CSS multi-line comments
     /""".*?"""/gs,        // Python docstrings
     /<!--[\s\S]*?-->/g,   // HTML/XML comments
@@ -210,9 +210,9 @@ export class InsecureHttpRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
 
-    // Special case for our test file - direct detection of HTTP URLs
+    // Special case for our test file: Direct detection of HTTP URLs
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Look for specific HTTP URLs in our test file
+      // Looks for specific HTTP URLs in our test file
       const httpUrlMatches = this.findHttpUrlsInTestFile(fileContent);
       for (const match of httpUrlMatches) {
         issues.push(this.createIssue(
@@ -230,7 +230,7 @@ export class InsecureHttpRule extends BaseRule {
       }
     }
 
-    // Analyze context for the entire file
+    // Analyzes context for the entire file
     const context = this.analyzeContext(fileContent);
 
     for (const pattern of this.httpPatterns) {
@@ -239,17 +239,17 @@ export class InsecureHttpRule extends BaseRule {
       for (const { match, line, column, lineContent } of matches) {
         const matchedText = match[0];
         
-        // Validate the match
+        // Validates the match
         if (pattern.validation && !pattern.validation(matchedText)) {
           continue;
         }
 
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, fileContent.path, context)) {
           continue;
         }
 
-        // Calculate confidence and severity
+        // Calculates confidence and severity
         const confidence = this.calculateConfidence(pattern.confidence || 0.8, context);
         const severity = this.calculateSeverity(pattern.severity || 'medium', confidence, context);
 
@@ -281,18 +281,18 @@ export class InsecureHttpRule extends BaseRule {
       lineContent: string;
     }> = [];
 
-    // Check each line for HTTP URLs
+    // Checks each line for HTTP URLs
     fileContent.lines.forEach((lineContent, lineIndex) => {
       if (!lineContent) return;
       
-      // Look for HTTP URLs that aren't localhost
+      // Looks for HTTP URLs that aren't localhost
       const httpUrlRegex = /http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
       let match;
       
       while ((match = httpUrlRegex.exec(lineContent)) !== null) {
         const url = match[0];
         
-        // Skip if it's in a development context
+        // Skips if it's in a development context
         if (this.isDevelopmentContext(lineContent)) {
           continue;
         }
@@ -310,7 +310,7 @@ export class InsecureHttpRule extends BaseRule {
   }
 
   private isDevelopmentContext(text: string): boolean {
-    // Don't apply safe patterns to our test file
+    // Doesn't apply safe patterns to our test file
     if (text.includes('all-vulnerabilities-test.js')) {
       return false;
     }
@@ -324,7 +324,7 @@ export class InsecureHttpRule extends BaseRule {
     return urlMatch ? urlMatch[0] : text;
   }
 
-  // Context analysis methods
+  // Context analysis methods!
   private analyzeContext(fileContent: FileContent): HttpContext {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
@@ -332,8 +332,8 @@ export class InsecureHttpRule extends BaseRule {
     const hasSecurityHeaders = this.hasSecurityHeaders(fileContent.content);
 
     return {
-      isInComment: false, // Will be checked per line
-      isInString: false, // Will be checked per line
+      isInComment: false, // Will be checked per line!
+      isInString: false, // Will be checked per line!
       isInTestFile: this.isInTestFile(fileContent.path),
       isInDocumentation: this.isInDocumentation(fileContent.path),
       isInDevelopment: this.isInDevelopment(fileContent.path),
@@ -346,22 +346,22 @@ export class InsecureHttpRule extends BaseRule {
   }
 
   private isSafeContext(lineContent: string, filePath: string, context: HttpContext): boolean {
-    // Check for safe patterns
+  
     if (this.safePatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if in comment
+    
     if (this.isInComment(lineContent, filePath)) {
       return true;
     }
 
-    // Check if in test/documentation context
+    
     if (context.isInTestFile || context.isInDocumentation) {
       return true;
     }
 
-    // Check for false positive patterns
+    
     if (this.isFalsePositive(lineContent)) {
       return true;
     }
@@ -372,12 +372,12 @@ export class InsecureHttpRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: HttpContext): number {
     let confidence = baseConfidence;
 
-    // Reduce confidence for development contexts
+    // Reduces confidence for development contexts
     if (context.isInDevelopment) {
       confidence *= 0.7;
     }
 
-    // Increase confidence if HTTPS configuration is present
+    // Increases confidence if HTTPS configuration is present
     if (context.hasHttpsConfiguration) {
       confidence *= 0.8;
     }
@@ -392,12 +392,12 @@ export class InsecureHttpRule extends BaseRule {
   private calculateSeverity(baseSeverity: string, confidence: number, context: HttpContext): 'critical' | 'high' | 'medium' | 'low' {
     let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
-    // Never downgrade critical issues below high
+    // Never downgrades critical issues below high
     if (baseSeverity === 'critical' && confidence < 0.8) {
       return 'high';
     }
 
-    // Downgrade severity for development contexts
+    // Downgrades severity for development contexts
     if (context.isInDevelopment) {
       if (severity === 'critical') return 'high';
       if (severity === 'high') return 'medium';
@@ -477,20 +477,18 @@ export class InsecureHttpRule extends BaseRule {
   private isInComment(lineContent: string, filePath: string): boolean {
     const trimmedLine = lineContent.trim();
 
-    // Check for single-line comments
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') ||
         trimmedLine.startsWith('--') || trimmedLine.startsWith('*')) {
       return true;
     }
 
-    // Check for multi-line comments
     for (const pattern of this.multiLineCommentPatterns) {
       if (pattern.test(lineContent)) {
         return true;
       }
     }
 
-    // Language-specific comment detection based on file extension
+    // Language specific comment detection: Based on file extension!
     const ext = filePath.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'py':
@@ -630,7 +628,7 @@ export class InsecureHttpRule extends BaseRule {
     return falsePositivePatterns.some(pattern => pattern.test(lineContent));
   }
 
-  // Validation methods for HTTP patterns
+  // Validation methods: For HTTP patterns!
   private validateHttpApiEndpoint(text: string): boolean {
     return (text.toLowerCase().includes('api_url') || text.includes('endpoint') || text.includes('base_url') || text.includes('apiendpoint') || text.includes('baseurl') || text.includes('apiurl')) && text.includes('http://');
   }

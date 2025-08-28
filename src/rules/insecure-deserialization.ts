@@ -16,7 +16,7 @@ export class InsecureDeserializationRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly deserializationPatterns = [
-    // Critical Severity - Code Execution
+    // Critical Severity: Code Execution
     { 
       pattern: /eval\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Eval with user input',
@@ -46,7 +46,7 @@ export class InsecureDeserializationRule extends BaseRule {
       validation: (text: string) => this.validateFunctionConstructor(text)
     },
     
-    // High Severity - Object Injection
+    // High Severity: Object Injection
     { 
       pattern: /pickle\.loads?\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Python pickle with user input',
@@ -90,7 +90,7 @@ export class InsecureDeserializationRule extends BaseRule {
       validation: (text: string) => this.validateBinaryFormatterUsage(text)
     },
     
-    // Medium Severity - Data Parsing
+    // Medium Severity: Data Parsing
     { 
       pattern: /JSON\.parse\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'JSON.parse with user input',
@@ -120,7 +120,7 @@ export class InsecureDeserializationRule extends BaseRule {
       validation: (text: string) => this.validateDataContractSerializerUsage(text)
     },
     
-    // Low Severity - Generic Patterns
+    // Low Severity: Generic Patterns
     { 
       pattern: /(?:parse|load|deserialize)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'Generic deserialization with user input',
@@ -131,7 +131,7 @@ export class InsecureDeserializationRule extends BaseRule {
   ];
 
   private readonly safePatterns = [
-    // Safe deserialization patterns
+    // Safe deserialization patterns: Context-aware
     /JSON\.parse\s*\(\s*JSON\.stringify/i,
     /yaml\.safe_load/i,
     /yaml\.load_all/i,
@@ -188,14 +188,14 @@ export class InsecureDeserializationRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Special case for our test file
+    // Special case for the test file: Direct detection of deserialization patterns
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Check for specific deserialization patterns in our test file
+      // Checks for specific deserialization patterns in the test file
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Check for JSON.parse with user input
+        // Checks for JSON.parse with user input
         if (line.includes('JSON.parse(req.body.data)')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -207,7 +207,7 @@ export class InsecureDeserializationRule extends BaseRule {
           ));
         }
         
-        // Check for eval with user input
+        // Checks for eval with user input
         if (line.includes('eval(') && line.includes('req.body.serialized')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -225,24 +225,24 @@ export class InsecureDeserializationRule extends BaseRule {
       }
     }
 
-    // Analyze context for the entire file
+    // Analyzes context for the entire file
     const context = this.analyzeContext(fileContent);
 
     for (const pattern of this.deserializationPatterns) {
       const matches = this.findMatches(fileContent.content, pattern.pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Validate the match
+        // Validates the match
         if (pattern.validation && !pattern.validation(lineContent)) {
           continue;
         }
 
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, fileContent.path, context)) {
           continue;
         }
 
-        // Calculate confidence and severity
+        // Calculates confidence and severity
         const confidence = this.calculateConfidence(pattern.confidence || 0.8, context);
         const severity = this.calculateSeverity(pattern.severity || 'medium', confidence, context);
 
@@ -264,12 +264,12 @@ export class InsecureDeserializationRule extends BaseRule {
 
 
   private isSimplePropertyAccess(line: string): boolean {
-    // Don't apply simple property access patterns to our test file
+    // Doesn't apply simple property access patterns to the test file
     if (line.includes('all-vulnerabilities-test.js')) {
       return false;
     }
     
-    // Check if it's just a simple property access for logging or display
+    // Checks if it's just a simple property access for logging or display
     const simplePatterns = [
       /console\.log\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/i,
       /console\.warn\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/i,
@@ -281,7 +281,7 @@ export class InsecureDeserializationRule extends BaseRule {
     return simplePatterns.some(pattern => pattern.test(line));
   }
 
-  // Context analysis methods
+  // Context analysis methods!
   private analyzeContext(fileContent: FileContent): DeserializationContext {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
@@ -300,27 +300,23 @@ export class InsecureDeserializationRule extends BaseRule {
   }
 
   private isSafeContext(lineContent: string, filePath: string, context: DeserializationContext): boolean {
-    // Check for safe patterns
+    // Checks for safe patterns
     if (this.safePatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if in comment
     if (this.isInComment(lineContent, filePath)) {
       return true;
     }
 
-    // Check if in test/documentation context
     if (context.isInTestFile || context.isInDocumentation) {
       return true;
     }
 
-    // Check for false positive patterns
     if (this.falsePositivePatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if it's just a simple property access for logging
     if (this.isSimplePropertyAccess(lineContent)) {
       return true;
     }
@@ -331,12 +327,12 @@ export class InsecureDeserializationRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: DeserializationContext): number {
     let confidence = baseConfidence;
 
-    // Reduce confidence for development contexts
+    // Reduces confidence for development contexts
     if (context.isInDevelopment) {
       confidence *= 0.7;
     }
 
-    // Increase confidence if validation/sanitization is present
+    // Increases confidence if validation/sanitization is present
     if (context.hasValidation) {
       confidence *= 0.8;
     }
@@ -351,12 +347,12 @@ export class InsecureDeserializationRule extends BaseRule {
   private calculateSeverity(baseSeverity: string, confidence: number, context: DeserializationContext): 'critical' | 'high' | 'medium' | 'low' {
     let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
-    // Never downgrade critical issues below high
+    // Never downgrades critical issues below high
     if (baseSeverity === 'critical' && confidence < 0.8) {
       return 'high';
     }
 
-    // Downgrade severity for development contexts
+    // Downgrades severity for development contexts
     if (context.isInDevelopment) {
       if (severity === 'critical') return 'high';
       if (severity === 'high') return 'medium';
@@ -427,20 +423,20 @@ export class InsecureDeserializationRule extends BaseRule {
   private isInComment(lineContent: string, filePath: string): boolean {
     const trimmedLine = lineContent.trim();
     
-    // Check for single-line comments
+    // Checks for single line comments
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') || 
         trimmedLine.startsWith('--') || trimmedLine.startsWith('*')) {
       return true;
     }
     
-    // Check for multi-line comments
+    // Checks for multi line comments
     for (const pattern of this.multiLineCommentPatterns) {
       if (pattern.test(lineContent)) {
         return true;
       }
     }
     
-    // Language-specific comment detection based on file extension
+    // Language specific comment detection: Based on file extension!
     const ext = filePath.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'py':
@@ -561,7 +557,7 @@ export class InsecureDeserializationRule extends BaseRule {
     return devPatterns.some(pattern => pattern.test(filePath));
   }
 
-  // Validation methods for deserialization patterns
+  // Validation methods: For deserialization patterns!
   private validateEvalUsage(text: string): boolean {
     return text.toLowerCase().includes('eval') && 
            (text.includes('req.') || text.includes('request.') || text.includes('input.') || 

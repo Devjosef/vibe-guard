@@ -20,7 +20,7 @@ export class InsecureDependenciesRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly vulnerablePackages = [
-    // Node.js packages with known CVEs
+    // Node.js packages with known CVEs!
     { 
       name: 'lodash', 
       versions: ['<4.17.21'], 
@@ -110,7 +110,7 @@ export class InsecureDependenciesRule extends BaseRule {
       validation: (version: string) => this.validateEventStreamUsage(version)
     },
     
-    // Python packages with known CVEs
+    // Python packages with known CVEs!
     { 
       name: 'django', 
       versions: ['<3.2.13'], 
@@ -152,7 +152,7 @@ export class InsecureDependenciesRule extends BaseRule {
       validation: (version: string) => this.validatePillowVersion(version)
     },
     
-    // PHP packages with known CVEs
+    // PHP packages with known CVEs!
     { 
       name: 'symfony/symfony', 
       versions: ['<4.4.35'], 
@@ -272,15 +272,15 @@ export class InsecureDependenciesRule extends BaseRule {
     const packageManager = this.detectPackageManager(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
     
-    // Skip if not a dependency file
+    // Skips if not a dependency file
     if (!this.isDependencyFile(fileContent.path)) {
       return issues;
     }
     
-    // Check for vulnerable packages using package manager-specific patterns
+    // Checks for vulnerable packages using package manager specific patterns
     this.checkVulnerablePackages(fileContent, issues, language, packageManager, framework);
     
-    // Check for suspicious patterns
+    // Checks for suspicious patterns
     this.checkSuspiciousPatterns(fileContent, issues, language, packageManager, framework);
 
     return issues;
@@ -525,17 +525,17 @@ export class InsecureDependenciesRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, packageManager, framework, false, this.detectDependencyType(fileContent.path));
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the suspicious pattern
+        // Validates the suspicious pattern
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Calculate final confidence and severity based on context
+        // Calculates final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         const finalSeverity = this.calculateSeverity(severity, context, finalConfidence);
         
@@ -555,16 +555,13 @@ export class InsecureDependenciesRule extends BaseRule {
   }
 
   private isSafeContext(context: DependencyContext): boolean {
-    // Safe if in comment
+
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
-    
-    // Safe if in documentation
+   
     if (context.isInDocumentation) return true;
-    
-    // Safe if using security-related keywords
+ 
     if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
@@ -575,10 +572,10 @@ export class InsecureDependenciesRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: DependencyContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.isInDevDependencies) confidence *= 0.7; // Reduce for dev dependencies
-    if (context.packageManager) confidence *= 1.1; // Increase for known package managers
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.isInDevDependencies) confidence *= 0.7; // Reduces for dev dependencies
+    if (context.packageManager) confidence *= 1.1; // Increases for known package managers
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
@@ -636,7 +633,7 @@ export class InsecureDependenciesRule extends BaseRule {
     return false;
   }
 
-  // Validation methods for vulnerable packages
+  // Validation methods for vulnerable packages!
   private validateLodashVersion(version: string): boolean {
     return this.compareVersions(version, '4.17.21') < 0;
   }
@@ -726,33 +723,33 @@ export class InsecureDependenciesRule extends BaseRule {
   private calculateSeverity(baseSeverity: string, context: DependencyContext, confidence: number): 'critical' | 'high' | 'medium' | 'low' {
     let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
-    // Adjust severity based on context
+    // Adjusts the severity based on context
     if (context.isInDevDependencies) {
-      // Lower severity for dev dependencies but keep at least medium
+      // Lowers the severity for dev dependencies but keeps at least medium
       if (severity === 'critical') severity = 'high';
       else if (severity === 'high') severity = 'medium';
-      else if (severity === 'medium') severity = 'medium'; // Keep medium
+      else if (severity === 'medium') severity = 'medium'; // Keeps medium
     }
     
-    // Check if in production context (Dockerfile, CI/CD)
+    // Checks if in production context (Dockerfile, CI/CD)
     if (this.isInProductionContext(context)) {
-      // Treat as production-level severity
+      // Treats as production level severity
       if (severity === 'medium') severity = 'high';
       else if (severity === 'low') severity = 'medium';
     }
     
-    // Framework-specific adjustments
+    // Framework specific adjustments
     if (context.framework) {
       if (['react', 'angular', 'vue'].includes(context.framework)) {
-        // Frontend frameworks - highlight build dependency risk
+        // Frontend frameworks: Highlight build dependency risk
         if (severity === 'medium') severity = 'high';
       } else if (['express', 'django', 'laravel'].includes(context.framework)) {
-        // Backend APIs - emphasize exposure risk
+        // Backend APIs: Emphasize exposure risk
         if (severity === 'medium') severity = 'high';
       }
     }
     
-    // Confidence-based adjustments
+    // Confidence based adjustments
     if (confidence < 0.6 && severity === 'critical') {
       severity = 'high';
     }
@@ -761,12 +758,12 @@ export class InsecureDependenciesRule extends BaseRule {
   }
 
   private isInProductionContext(context: DependencyContext): boolean {
-    // Check if this dependency is used in production contexts
+    // Checks if this dependency is used in production contexts
     const productionKeywords = ['dockerfile', 'docker-compose', 'deploy', 'production', 'prod', 'ci/cd', 'github actions', 'gitlab-ci', 'jenkins'];
     return productionKeywords.some(keyword => context.surroundingCode.toLowerCase().includes(keyword));
   }
 
-  // Validation methods for suspicious patterns
+  // Validation methods: For suspicious patterns!
   private validateSuspiciousPackage(text: string): boolean {
     const suspiciousKeywords = ['eval', 'exec', 'shell', 'cmd', 'system', 'proc', 'spawn'];
     return suspiciousKeywords.some(keyword => text.toLowerCase().includes(keyword));

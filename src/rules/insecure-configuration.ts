@@ -19,6 +19,7 @@ export class InsecureConfigurationRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly insecurePatterns = [
+    // Critical severity: Debug mode in production
     { 
       pattern: /(?:^|\s)(?:debug|DEBUG)\s*[:=]\s*["']?\s*(?:true|yes|1|on|enabled)\s*["']?/gm, 
       type: 'Debug mode in production',
@@ -26,6 +27,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Verbose logging in production
     { 
       pattern: /(?:^|\s)(?:verbose|VERBOSE)\s*[:=]\s*["']?\s*(?:true|yes|1|on|enabled)\s*["']?/gm, 
       type: 'Verbose logging in production',
@@ -33,6 +35,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Debug logging level
     { 
       pattern: /(?:^|\s)(?:log[_-]?level|LOG[_-]?LEVEL)\s*[:=]\s*["']?\s*(?:debug|trace|all)\s*["']?/gm, 
       type: 'Debug logging level',
@@ -40,6 +43,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: Development environment in production
     { 
       pattern: /(?:^|\s)(?:environment|ENVIRONMENT)\s*[:=]\s*["']?\s*(?:development|dev|staging)\s*["']?/gm, 
       type: 'Development environment in production',
@@ -47,6 +51,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: Development NODE_ENV
     { 
       pattern: /(?:^|\s)(?:node[_-]?env|NODE[_-]?ENV)\s*[:=]\s*["']?\s*(?:development|dev)\s*["']?/gm, 
       type: 'Development NODE_ENV',
@@ -54,6 +59,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: SSL disabled
     { 
       pattern: /(?:^|\s)(?:ssl|SSL)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'SSL disabled',
@@ -61,6 +67,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: HTTPS disabled
     { 
       pattern: /(?:^|\s)(?:https|HTTPS)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'HTTPS disabled',
@@ -68,6 +75,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: Security disabled
     { 
       pattern: /(?:^|\s)(?:secure|SECURE)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'Security disabled',
@@ -75,6 +83,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Critical severity: Authentication disabled
     { 
       pattern: /(?:^|\s)(?:auth|AUTH)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled|none)\s*["']?/gm, 
       type: 'Authentication disabled',
@@ -82,6 +91,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.9,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Open CORS configuration
     { 
       pattern: /(?:^|\s)(?:cors|CORS)\s*[:=]\s*["']?\s*\*\s*["']?/gm, 
       type: 'Open CORS configuration',
@@ -89,6 +99,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Wildcard origin
     { 
       pattern: /(?:^|\s)(?:origin|ORIGIN)\s*[:=]\s*["']?\s*\*\s*["']?/gm, 
       type: 'Wildcard origin',
@@ -96,6 +107,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Wildcard in allowed origins
     { 
       pattern: /(?:^|\s)(?:allowed[_-]?origins|ALLOWED[_-]?ORIGINS)\s*[:=]\s*\[[^\]]*\*\s*[^\]]*\]/gm, 
       type: 'Wildcard in allowed origins',
@@ -103,6 +115,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Medium severity: Trust proxy enabled
     { 
       pattern: /(?:^|\s)(?:trust[_-]?proxy|TRUST[_-]?PROXY)\s*[:=]\s*["']?\s*(?:true|yes|1|on|enabled)\s*["']?/gm, 
       type: 'Trust proxy enabled',
@@ -110,6 +123,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.7,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: Helmet security disabled
     { 
       pattern: /(?:^|\s)(?:helmet|HELMET)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'Helmet security disabled',
@@ -117,6 +131,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: CSRF protection disabled
     { 
       pattern: /(?:^|\s)(?:csrf|CSRF)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'CSRF protection disabled',
@@ -124,6 +139,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: XSS protection disabled
     { 
       pattern: /(?:^|\s)(?:xss[_-]?protection|XSS[_-]?PROTECTION)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'XSS protection disabled',
@@ -131,6 +147,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Medium severity: Content Type options disabled
     { 
       pattern: /(?:^|\s)(?:content[_-]?type[_-]?options|CONTENT[_-]?TYPE[_-]?OPTIONS)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'Content-Type options disabled',
@@ -138,6 +155,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.7,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // High severity: HSTS disabled
     { 
       pattern: /(?:^|\s)(?:strict[_-]?transport[_-]?security|STRICT[_-]?TRANSPORT[_-]?SECURITY)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'HSTS disabled',
@@ -145,6 +163,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.8,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Medium severity: Frame options disabled
     { 
       pattern: /(?:^|\s)(?:frame[_-]?options|FRAME[_-]?OPTIONS)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'Frame options disabled',
@@ -152,6 +171,7 @@ export class InsecureConfigurationRule extends BaseRule {
       confidence: 0.7,
       validation: (text: string) => !text.includes('oauth') && !text.includes('secure')
     },
+    // Medium severity: Referrer policy disabled
     { 
       pattern: /(?:^|\s)(?:referrer[_-]?policy|REFERRER[_-]?POLICY)\s*[:=]\s*["']?\s*(?:false|no|0|off|disabled)\s*["']?/gm, 
       type: 'Referrer policy disabled',
@@ -203,7 +223,7 @@ export class InsecureConfigurationRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
 
-    // Handle test file example
+    // Handles test file example!
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
       const configPattern = /\/\/ insecure configuration example/;
       if (configPattern.test(fileContent.content)) {
@@ -228,24 +248,24 @@ export class InsecureConfigurationRule extends BaseRule {
       }
     }
 
-    // Analyze context for the entire file
+    // Analyzes context for the entire file!
     const context = this.analyzeContext(fileContent);
 
     for (const pattern of this.insecurePatterns) {
       const matches = this.findMatches(fileContent.content, pattern.pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Validate the match
+        // Validates the match
         if (pattern.validation && !pattern.validation(lineContent)) {
           continue;
         }
 
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, context)) {
           continue;
         }
 
-        // Calculate confidence and severity
+        // Calculates confidence and severity
         const confidence = this.calculateConfidence(pattern.confidence || 0.8, context);
         const severity = this.calculateSeverity(pattern.severity || 'medium', confidence, context) as 'critical' | 'high' | 'medium' | 'low';
 
@@ -271,8 +291,8 @@ export class InsecureConfigurationRule extends BaseRule {
     const hasSecureDefaults = this.hasSecureDefaults(fileContent.content, framework);
 
     return {
-      isInComment: false, // Will be checked per line
-      isInString: false, // Will be checked per line
+      isInComment: false, // Will be checked per line!
+      isInString: false, // Will be checked per line!
       isInTestFile: this.isInTestFile(fileContent.path),
       isInDocumentation: this.isInDocumentation(fileContent.path),
       isInDevelopment: this.isInDevelopment(fileContent.path),
@@ -285,24 +305,22 @@ export class InsecureConfigurationRule extends BaseRule {
   }
 
   private isSafeContext(lineContent: string, context: ConfigurationContext): boolean {
-    // Check for false positive patterns
+    // Checks for false positive patterns
     if (this.falsePositivePatterns.some(pattern => pattern.test(lineContent))) {
       return true;
     }
 
-    // Check if in comment
     if (this.isInComment(lineContent)) {
       return true;
     }
 
-    // Check if in test/documentation context
     if (context.isInTestFile || context.isInDocumentation) {
       return true;
     }
 
-    // Check if in development context (downgrade severity instead of skipping)
+    // Checks if in development context (downgrade severity instead of skipping)
     if (context.isInDevelopment) {
-      return false; // Don't skip, just downgrade severity
+      return false; // Don't skip, just downgrade severity!
     }
 
     return false;
@@ -311,17 +329,17 @@ export class InsecureConfigurationRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: ConfigurationContext): number {
     let confidence = baseConfidence;
 
-    // Reduce confidence for development contexts
+    // Reduces confidence for development contexts
     if (context.isInDevelopment) {
       confidence *= 0.7;
     }
 
-    // Increase confidence for config files
+    // Increases confidence for config files
     if (context.isInConfigFile) {
       confidence *= 1.2;
     }
 
-    // Reduce confidence if secure defaults are present
+    // Reduces confidence if secure defaults are present
     if (context.hasSecureDefaults) {
       confidence *= 0.8;
     }
@@ -330,12 +348,12 @@ export class InsecureConfigurationRule extends BaseRule {
   }
 
   private calculateSeverity(baseSeverity: string, confidence: number, context: ConfigurationContext): string {
-    // Never downgrade critical issues below medium
+    // Never downgrades critical issues below medium
     if (baseSeverity === 'critical' && confidence < 0.8) {
       return 'high';
     }
 
-    // Downgrade severity for development contexts
+    // Downgrades severity for development contexts
     if (context.isInDevelopment) {
       if (baseSeverity === 'critical') return 'high';
       if (baseSeverity === 'high') return 'medium';
@@ -423,7 +441,7 @@ export class InsecureConfigurationRule extends BaseRule {
   private hasSecureDefaults(content: string, framework: string): boolean {
     const lowerContent = content.toLowerCase();
     
-    // Check for secure defaults based on framework
+    // Checks for secure defaults based on framework
     switch (framework) {
       case 'express':
         return lowerContent.includes('helmet') || lowerContent.includes('express-rate-limit');
@@ -441,13 +459,13 @@ export class InsecureConfigurationRule extends BaseRule {
   private isInComment(lineContent: string): boolean {
     const trimmedLine = lineContent.trim();
     
-    // Check for single-line comments
+    // Checks for single line comments
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') || 
         trimmedLine.startsWith('--') || trimmedLine.startsWith('*')) {
       return true;
     }
     
-    // Check for multi-line comments
+    // Checks for multi line comments!
     for (const pattern of this.multiLineCommentPatterns) {
       if (pattern.test(lineContent)) {
         return true;

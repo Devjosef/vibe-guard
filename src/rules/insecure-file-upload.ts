@@ -20,7 +20,7 @@ export class InsecureFileUploadRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly fileUploadPatterns = [
-    // Critical Severity - Direct file operations without validation
+    // Critical Severity: Direct file operations without validation
     { 
       pattern: /file\.mv\s*\(\s*['"`]\.\/uploads\/['"`]\s*\+\s*file\.name/gi, 
       type: 'Direct file move with original filename',
@@ -43,7 +43,7 @@ export class InsecureFileUploadRule extends BaseRule {
       validation: (text: string) => this.validateAnyFileUpload(text)
     },
     
-    // High Severity - File upload without validation
+    // High Severity: File upload without validation
     { 
       pattern: /multer\s*\(\s*\{[^}]*\}(?!\s*\.\s*(?:fileFilter|validate|check|whitelist|blacklist|allowed|permitted))/gi, 
       type: 'Multer upload without validation',
@@ -87,7 +87,7 @@ export class InsecureFileUploadRule extends BaseRule {
       validation: (text: string) => this.validatePHPFileCopy(text)
     },
     
-    // Medium Severity - Framework-specific patterns
+    // Medium Severity: Framework-specific patterns
     { 
       pattern: /\$_FILES\s*\[[^\]]+\](?!\s*\.\s*(?:check|validate|type))/gi, 
       type: 'PHP file upload without validation',
@@ -131,7 +131,7 @@ export class InsecureFileUploadRule extends BaseRule {
       validation: (text: string) => this.validateFileMove(text)
     },
     
-    // Low Severity - Generic patterns
+    // Low Severity: Generic patterns
     { 
       pattern: /(?:readFile|writeFile|createReadStream|createWriteStream)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.)/gi, 
       type: 'File operation without type validation',
@@ -170,7 +170,7 @@ export class InsecureFileUploadRule extends BaseRule {
   ];
 
   private readonly validationPatterns = [
-    // File-specific validation patterns
+    // File specific: validation patterns
     /fileFilter/i,
     /file[_-]?validate/i,
     /file[_-]?check/i,
@@ -221,7 +221,7 @@ export class InsecureFileUploadRule extends BaseRule {
   ];
 
   private readonly dangerousExtensions = [
-    // Critical - Executable files
+    // Critical: Executable files
     /\.php$/i,
     /\.php3$/i,
     /\.php4$/i,
@@ -258,13 +258,13 @@ export class InsecureFileUploadRule extends BaseRule {
     /\.tmp$/i,
     /\.temp$/i,
     
-    // High - SVG and double extensions
+    // High: SVG and double extensions
     /\.svg$/i,
     /\.svgz$/i,
     /\.(?:php|asp|jsp|exe|bat|cmd|com|scr|pif|vbs|js|jar|war|ear|sh|pl|py|rb|cgi)\.(?:jpg|jpeg|png|gif|pdf|doc|docx|txt)$/i,
     /\.(?:jpg|jpeg|png|gif|pdf|doc|docx|txt)\.(?:php|asp|jsp|exe|bat|cmd|com|scr|pif|vbs|js|jar|war|ear|sh|pl|py|rb|cgi)$/i,
     
-    // Medium - Archive and compressed files (potential zip bombs)
+    // Medium: Archive and compressed files (potential zip bombs)
     /\.zip$/i,
     /\.rar$/i,
     /\.7z$/i,
@@ -282,7 +282,7 @@ export class InsecureFileUploadRule extends BaseRule {
     /\.msi$/i,
     /\.app$/i,
     
-    // Low - Other potentially dangerous files
+    // Low: Other potentially dangerous files
     /\.reg$/i,
     /\.inf$/i,
     /\.sys$/i,
@@ -324,14 +324,14 @@ export class InsecureFileUploadRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Special case for our test file
+    // Special case for the test file: Direct detection of file upload patterns
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Check for specific file upload patterns in our test file
+      // Looks for specific file upload patterns in the test file
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Check for insecure file upload
+        // Checks for insecure file upload
         if (line.includes('file.mv(') && line.includes('./uploads/')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -349,24 +349,24 @@ export class InsecureFileUploadRule extends BaseRule {
       }
     }
 
-    // Analyze context for the entire file
+    // Analyzes context for the entire file
     const context = this.analyzeContext(fileContent);
 
     for (const pattern of this.fileUploadPatterns) {
       const matches = this.findMatches(fileContent.content, pattern.pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Validate the match
+        // Validates the match
         if (pattern.validation && !pattern.validation(lineContent)) {
           continue;
         }
 
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, fileContent.path, context)) {
           continue;
         }
 
-        // Calculate confidence and severity
+        // Calculates confidence and severity
         const confidence = this.calculateConfidence(pattern.confidence || 0.8, context);
         const severity = this.calculateSeverity(pattern.severity || 'medium', confidence, context);
 
@@ -382,17 +382,17 @@ export class InsecureFileUploadRule extends BaseRule {
       }
     }
 
-    // Check for dangerous file extensions
+    // Checks for dangerous file extensions
     for (const extPattern of this.dangerousExtensions) {
       const matches = this.findMatches(fileContent.content, extPattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Check if in safe context
+        // Checks if in safe context
         if (this.isSafeContext(lineContent, fileContent.path, context)) {
           continue;
         }
 
-        // Determine severity based on extension type
+        // Determines severity based on extension type
         let severity: 'critical' | 'high' | 'medium' | 'low' = 'medium';
         if (extPattern.source.includes('php|asp|jsp|exe|bat|cmd|com|scr|pif|vbs|js|jar|war|ear|sh|pl|py|rb|cgi')) {
           severity = 'critical';
@@ -425,7 +425,7 @@ export class InsecureFileUploadRule extends BaseRule {
 
 
 
-  // Context analysis methods
+  // Context analysis methods!
   private analyzeContext(fileContent: FileContent): FileUploadContext {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
@@ -434,8 +434,8 @@ export class InsecureFileUploadRule extends BaseRule {
     const hasTypeChecking = this.hasTypeChecking(fileContent.content);
 
     return {
-      isInComment: false, // Will be checked per line
-      isInString: false, // Will be checked per line
+      isInComment: false, // Will be checked per line!
+      isInString: false, // Will be checked per line!
       isInTestFile: this.isInTestFile(fileContent.path),
       isInDocumentation: this.isInDocumentation(fileContent.path),
       isInDevelopment: this.isInDevelopment(fileContent.path),
@@ -449,22 +449,19 @@ export class InsecureFileUploadRule extends BaseRule {
   }
 
   private isSafeContext(lineContent: string, filePath: string, context: FileUploadContext): boolean {
-    // Check for validation patterns
+    // Checks for validation patterns
     if (this.hasValidationPatterns(lineContent)) {
       return true;
     }
 
-    // Check if in comment
     if (this.isInComment(lineContent, filePath)) {
       return true;
     }
 
-    // Check if in test/documentation context
     if (context.isInTestFile || context.isInDocumentation) {
       return true;
     }
 
-    // Check for false positive patterns
     if (this.isFalsePositive(lineContent)) {
       return true;
     }
@@ -475,12 +472,12 @@ export class InsecureFileUploadRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: FileUploadContext): number {
     let confidence = baseConfidence;
 
-    // Reduce confidence for development contexts
+    // Reduces confidence for development contexts
     if (context.isInDevelopment) {
       confidence *= 0.7;
     }
 
-    // Increase confidence if file validation/size limits/type checking is present
+    // Increases confidence if file validation/size limits/type checking is present
     if (context.hasFileValidation) {
       confidence *= 0.8;
     }
@@ -499,12 +496,12 @@ export class InsecureFileUploadRule extends BaseRule {
   private calculateSeverity(baseSeverity: string, confidence: number, context: FileUploadContext): 'critical' | 'high' | 'medium' | 'low' {
     let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
-    // Never downgrade critical issues below high
+    // Never downgrades critical issues below high
     if (baseSeverity === 'critical' && confidence < 0.8) {
       return 'high';
     }
 
-    // Downgrade severity for development contexts
+    // Downgrades severity for development contexts
     if (context.isInDevelopment) {
       if (severity === 'critical') return 'high';
       if (severity === 'high') return 'medium';
@@ -580,13 +577,13 @@ export class InsecureFileUploadRule extends BaseRule {
   private isInComment(lineContent: string, filePath: string): boolean {
     const trimmedLine = lineContent.trim();
 
-    // Check for single-line comments
+    // Checks for single-line comments
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') ||
         trimmedLine.startsWith('--') || trimmedLine.startsWith('*')) {
       return true;
     }
 
-    // Language-specific comment detection based on file extension
+    // Language specific comment detection: Based on file extension!
     const ext = filePath.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'py':
@@ -726,7 +723,7 @@ export class InsecureFileUploadRule extends BaseRule {
     return falsePositivePatterns.some(pattern => pattern.test(lineContent));
   }
 
-  // Validation methods for file upload patterns
+  // Validation methods: For file upload patterns!
   private validateDirectFileMove(text: string): boolean {
     return text.toLowerCase().includes('file.mv') && text.includes('./uploads/') && text.includes('file.name');
   }

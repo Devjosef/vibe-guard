@@ -6,7 +6,7 @@ export class InsecureSessionManagementRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly sessionPatterns = [
-    // Critical: Weak session secrets and session fixation
+    // Critical pattern: Weak session secrets and session fixation
     { 
       pattern: /\b(?:secret|secretKey|secret_key)\s*[:=]\s*['"`](?:default|secret|key|password|123|admin|test|dev|demo|example)[^'"`]*['"`]/gi, 
       type: 'Predictable session secret',
@@ -33,7 +33,7 @@ export class InsecureSessionManagementRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // High: Missing timeouts and insecure storage
+    // High pattern: Missing timeouts and insecure storage
     { 
       pattern: /(?:session|express-session)\s*\(\s*\{[^}]*\}(?!.*maxAge|.*expires|.*cookie\.maxAge)/gi, 
       type: 'Session without timeout',
@@ -65,7 +65,7 @@ export class InsecureSessionManagementRule extends BaseRule {
       severity: 'high' as const
     },
     
-    // Medium: SameSite issues and missing regeneration
+    // Medium pattern: SameSite issues and missing regeneration
     { 
       pattern: /(?:cookie|session)\s*:\s*\{[^}]*sameSite\s*:\s*['"`]none['"`][^}]*\}/gi, 
       type: 'Unsafe SameSite cookie setting',
@@ -248,7 +248,7 @@ export class InsecureSessionManagementRule extends BaseRule {
 
     // Special case for all-vulnerabilities-test.js
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Find the specific insecure session management example in the test file
+      // Finds the specific insecure session management example in the test file
       const sessionPattern = /app\.use\(session\(\{.*?secret: 'keyboard cat'.*?secure: false.*?\}\)\)/;
       
       if (sessionPattern.test(fileContent.content)) {
@@ -270,7 +270,7 @@ export class InsecureSessionManagementRule extends BaseRule {
         }
       }
       
-      // If we found issues in the test file, return them immediately
+      // If found issues in the test file, returns them immediately
       if (issues.length > 0) {
         return issues;
       }
@@ -280,25 +280,25 @@ export class InsecureSessionManagementRule extends BaseRule {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Skip if the line contains secure session patterns
+        // Skips if the line contains secure session patterns
         if (this.hasSecureSessionPatterns(lineContent)) {
           continue;
         }
 
-        // Skip if it's in a comment or test file (except for all-vulnerabilities-test.js)
+        // Skips if it's in a comment or test file (except for all-vulnerabilities-test.js)
         if (this.isCommentOrTest(lineContent, fileContent.path)) {
           continue;
         }
 
-        // Skip false positives (except for all-vulnerabilities-test.js)
+        // Skips false positives (except for all-vulnerabilities-test.js)
         if (!fileContent.path.includes('all-vulnerabilities-test.js') && this.isFalsePositive(lineContent)) {
           continue;
         }
 
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, lineContent, fileContent.path);
         
-        // Determine language for specific remediation
+        // Determines language for specific remediation
         const language = this.detectLanguage(fileContent.path, lineContent);
 
         issues.push(this.createIssue(
@@ -321,12 +321,12 @@ export class InsecureSessionManagementRule extends BaseRule {
   }
 
   private isCommentOrTest(line: string, filePath: string): boolean {
-    // Don't skip all-vulnerabilities-test.js
+    // Doesn't skip all-vulnerabilities-test.js
     if (filePath.includes('all-vulnerabilities-test.js')) {
       return false;
     }
     
-    // Check if line is a comment
+    // Checks if line is a comment
     const commentPatterns = [
       /^\s*\/\//,  // JavaScript comment
       /^\s*#/,     // Python/Shell comment
@@ -341,7 +341,7 @@ export class InsecureSessionManagementRule extends BaseRule {
       return true;
     }
 
-    // Check if it's a test file
+    // Checks if it's a test file
     const testPatterns = [
       /test/i,
       /spec/i,
@@ -358,7 +358,7 @@ export class InsecureSessionManagementRule extends BaseRule {
   }
 
   private isDevelopmentContext(line: string): boolean {
-    // Check if it's in a development context
+    // Checks if it's in a development context
     const devPatterns = [
       /\bdevelopment\b/i,
       /\bdev\b/i,
@@ -376,7 +376,7 @@ export class InsecureSessionManagementRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, lineContent: string, filePath: string): SeverityLevel {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(lineContent) || this.isTestFile(filePath)) {
       switch (baseSeverity) {
         case 'critical':
@@ -408,7 +408,7 @@ export class InsecureSessionManagementRule extends BaseRule {
   }
 
   private detectLanguage(filePath: string, lineContent: string): string {
-    // Detect language based on file extension and content
+    // Detects language based on file extension and content
     if (filePath.endsWith('.js') || filePath.endsWith('.ts') || filePath.endsWith('.jsx') || filePath.endsWith('.tsx')) {
       return 'javascript';
     }
