@@ -26,11 +26,13 @@ import { InsecureErrorHandlingRule } from './rules/insecure-error-handling';
 import { InsecureConfigurationRule } from './rules/insecure-configuration';
 import { VERSION } from './types/version';
 
+// Main class for the VibeGuard application
 export class VibeGuard {
   private scanner: FileScanner;
   private reporter: Reporter;
   private rules: BaseRule[];
 
+  // Constructor for the VibeGuard class
   constructor() {
     this.rules = [
       new ExposedSecretsRule(),
@@ -58,13 +60,10 @@ export class VibeGuard {
     this.reporter = new Reporter();
   }
 
+  // Scans the target path for security issues
   async scan(options: ScanOptions): Promise<ScanResult> {
-    // Load configuration from vibe-guard.json
     const config = ConfigLoader.loadConfig(options.target);
-    
-    // Merge config with CLI options (CLI takes precedence)
     const mergedOptions = ConfigLoader.mergeConfig(config, options);
-    
     const targetPath = path.resolve(mergedOptions.target);
     
     if (mergedOptions.verbose) {
@@ -105,6 +104,7 @@ export class VibeGuard {
     }
   }
 
+  // Formats the scan results
   formatResults(result: ScanResult, format: 'table' | 'json' | 'sarif' | 'html' = 'table'): string {
     switch (format) {
       case 'json':
@@ -119,6 +119,7 @@ export class VibeGuard {
     }
   }
 
+  // Scans and formats the results
   async scanAndFormat(options: ScanOptions): Promise<string> {
     const result = await this.scan(options);
     return this.formatResults(result, options.format);
@@ -136,16 +137,10 @@ export class VibeGuard {
     return VERSION;
   }
 
-  /**
-   * Generate a sample configuration file
-   */
   generateConfig(): string {
     return ConfigLoader.generateSampleConfig();
   }
 
-  /**
-   * Create a default configuration file in the current directory
-   */
   createConfigFile(): void {
     const configPath = path.join(process.cwd(), 'vibe-guard.json');
     if (fs.existsSync(configPath)) {

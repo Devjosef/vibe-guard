@@ -9,9 +9,7 @@ export class ConfigLoader {
     'vibe-guard.config.json'
   ];
 
-  /**
-   * Load configuration from the nearest vibe-guard.json file
-   */
+  // Loads the config file from the project path
   static loadConfig(projectPath: string): VibeGuardConfig {
     const configPath = this.findConfigFile(projectPath);
     if (!configPath) {
@@ -22,7 +20,6 @@ export class ConfigLoader {
       const configContent = fs.readFileSync(configPath, 'utf-8');
       const config = JSON.parse(configContent);
       
-      // Validate and normalize config
       return this.validateConfig(config);
     } catch (error) {
       console.warn(`Warning: Could not load config from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -30,9 +27,7 @@ export class ConfigLoader {
     }
   }
 
-  /**
-   * Find the nearest configuration file in the project hierarchy
-   */
+  // Finds the config file from the project path
   static findConfigFile(projectPath: string): string | null {
     let currentPath = path.resolve(projectPath);
     
@@ -49,23 +44,18 @@ export class ConfigLoader {
     return null;
   }
 
-  /**
-   * Validate and normalize configuration
-   */
+  // Validates the config file
   private static validateConfig(config: any): VibeGuardConfig {
     const validated: VibeGuardConfig = {};
 
-    // Validate output format
     if (config.outputFormat && ['table', 'json', 'sarif', 'html'].includes(config.outputFormat)) {
       validated.outputFormat = config.outputFormat;
     }
 
-    // Validate severity
     if (config.severity && ['critical', 'high', 'medium', 'low'].includes(config.severity)) {
       validated.severity = config.severity as SeverityLevel;
     }
 
-    // Validate arrays
     if (Array.isArray(config.exclude)) {
       validated.exclude = config.exclude.filter((item: any) => typeof item === 'string');
     }
@@ -74,7 +64,6 @@ export class ConfigLoader {
       validated.include = config.include.filter((item: any) => typeof item === 'string');
     }
 
-    // Validate strings
     if (typeof config.outputFile === 'string') {
       validated.outputFile = config.outputFile;
     }
@@ -83,7 +72,6 @@ export class ConfigLoader {
       validated.maxFileSize = config.maxFileSize;
     }
 
-    // Validate booleans
     if (typeof config.verbose === 'boolean') {
       validated.verbose = config.verbose;
     }
@@ -92,12 +80,10 @@ export class ConfigLoader {
       validated.parallel = config.parallel;
     }
 
-    // Validate numbers
     if (typeof config.maxWorkers === 'number' && config.maxWorkers > 0) {
       validated.maxWorkers = config.maxWorkers;
     }
 
-    // Validate rules configuration
     if (config.rules && typeof config.rules === 'object') {
       validated.rules = {};
       for (const [ruleName, ruleConfig] of Object.entries(config.rules)) {
@@ -116,9 +102,7 @@ export class ConfigLoader {
     return validated;
   }
 
-  /**
-   * Merge configuration with CLI options (CLI takes precedence)
-   */
+  // Merges the config file with the CLI options
   static mergeConfig(config: VibeGuardConfig, cliOptions: Partial<ScanOptions>): ScanOptions {
     return {
       target: cliOptions.target || '.',
@@ -129,9 +113,6 @@ export class ConfigLoader {
     };
   }
 
-  /**
-   * Create a default configuration file
-   */
   static createDefaultConfig(): VibeGuardConfig {
     return {
       exclude: [
@@ -152,9 +133,7 @@ export class ConfigLoader {
     };
   }
 
-  /**
-   * Generate a sample configuration file content
-   */
+  // Generates a sample config file
   static generateSampleConfig(): string {
     const sampleConfig = {
       exclude: [
