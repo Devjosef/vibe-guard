@@ -2,7 +2,9 @@ const Table = require('cli-table3');
 import chalk from 'chalk';
 import { SecurityIssue, ScanResult, SeverityLevel } from './types';
 
+// Class for reporting the scan results
 export class Reporter {
+  // Formats the scan results as a table
   formatTable(result: ScanResult): string {
     if (result.issues.length === 0) {
       return this.formatSuccess(result);
@@ -33,10 +35,12 @@ export class Reporter {
     return this.formatHeader(result) + '\n\n' + table.toString() + '\n\n' + this.formatSummary(result);
   }
 
+  // Formats the scan results as a JSON string
   formatJson(result: ScanResult): string {
     return JSON.stringify(result, null, 2);
   }
 
+  // Formats the scan results as a SARIF string
   formatSarif(result: ScanResult): string {
     const sarif = {
       $schema: "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
@@ -74,6 +78,7 @@ export class Reporter {
     return JSON.stringify(sarif, null, 2);
   }
 
+  // Formats the scan results as an HTML string
   formatHtml(result: ScanResult): string {
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -312,6 +317,7 @@ export class Reporter {
     return html;
   }
 
+  // Generates the SARIF rules
   private generateSarifRules(result: ScanResult): any[] {
     const ruleNames = [...new Set(result.issues.map(issue => issue.rule))];
     return ruleNames.map(ruleName => ({
@@ -323,6 +329,7 @@ export class Reporter {
     }));
   }
 
+  // Generates the SARIF results
   private generateSarifResults(result: ScanResult): any[] {
     return result.issues.map(issue => ({
       ruleId: issue.rule,
@@ -349,6 +356,7 @@ export class Reporter {
     }));
   }
 
+  // Maps the severity to the SARIF level
   private mapSeverityToSarifLevel(severity: SeverityLevel): string {
     switch (severity) {
       case 'critical':
@@ -363,6 +371,7 @@ export class Reporter {
     }
   }
 
+  // Formats the HTML issue
   private formatHtmlIssue(issue: SecurityIssue): string {
     return `
         <div class="issue">
@@ -452,6 +461,7 @@ export class Reporter {
       chalk.cyan('• Check our documentation for detailed fix suggestions');
   }
 
+  // Colors the severity
   private colorSeverity(severity: SeverityLevel): string {
     switch (severity) {
       case 'critical':
@@ -467,6 +477,7 @@ export class Reporter {
     }
   }
 
+  // Truncates the file path
   private truncateFilePath(filePath: string, maxLength: number = 35): string {
     let sanitizedPath = filePath.replace(/\\+/g, '/').replace(/\\/g, '/').replace(/\/+/g, '/');
     sanitizedPath = sanitizedPath.replace(/\.\./g, '').replace(/\/+/g, '/');
