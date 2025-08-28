@@ -15,7 +15,7 @@ export class UnvalidatedInputRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly inputPatterns: UnvalidatedInputPattern[] = [
-    // Critical - Remote Code Execution sinks
+    // Critical patterns: Remote Code Execution sinks
     { 
       pattern: /\b(?:eval|exec|system|shell_exec|passthru)\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'Code execution with user input',
@@ -49,7 +49,7 @@ export class UnvalidatedInputRule extends BaseRule {
       validation: (text: string) => this.validateJavaRuntimeExecution(text)
     },
     
-    // High - SQL and File System sinks
+    // High pattern: SQL and File System sinks
     { 
       pattern: /\b(?:query|sql|execute|CommandText)\s*[:=]\s*['"`][^'"`]*['"`]\s*[+]\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'SQL injection with user input',
@@ -75,7 +75,7 @@ export class UnvalidatedInputRule extends BaseRule {
       validation: (text: string) => this.validatePhpFileOperation(text)
     },
     
-    // Medium - Variable assignment and DOM manipulation
+    // Medium pattern: Variable assignment and DOM manipulation
     { 
       pattern: /\b(?:const|let|var)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'Variable assignment from user input',
@@ -93,7 +93,7 @@ export class UnvalidatedInputRule extends BaseRule {
       validation: (text: string) => this.validateDomManipulation(text)
     },
     
-    // Low - Template literals and logging
+    // Low pattern: Template literals and logging
     { 
       pattern: /\$\{(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)[^}]+\}/gi, 
       type: 'Template literal with user input',
@@ -195,7 +195,7 @@ export class UnvalidatedInputRule extends BaseRule {
     const language = this.detectLanguage(fileContent.path);
     const framework = this.detectFramework(fileContent.content, language);
     
-    // Special case for our test file
+    // Special case for the test file!
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
       // Check for specific unvalidated input patterns in our test file
       for (let i = 0; i < fileContent.lines.length; i++) {
@@ -269,7 +269,7 @@ export class UnvalidatedInputRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, fileContent: FileContent, lineNumber: number): SeverityLevel {
-    // Downgrade severity in development/test contexts instead of skipping
+    // Downgrades severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(fileContent.content, lineNumber) || this.isTestFile(fileContent.path)) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -376,7 +376,7 @@ export class UnvalidatedInputRule extends BaseRule {
 
   private hasValidationNearby(content: string, lineNumber: number): boolean {
     const lines = content.split('\n');
-    const contextRange = 5; // Check 5 lines before and after
+    const contextRange = 5; // Checks 5 lines before and after
     
     const startLine = Math.max(0, lineNumber - contextRange - 1);
     const endLine = Math.min(lines.length, lineNumber + contextRange);

@@ -27,7 +27,7 @@ export class SqlInjectionRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly sqlInjectionPatterns: SqlInjectionPattern[] = [
-    // Critical - Database query with raw concatenation and request input
+    // Critical pattern: Database query with raw concatenation and request input
     { 
       pattern: /\b(?:query|sql|execute|CommandText)\s*[:=]\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
       type: 'Database query with raw concatenation and request input',
@@ -43,7 +43,7 @@ export class SqlInjectionRule extends BaseRule {
       validation: (text: string) => this.validateSqlStatement(text)
     },
     
-    // High - Template literals and string interpolation
+    // High pattern: Template literals and string interpolation
     { 
       pattern: /\b(?:query|sql|execute)\s*[:=]\s*`[^`]*\$\{[^}]+\}[^`]*`/gi, 
       type: 'Template literal SQL with variables',
@@ -73,7 +73,7 @@ export class SqlInjectionRule extends BaseRule {
       validation: (text: string) => this.validatePercentSubstitution(text)
     },
     
-    // Medium - ORM concatenation and JDBC patterns
+    // Medium pattern: ORM concatenation and JDBC patterns
     { 
       pattern: /\b\.where\s*\(\s*['"`][^'"`]*['"`]\s*[+]\s*\b(?:req\.|request\.|input\.|form\.|queryParam\.|body\.|params\.)/gi, 
       type: 'ORM where clause with concatenation',
@@ -96,7 +96,7 @@ export class SqlInjectionRule extends BaseRule {
       validation: (text: string) => this.validateADOConcatenation(text)
     },
     
-    // Low - Suspicious patterns in migrations/tests
+    // Low pattern: Suspicious patterns in migrations/tests
     { 
       pattern: /\b(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|EXEC)\s+[^'"`]*['"`]\s*[+]/gi, 
       type: 'SQL statement with concatenation',
@@ -114,7 +114,7 @@ export class SqlInjectionRule extends BaseRule {
   ];
 
   private readonly safePatterns = [
-    // Parameterized queries
+    // Parameterized queries safe patterns
     /\?\s*,/g,
     /\$\d+/g,
     /:\w+/g,
@@ -151,17 +151,17 @@ export class SqlInjectionRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework);
         
-        // Skip if in safe context (but not migrations - we want to flag those with lower severity)
+        // Skip if in safe context (but not migrations! We want to flag those with lower severity)
         if (this.isSafeContext(context) && !context.isInMigration) {
           continue;
         }
         
-        // Validate the pattern
+        // Validates the pattern
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Determine final severity based on context
+        // Determines final severity based on context
         const finalSeverity = this.determineSeverity(severity, context);
         
         issues.push(this.createIssue(
@@ -199,7 +199,7 @@ export class SqlInjectionRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, context: SqlInjectionContext): SeverityLevel {
-    // Downgrade severity in migration/test contexts instead of skipping
+    // Downgrades severity in migration/test contexts instead of skipping
     if (context.isInMigration || context.isInTestFile) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -214,16 +214,16 @@ export class SqlInjectionRule extends BaseRule {
   }
 
   private isSafeContext(context: SqlInjectionContext): boolean {
-    // Safe if in comment
+    
     if (context.isInComment) return true;
     
-    // Safe if in documentation
+    
     if (context.isInDocumentation) return true;
     
-    // Safe if using parameterized queries
+   
     if (context.hasParameterizedQueries) return true;
     
-    // Safe if using ORM properly
+    
     if (context.isORMUsage) return true;
     
     return false;
@@ -327,7 +327,7 @@ export class SqlInjectionRule extends BaseRule {
 
 
 
-  // Advanced validation methods for tainted input detection
+  // Advanced validation methods!
   private validateTaintedInput(text: string): boolean {
     const taintedPatterns = [
       /\breq\./i,
