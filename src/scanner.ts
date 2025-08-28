@@ -3,6 +3,7 @@ import * as path from 'path';
 import { glob } from 'glob';
 import { FileContent, SecurityIssue, ScanResult, BaseRule } from './types';
 
+// Class for scanning the files for security issues
 export class FileScanner {
   private readonly supportedExtensions = [
     '.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte',
@@ -13,6 +14,7 @@ export class FileScanner {
     '.config', '.conf', '.ini', '.toml'
   ];
 
+  // The patterns to exclude from the scan
   private readonly excludePatterns = [
     '**/node_modules/**',
     '**/dist/**',
@@ -29,8 +31,10 @@ export class FileScanner {
     '**/obj/**'
   ];
 
+  // The maximum file size to scan
   private readonly maxFileSize = 5 * 1024 * 1024;
 
+  // The binary extensions to exclude
   private readonly binaryExtensions = [
     '.exe', '.dll', '.so', '.dylib', '.bin', '.dat',
     '.img', '.iso', '.dmg', '.pkg', '.deb', '.rpm',
@@ -44,6 +48,7 @@ export class FileScanner {
     '.o', '.obj', '.lib', '.a'
   ];
 
+  // Scans a directory for security issues
   async scanDirectory(targetPath: string, rules: BaseRule[]): Promise<ScanResult> {
     const files = await this.findFiles(targetPath);
     const issues: SecurityIssue[] = [];
@@ -76,23 +81,18 @@ export class FileScanner {
     return this.createScanResult(issues, filesScanned);
   }
 
+  // Scans a file for security issues
   async scanFile(filePath: string, rules: BaseRule[]): Promise<ScanResult> {
     const issues: SecurityIssue[] = [];
     let filesScanned = 0;
-
-    console.log('DEBUG: scanFile called with', rules.length, 'rules');
-    console.log('DEBUG: Rule names:', rules.map(r => r.name));
 
     try {
       const fileContent = await this.readFile(filePath);
       if (fileContent) {
         filesScanned = 1;
-        console.log('DEBUG: File content read, length:', fileContent.content.length);
         
         for (const rule of rules) {
-          console.log('DEBUG: Checking rule:', rule.name);
           const ruleIssues = rule.check(fileContent);
-          console.log('DEBUG: Rule', rule.name, 'found', ruleIssues.length, 'issues');
           issues.push(...ruleIssues);
         }
       } else {
@@ -102,10 +102,10 @@ export class FileScanner {
       throw new Error(`Could not scan file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    console.log('DEBUG: Total issues found:', issues.length);
     return this.createScanResult(issues, filesScanned);
   }
 
+  // Finds the files to scan
   private async findFiles(targetPath: string): Promise<string[]> {
     const stats = await fs.promises.stat(targetPath);
     
@@ -127,6 +127,7 @@ export class FileScanner {
     return allFiles.filter((file: string) => this.isSupportedFile(file));
   }
 
+  // Checks if the file is supported
   private isSupportedFile(filePath: string): boolean {
     const ext = path.extname(filePath).toLowerCase();
     
@@ -137,6 +138,7 @@ export class FileScanner {
     return this.supportedExtensions.includes(ext);
   }
 
+  // Reads the file content
   private async readFile(filePath: string): Promise<FileContent | null> {
     try {
       const stats = await fs.promises.stat(filePath);
@@ -168,6 +170,7 @@ export class FileScanner {
     }
   }
 
+  // Checks if the file is a binary file
   private async isBinaryFile(filePath: string): Promise<boolean> {
     try {
       const fd = await fs.promises.open(filePath, 'r');
@@ -201,6 +204,7 @@ export class FileScanner {
     }
   }
 
+  // Creates the scan result
   private createScanResult(issues: SecurityIssue[], filesScanned: number): ScanResult {
     const summary = {
       critical: 0,
