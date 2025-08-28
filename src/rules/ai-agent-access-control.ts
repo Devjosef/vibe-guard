@@ -20,7 +20,8 @@ export class AiAgentAccessControlRule extends BaseRule {
   readonly severity = 'critical' as const;
 
   private readonly accessControlPatterns = [
-    // AI Agent with elevated privileges - tighter patterns
+    // AI Agent with elevated privileges: Tighter patterns!
+    // Critical severity
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant)\s*[:=]\s*['"`]?(?:admin|root|superuser|sudo)['"`]?/gi, 
       type: 'Elevated AI Agent Privileges',
@@ -28,6 +29,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateElevatedPrivileges(text)
     },
+    // Critical severity
     { 
       pattern: /(?:permissions?|roles?|access)\s*[:=]\s*['"`]?(?:all|full|unlimited|wildcard)['"`]?/gi, 
       type: 'Unlimited AI Agent Permissions',
@@ -35,7 +37,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateUnlimitedPermissions(text)
     },
-    
+    // High severity
     // Authentication bypass patterns
     { 
       pattern: /(?:auth|authentication)\s*[:=]\s*['"`]?(?:false|no|0|disabled|off)['"`]?/gi, 
@@ -44,8 +46,8 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateDisabledAuth(text)
     },
-    
-    // Missing RBAC for AI agents - more specific
+    // High severity
+    // Missing RBAC for AI agents: More specific
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant)\s*[:=]\s*['"`]?[^'"`]*\b(?:without|no|missing)\s+(?:role|permission|access[_-]?control)['"`]?/gi, 
       type: 'Missing AI Agent RBAC',
@@ -53,7 +55,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateMissingRBAC(text)
     },
-    
+    // Critical severity
     // AI Agent with persistent elevated access
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant).*?(?:permanent|persistent|always|forever).*?(?:admin|root|elevated)/gi, 
@@ -62,7 +64,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validatePersistentAccess(text)
     },
-    
+    // High severity
     // AI Agent bypassing authentication
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant).*?(?:bypass|skip|ignore).*?(?:auth|authentication|login)/gi, 
@@ -71,7 +73,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateAuthBypass(text)
     },
-    
+    // High severity
     // AI Agent with system-level access
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant).*?(?:system|os|kernel|hardware)/gi, 
@@ -80,8 +82,8 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateSystemAccess(text)
     },
-    
-    // MCP Server insecure access - tighter patterns
+    // High severity
+    // MCP Server insecure access: Tighter patterns!
     { 
       pattern: /(?:mcp|model[_-]?context[_-]?protocol).*?(?:unrestricted|open|public)/gi, 
       type: 'Insecure MCP Server Access',
@@ -89,6 +91,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateInsecureMCP(text)
     },
+    // High severity
     { 
       pattern: /(?:mcp[_-]?server|model[_-]?context[_-]?protocol).*?(?:no[_-]?auth|without[_-]?auth)/gi, 
       type: 'MCP Server Without Auth',
@@ -96,7 +99,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateMCPNoAuth(text)
     },
-    
+    // Medium severity
     // AI Agent with file system access
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant).*?(?:file|directory|path|fs)/gi, 
@@ -105,7 +108,7 @@ export class AiAgentAccessControlRule extends BaseRule {
       severity: 'medium' as const,
       validation: (text: string) => this.validateFileSystemAccess(text)
     },
-    
+    // Medium severity
     // AI Agent with network access
     { 
       pattern: /(?:ai[_-]?agent|agent|bot|assistant).*?(?:network|http|https|api|endpoint)/gi, 
@@ -117,7 +120,7 @@ export class AiAgentAccessControlRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Development and testing patterns
+    // Development and testing patterns:
     /example/i,
     /demo/i,
     /test/i,
@@ -136,7 +139,7 @@ export class AiAgentAccessControlRule extends BaseRule {
     /staging/i,
     /localhost/i,
     
-    // Sandbox and safe environments
+    // Sandbox and safe environments:
     /sandbox/i,
     /isolated/i,
     /contained/i,
@@ -145,14 +148,14 @@ export class AiAgentAccessControlRule extends BaseRule {
     /demo[_-]?mode/i,
     /test[_-]?environment/i,
     
-    // Documentation and examples
+    // Documentation and examples:
     /documentation/i,
     /docs?/i,
     /readme/i,
     /example[_-]?config/i,
     /sample[_-]?config/i,
     
-    // Security related patterns (likely safe)
+    // Security related patterns (likely safe):
     /secure/i,
     /protected/i,
     /guarded/i,
@@ -176,17 +179,17 @@ export class AiAgentAccessControlRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasAuthChecks, isProtectedEnvironment);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the access control issue
+        // Validates the access control issue
         if (!validation(matchedText)) {
           continue;
         }
 
-        // Calculate final confidence based on context
+        // Calculates final confidence based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         
         if (finalConfidence >= 0.5) {
@@ -387,15 +390,15 @@ export class AiAgentAccessControlRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: AiAgentContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasAuthChecks) confidence *= 0.6; // Reduce if auth checks present
-    if (context.isProtectedEnvironment) confidence *= 0.7; // Reduce if in protected environment
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasAuthChecks) confidence *= 0.6; // Reduces if auth checks present
+    if (context.isProtectedEnvironment) confidence *= 0.7; // Reduces if in protected environment
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
 
-  // Validation methods for different access control issues
+  // Validation methods for different access control issues!
   private validateElevatedPrivileges(text: string): boolean {
     const privilegeKeywords = ['admin', 'root', 'superuser', 'sudo'];
     return privilegeKeywords.some(keyword => text.toLowerCase().includes(keyword));

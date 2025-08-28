@@ -19,7 +19,8 @@ export class AiDataLeakagePreventionRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly leakagePatterns = [
-    // Training data exposure: more specific patterns
+    // Training data exposure: More specific patterns!
+    // Critical severity
     { 
       pattern: /(?:training[_-]?data|dataset|corpus)\s*[:=]\s*['"`]?[^'"`]*(?:expose|leak|public|unrestricted)['"`]?/gi, 
       type: 'Training Data Exposure',
@@ -27,6 +28,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateTrainingDataExposure(text)
     },
+    // Critical severity
     { 
       pattern: /(?:sensitive|confidential|proprietary)\s*[:=]\s*['"`]?[^'"`]*(?:training|dataset|corpus)['"`]?/gi, 
       type: 'Sensitive Training Data',
@@ -34,7 +36,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateSensitiveTrainingData(text)
     },
-    
+    // High severity
     // Model output containing sensitive data: more specific
     { 
       pattern: /(?:model|ai|llm)\s*[:=]\s*['"`]?[^'"`]*(?:output|response|generation)\s*[:=]\s*['"`]?[^'"`]*(?:sensitive|confidential|proprietary)['"`]?/gi, 
@@ -43,7 +45,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateSensitiveOutput(text)
     },
-    
+    // High severity
     // Unfiltered AI responses: more specific
     { 
       pattern: /(?:ai|model|llm)\s*[:=]\s*['"`]?[^'"`]*(?:unfiltered|unrestricted|raw)\s*[:=]\s*['"`]?[^'"`]*(?:output|response)['"`]?/gi, 
@@ -52,7 +54,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateUnfilteredOutput(text)
     },
-    
+    // High severity
     // Data classification bypass: more specific
     { 
       pattern: /(?:bypass|ignore|skip)\s*[:=]\s*['"`]?[^'"`]*(?:classification|label|sensitivity)['"`]?/gi, 
@@ -61,7 +63,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateClassificationBypass(text)
     },
-    
+    // Critical severity
     // AI model containing sensitive data: more specific
     { 
       pattern: /(?:model|weights|parameters)\s*[:=]\s*['"`]?[^'"`]*(?:contain|include|embed)\s*[:=]\s*['"`]?[^'"`]*(?:sensitive|confidential)['"`]?/gi, 
@@ -70,7 +72,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateSensitiveModel(text)
     },
-    
+    // High severity
     // Unencrypted AI artifacts: more specific
     { 
       pattern: /(?:model|weights|artifacts)\s*[:=]\s*['"`]?[^'"`]*(?:unencrypted|plaintext|raw)['"`]?/gi, 
@@ -79,7 +81,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateUnencryptedArtifacts(text)
     },
-    
+    // High severity
     // Logging sensitive data: more specific
     { 
       pattern: /(?:log|console|print|echo)\s*[:=]\s*['"`]?[^'"`]*(?:sensitive|confidential|proprietary|personal)['"`]?/gi, 
@@ -88,7 +90,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateSensitiveLogging(text)
     },
-    
+    // Medium severity
     // Data export without filtering: more specific
     { 
       pattern: /(?:export|save|write)\s*[:=]\s*['"`]?[^'"`]*(?:all|complete|full)\s*[:=]\s*['"`]?[^'"`]*(?:data|dataset)['"`]?/gi, 
@@ -97,7 +99,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
       severity: 'medium' as const,
       validation: (text: string) => this.validateUnfilteredExport(text)
     },
-    
+    // Medium severity
     // API response without sanitization: more specific
     { 
       pattern: /(?:api|response|return)\s*[:=]\s*['"`]?[^'"`]*(?:raw|unfiltered|complete)\s*[:=]\s*['"`]?[^'"`]*(?:data|result)['"`]?/gi, 
@@ -109,7 +111,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Development and testing patterns
+    // Development and testing patterns:
     /example/i,
     /demo/i,
     /test/i,
@@ -128,7 +130,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
     /staging/i,
     /localhost/i,
     
-    // Documentation and tutorials
+    // Documentation and tutorials:
     /documentation/i,
     /docs?/i,
     /tutorial/i,
@@ -140,7 +142,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
     /\.rst$/i,
     /\.txt$/i,
     
-    // Safe environments
+    // Safe environments:
     /sandbox/i,
     /isolated/i,
     /contained/i,
@@ -149,7 +151,7 @@ export class AiDataLeakagePreventionRule extends BaseRule {
     /demo[_-]?mode/i,
     /test[_-]?environment/i,
     
-    // Data protection patterns (likely safe)
+    // Data protection patterns (likely safe):
     /encrypt/i,
     /protect/i,
     /secure/i,
@@ -176,17 +178,17 @@ export class AiDataLeakagePreventionRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasDataProtection, isProtectedEnvironment);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
 
-        // Validate the data leakage issue
+        // Validates the data leakage issue
         if (!validation(matchedText)) {
           continue;
         }
 
-        // Calculate final confidence based on context
+        // Calculates final confidence based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         
         if (finalConfidence >= 0.5) {
@@ -226,27 +228,21 @@ export class AiDataLeakagePreventionRule extends BaseRule {
   }
 
   private isSafeContext(context: DataLeakageContext): boolean {
-    // Safe if in comment
+   
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
     
-    // Safe if in documentation
     if (context.isInDocumentation) return true;
     
-    // Safe if in development context
     if (context.isInDevelopment) return true;
     
-    // Safe if using data protection keywords
     if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
-    
-    // Safe if data protection measures are present
+
     if (context.hasDataProtection) return true;
-    
-    // Safe if in protected environment
+
     if (context.isProtectedEnvironment) return true;
     
     return false;
@@ -376,15 +372,15 @@ export class AiDataLeakagePreventionRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: DataLeakageContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasDataProtection) confidence *= 0.6; // Reduce if data protection present
-    if (context.isProtectedEnvironment) confidence *= 0.7; // Reduce if in protected environment
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasDataProtection) confidence *= 0.6; // Reduces if data protection present
+    if (context.isProtectedEnvironment) confidence *= 0.7; // Reduces if in protected environment
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
 
-  // Validation methods for different data leakage issues
+  // Validation methods for different data leakage issues!
   private validateTrainingDataExposure(text: string): boolean {
     const trainingKeywords = ['training', 'dataset', 'corpus'];
     const exposureKeywords = ['expose', 'leak', 'public', 'unrestricted'];

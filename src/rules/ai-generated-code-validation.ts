@@ -21,7 +21,8 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   readonly severity = 'high' as const;
 
   private readonly aiCodePatterns = [
-    // AI-generated code indicators - more specific assignment patterns
+    // AI generated code indicators: More specific assignment patterns!
+    // Medium severity
     { 
       pattern: /(?:generated[_-]?by|ai[_-]?generated|copilot|chatgpt|gpt[_-]?generated|claude[_-]?generated)\s*[:=]\s*['"`]?[^'"`]*['"`]?/gi, 
       type: 'AI-Generated Code',
@@ -29,6 +30,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'medium' as const,
       validation: (text: string) => this.validateAiGeneratedCode(text)
     },
+    // High severity
     { 
       pattern: /(?:ai|generated|copilot)\s*[:=]\s*['"`]?[^'"`]*(?:unvalidated|unreviewed|unchecked)['"`]?/gi, 
       type: 'Unvalidated AI Code',
@@ -36,6 +38,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateUnvalidatedCode(text)
     },
+    // High severity
     { 
       pattern: /(?:ai|generated|copilot)\s*[:=]\s*['"`]?[^'"`]*(?:no[_-]?review|without[_-]?review|skip[_-]?review)['"`]?/gi, 
       type: 'AI Code Without Security Review',
@@ -43,6 +46,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateNoReviewCode(text)
     },
+    // Critical severity
     { 
       pattern: /(?:ai|generated|copilot)\s*[:=]\s*['"`]?[^'"`]*(?:vulnerable|insecure|unsafe)['"`]?/gi, 
       type: 'Vulnerable AI-Generated Code',
@@ -50,6 +54,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateVulnerableCode(text)
     },
+    // Critical severity
     { 
       pattern: /(?:ai|generated|copilot)\s*[:=]\s*['"`]?[^'"`]*(?:bypass|skip|ignore)\s*[:=]\s*['"`]?[^'"`]*(?:security|validation)['"`]?/gi, 
       type: 'AI Code Bypassing Security',
@@ -58,7 +63,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       validation: (text: string) => this.validateSecurityBypass(text)
     },
     
-    // Dangerous code patterns - eval, system commands, SQL injection
+    // Dangerous code patterns: eval, system commands, SQL injection
     { 
       pattern: /eval\s*\(\s*['"`]?[^'"`]*\$\{[^}]+\}[^'"`]*['"`]?/gi, 
       type: 'AI-Generated Eval with Variables',
@@ -66,6 +71,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateEvalWithVariables(text)
     },
+    // Critical severity
     { 
       pattern: /(?:exec|system|spawn)\s*\(\s*['"`]?[^'"`]*\$\{[^}]+\}[^'"`]*['"`]?/gi, 
       type: 'AI-Generated System Commands',
@@ -73,6 +79,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'critical' as const,
       validation: (text: string) => this.validateSystemCommands(text)
     },
+    // High severity
     { 
       pattern: /(?:query|sql)\s*[:=]\s*['"`]?[^'"`]*\$\{[^}]+\}[^'"`]*['"`]?/gi, 
       type: 'AI-Generated SQL with Variables',
@@ -80,8 +87,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       severity: 'high' as const,
       validation: (text: string) => this.validateSqlWithVariables(text)
     },
-    
-    // Multi-line AI injection patterns
+    // Multi line AI injection patterns!
     {
       pattern: /(?:prompt|input)\s*[:=]\s*['"`]?[^'"`]*(?:ignore|forget|system|assistant|user)\s*[:=]\s*['"`]?[^'"`]*(?:previous|above|instructions)['"`]?/gis,
       type: 'Multi-Line AI Injection',
@@ -90,7 +96,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       validation: (text: string) => this.validateMultiLineInjection(text)
     },
     
-    // AI-generated file operations
+    // AI generated file operations!
     { 
       pattern: /(?:readFile|writeFile|fs\.(?:read|write))\s*\(\s*['"`]?[^'"`]*\$\{[^}]+\}[^'"`]*['"`]?/gi, 
       type: 'AI-Generated File Operations',
@@ -99,7 +105,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
       validation: (text: string) => this.validateFileOperations(text)
     },
     
-    // AI-generated network requests
+    // AI generated network requests!
     { 
       pattern: /(?:fetch|axios|request)\s*\(\s*['"`]?[^'"`]*\$\{[^}]+\}[^'"`]*['"`]?/gi, 
       type: 'AI-Generated Network Requests',
@@ -110,7 +116,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   ];
 
   private readonly falsePositivePatterns = [
-    // Development and testing patterns
+    // Development and testing patterns:
     /example/i,
     /demo/i,
     /test/i,
@@ -129,7 +135,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     /staging/i,
     /localhost/i,
     
-    // Documentation and examples
+    // Documentation and examples:
     /documentation/i,
     /readme/i,
     /docs/i,
@@ -139,7 +145,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     /tutorial/i,
     /guide/i,
     
-    // Test files and directories
+    // Test files and directories:
     /test[_-]?files?/i,
     /test[_-]?data/i,
     /test[_-]?cases/i,
@@ -148,12 +154,12 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     /\.test\./i,
     /\.spec\./i,
     
-    // Configuration and setup
+    // Configuration and setup:
     /config[_-]?example/i,
     /setup[_-]?example/i,
     /template[_-]?example/i,
     
-    // Commit logs and version control
+    // Commit logs and version control:
     /commit/i,
     /git/i,
     /svn/i,
@@ -161,7 +167,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     /changelog/i,
     /history/i,
     
-    // License headers
+    // License headers:
     /license/i,
     /copyright/i,
     /mit/i,
@@ -169,7 +175,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     /gpl/i,
     /bsd/i,
     
-    // Security-related false positives (likely safe)
+    // Security related false positives (likely safe):
     /validate/i,
     /review/i,
     /secure/i,
@@ -191,7 +197,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     for (const { pattern, type, confidence, severity, validation } of this.aiCodePatterns) {
       let matches;
       
-      // Handle multi-line patterns differently
+      // Handles multi line patterns differently!
       if (pattern.flags.includes('s')) {
         matches = this.findMultiLineMatches(fileContent.content, pattern);
       } else {
@@ -202,17 +208,17 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, hasSecurityMeasures, issues.length);
         
-        // Skip if in safe context
+        // Skips if in safe context
         if (this.isSafeContext(context)) {
           continue;
         }
         
-        // Validate the AI code issue
+        // Validates the AI code issue
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Calculate final confidence and severity based on context
+        // Calculates final confidence and severity based on context
         const finalConfidence = this.calculateConfidence(confidence, context);
         const finalSeverity = this.calculateSeverity(severity, context);
         
@@ -255,25 +261,19 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   }
 
   private isSafeContext(context: AiCodeContext): boolean {
-    // Safe if in comment
+  
     if (context.isInComment) return true;
     
-    // Safe if in test file
     if (context.isInTestFile) return true;
-    
-    // Safe if in documentation
+  
     if (context.isInDocumentation) return true;
-    
-    // Safe if in development context
+
     if (context.isInDevelopment) return true;
-    
-    // Safe if in commit log
+ 
     if (context.isInCommitLog) return true;
-    
-    // Safe if in license header
+   
     if (context.isInLicenseHeader) return true;
     
-    // Safe if using security-related keywords
     if (this.falsePositivePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
@@ -409,9 +409,9 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   private calculateConfidence(baseConfidence: number, context: AiCodeContext): number {
     let confidence = baseConfidence;
     
-    // Adjust confidence based on context
-    if (context.hasSecurityMeasures) confidence *= 0.7; // Reduce if security measures present
-    if (context.framework) confidence *= 1.1; // Increase for known frameworks
+    // Adjusts confidence based on context
+    if (context.hasSecurityMeasures) confidence *= 0.7; // Reduces if security measures present
+    if (context.framework) confidence *= 1.1; // Increases for known frameworks
     
     return Math.min(confidence, 1.0);
   }
@@ -419,13 +419,13 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
   private calculateSeverity(baseSeverity: 'critical' | 'high' | 'medium', context: AiCodeContext): 'critical' | 'high' | 'medium' {
     let severity = baseSeverity;
     
-    // Auto-escalate severity if multiple issues found
+    // Auto escalates severity if multiple issues found
     if (context.issueCount > 2) {
       if (severity === 'medium') severity = 'high';
       if (severity === 'high') severity = 'critical';
     }
     
-    // Reduce severity in development context
+    // Reduces severity in development context
     if (context.isInDevelopment) {
       if (severity === 'critical') severity = 'high';
       if (severity === 'high') severity = 'medium';
@@ -434,7 +434,7 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     return severity;
   }
 
-  // Validation methods for different AI code issues
+  // Validation methods for different AI code issues!
   private validateAiGeneratedCode(text: string): boolean {
     const aiKeywords = ['generated', 'ai', 'copilot', 'chatgpt', 'gpt', 'claude'];
     return aiKeywords.some(keyword => text.toLowerCase().includes(keyword));
@@ -516,14 +516,14 @@ export class AiGeneratedCodeValidationRule extends BaseRule {
     const globalPattern = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
     
     while ((match = globalPattern.exec(content)) !== null) {
-      // Find the line number for the match
+      // Finds the line number for the match
       const matchIndex = match.index ?? 0;
       const beforeMatch = content.substring(0, matchIndex);
       const lineNumber = beforeMatch.split('\n').length;
       const lineStart = beforeMatch.lastIndexOf('\n') + 1;
       const columnNumber = matchIndex - lineStart + 1;
       
-      // Get the line content (first line of multi-line match)
+      // Gets the line content (first line of multi line match)
       const lines = content.split('\n');
       const lineContent = lines[lineNumber - 1] || '';
       
