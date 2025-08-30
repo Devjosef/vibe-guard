@@ -24,105 +24,90 @@ export class ExposedSecretsRule extends BaseRule {
   readonly severity = 'critical' as const;
 
   private readonly secretPatterns: SecretPattern[] = [
-    // Critical severity: AWS keys
     { 
       pattern: /AKIA[0-9A-Z]{16}/g, 
       type: 'AWS Access Key',
       confidence: 0.95,
       validation: (secret: string) => this.validateAwsKey(secret)
     },
-    // High severity: AWS secrets
     { 
       pattern: /(?:aws[_-]?secret|AWS_SECRET)\s*[:=]\s*['"`]([a-zA-Z0-9/+=]{40})/gi, 
       type: 'AWS Secret',
       confidence: 0.9,
       validation: (secret: string) => this.validateAwsSecret(secret)
     },
-    // Critical severity: GitHub tokens
     { 
       pattern: /ghp_[a-zA-Z0-9]{36}/g, 
       type: 'GitHub Personal Access Token',
       confidence: 0.95,
       validation: (secret: string) => this.validateGitHubToken(secret)
     },
-    // Critical severity: GitHub app tokens
     { 
       pattern: /ghs_[a-zA-Z0-9]{36}/g, 
       type: 'GitHub App Token',
       confidence: 0.95,
       validation: (secret: string) => this.validateGitHubToken(secret)
     },
-    // Critical severity: GitHub refresh tokens
     { 
       pattern: /ghr_[a-zA-Z0-9]{36}/g, 
       type: 'GitHub Refresh Token',
       confidence: 0.95,
       validation: (secret: string) => this.validateGitHubToken(secret)
     },
-    // Critical severity: Google API keys
     { 
       pattern: /AIza[0-9A-Za-z_\-]{35}/g, 
       type: 'Google API Key',
       confidence: 0.9,
       validation: (secret: string) => this.validateGoogleKey(secret)
     },
-    // High severity: Slack tokens
     { 
       pattern: /xox[baprs]-[0-9a-zA-Z\-]{10,}/g, 
       type: 'Slack Token',
       confidence: 0.85,
       validation: (secret: string) => this.validateSlackToken(secret)
     },
-    // Critical severity: Stripe live secret keys
     {
       pattern: /sk_live_[a-zA-Z0-9]{24}/g,
       type: 'Stripe Live Secret Key',
       confidence: 0.95,
       validation: (secret: string) => this.validateStripeKey(secret)
     },
-    // High severity: Stripe test secret keys
     {
       pattern: /sk_test_[a-zA-Z0-9]{24}/g,
       type: 'Stripe Test Secret Key',
       confidence: 0.8,
       validation: (secret: string) => this.validateStripeKey(secret)
     },
-    // Critical severity: Stripe live publishable keys
     {
       pattern: /pk_live_[a-zA-Z0-9]{24}/g,
       type: 'Stripe Live Publishable Key',
       confidence: 0.7,
       validation: (secret: string) => this.validateStripeKey(secret)
     },
-    // Critical severity: Twilio secret keys
     {
       pattern: /SK[a-f0-9]{32}/g,
       type: 'Twilio Secret Key',
       confidence: 0.9,
       validation: (secret: string) => this.validateTwilioKey(secret)
     },
-    // High severity: Twilio account SIDs
     {
       pattern: /AC[a-f0-9]{32}/g,
       type: 'Twilio Account SID',
       confidence: 0.85,
       validation: (secret: string) => this.validateTwilioSid(secret)
     },
-    // Critical severity: SendGrid API keys
     {
       pattern: /SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}/g,
       type: 'SendGrid API Key',
       confidence: 0.9,
       validation: (secret: string) => this.validateSendGridKey(secret)
     },
-    // Critical severity: Azure service principals
     {
       pattern: /[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}/g,
       type: 'Azure Service Principal',
       confidence: 0.85,
       validation: (secret: string) => this.validateAzurePrincipal(secret)
     },
-    // Critical severity: GCP service account keys
     {
       pattern: /"type":\s*"service_account".*"private_key_id":\s*"[a-zA-Z0-9]+"/gs,
       type: 'GCP Service Account Key',
@@ -130,21 +115,18 @@ export class ExposedSecretsRule extends BaseRule {
       validation: (secret: string) => this.validateGcpServiceAccount(secret),
       multiLine: true
     },
-    // High severity: Heroku API keys
     {
       pattern: /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/g,
       type: 'Heroku API Key',
       confidence: 0.8,
       validation: (secret: string) => this.validateHerokuKey(secret)
     },
-    // High severity: JWT tokens
     { 
       pattern: /eyJ[a-zA-Z0-9_\-]*\.eyJ[a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]*/g, 
       type: 'JWT Token',
       confidence: 0.8,
       validation: (secret: string) => this.validateJWT(secret)
     },
-    // Critical severity: PEM private keys
     {
       pattern: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----\s*[A-Za-z0-9+/=\s]+\s*-----END\s+(?:RSA\s+)?PRIVATE\s+KEY-----/g,
       type: 'PEM Private Key',
@@ -152,21 +134,18 @@ export class ExposedSecretsRule extends BaseRule {
       validation: (secret: string) => this.validatePemKey(secret),
       multiLine: true
     },
-    // High severity: API keys
     { 
       pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi, 
       type: 'API Key',
       confidence: 0.7,
       validation: (secret: string) => this.validateGenericSecret(secret)
     },
-    // High severity: Secret keys
     { 
       pattern: /(?:secret[_-]?key|secretkey)\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi, 
       type: 'Secret Key',
       confidence: 0.7,
       validation: (secret: string) => this.validateGenericSecret(secret)
     },
-    // High severity: Access tokens
     { 
       pattern: /(?:access[_-]?token|accesstoken)\s*[:=]\s*['"`]([a-zA-Z0-9_\-]{20,})/gi, 
       type: 'Access Token',
@@ -309,7 +288,6 @@ export class ExposedSecretsRule extends BaseRule {
     return matches;
   }
 
-  // Validation methods: Expanded coverage
   private validateAwsKey(key: string): boolean {
     return /^AKIA[0-9A-Z]{16}$/.test(key);
   }

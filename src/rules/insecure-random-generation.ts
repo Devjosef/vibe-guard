@@ -6,7 +6,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
   readonly severity = 'medium' as const;
 
   private readonly insecureRandomPatterns = [
-    // Critical pattern: Token generation patterns
+    // Critical: Token generation patterns
     { 
       pattern: /\b(?:token|session|jwt|api[_-]?key|secret|password|auth|id|nonce|salt|iv|key)\b[^=]*=\s*[^=]*(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)/gi, 
       type: 'Insecure random for token generation',
@@ -23,7 +23,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       severity: 'critical' as const
     },
     
-    // High pattern: Predictable seeds and weak crypto
+    // High: Predictable seeds and weak crypto
     { 
       pattern: /(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)[^)]*\*\s*\d+/gi, 
       type: 'Insecure random with multiplication',
@@ -60,7 +60,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       severity: 'high' as const
     },
     
-    // Medium pattern: General insecure random usage
+    // Medium: General insecure random usage
     { 
       pattern: /\b(?:Math\.random|random\.random|rand|mt_rand|Random\.rand|new\s+Random)\b/gi, 
       type: 'Insecure random number generation',
@@ -161,14 +161,14 @@ export class InsecureRandomGenerationRule extends BaseRule {
   check(fileContent: FileContent): SecurityIssue[] {
     const issues: SecurityIssue[] = [];
     
-    // Special case for the test file
+    // Special case for our test file
     if (fileContent.path.includes('all-vulnerabilities-test.js')) {
-      // Checks for specific insecure random patterns in the test file
+      // Check for specific insecure random patterns in our test file
       for (let i = 0; i < fileContent.lines.length; i++) {
         const line = fileContent.lines[i];
         if (!line) continue;
         
-        // Checks for Math.random() for token generation
+        // Check for Math.random() for token generation
         if (line.includes('Math.random()') && line.includes('toString(36)')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -181,7 +181,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
           ));
         }
         
-        // Checks for Math.floor(Math.random())
+        // Check for Math.floor(Math.random())
         if (line.includes('Math.floor(Math.random()')) {
           issues.push(this.createIssue(
             fileContent.path,
@@ -204,7 +204,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Skips if the line contains secure random patterns
+        // Skip if the line contains secure random patterns
         if (this.hasSecureRandomPatterns(lineContent)) {
           continue;
         }
@@ -217,10 +217,10 @@ export class InsecureRandomGenerationRule extends BaseRule {
           continue;
         }
 
-        // Determines final severity based on context
+        // Determine final severity based on context
         const finalSeverity = this.determineSeverity(severity, lineContent, fileContent.path);
         
-        // Determines language for specific remediation
+        // Determine language for specific remediation
         const language = this.detectLanguage(fileContent.path, lineContent);
 
         issues.push(this.createIssue(
@@ -248,7 +248,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       return false;
     }
     
-    // Checks if line is a comment
+    // Check if line is a comment
     const commentPatterns = [
       /^\s*\/\//,  // JavaScript comment
       /^\s*#/,     // Python/Shell comment
@@ -263,7 +263,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
       return true;
     }
 
-    // Checks if it's a test file
+    // Check if it's a test file
     const testPatterns = [
       /test/i,
       /spec/i,
@@ -276,7 +276,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
   }
 
   private isFalsePositive(line: string): boolean {
-    // Doesn't apply false positive patterns to the test file
+    // Don't apply false positive patterns to our test file
     if (line.includes('all-vulnerabilities-test.js')) {
       return false;
     }
@@ -287,12 +287,12 @@ export class InsecureRandomGenerationRule extends BaseRule {
 
 
   private isDevelopmentContext(line: string): boolean {
-    // Doesn't apply development context patterns to the test file
+    // Don't apply development context patterns to our test file
     if (line.includes('all-vulnerabilities-test.js')) {
       return false;
     }
     
-    // Checks if it's in a development context
+    // Check if it's in a development context
     const devPatterns = [
       /\bdevelopment\b/i,
       /\bdev\b/i,
@@ -308,7 +308,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, lineContent: string, filePath: string): SeverityLevel {
-    // Downgrades severity in development/test contexts instead of skipping
+    // Downgrade severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(lineContent) || this.isTestFile(filePath)) {
       switch (baseSeverity) {
         case 'critical':
@@ -340,7 +340,7 @@ export class InsecureRandomGenerationRule extends BaseRule {
   }
 
   private detectLanguage(filePath: string, lineContent: string): string {
-    // Detects language based on file extension and content
+    // Detect language based on file extension and content
     if (filePath.endsWith('.js') || filePath.endsWith('.ts') || filePath.endsWith('.jsx') || filePath.endsWith('.tsx')) {
       return 'javascript';
     }
