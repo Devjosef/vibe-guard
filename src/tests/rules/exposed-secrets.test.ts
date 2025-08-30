@@ -142,7 +142,7 @@ describe('ExposedSecretsRule', () => {
   describe('Communication Service Keys', () => {
     it('should detect Twilio Secret Key', () => {
       // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
-      const content = 'const twilioKey = "SK1234567890abcdef1234567890abcdef";';
+      const content = 'const twilioKey = "SK_FAKE_TWILIO_KEY_1234567890abcdef";';
       const fileContent: FileContent = {
         path: 'src/config.js',
         content,
