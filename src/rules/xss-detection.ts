@@ -16,7 +16,7 @@ export class XssDetectionRule extends BaseRule {
   readonly severity = 'critical' as const;
 
   private readonly xssPatterns: XssPattern[] = [
-    // Critical pattern: Direct user input in dangerous sinks
+    // Critical - Direct user input in dangerous sinks
     { 
       pattern: /\b(?:innerHTML|outerHTML)\s*=\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'DOM manipulation with user input',
@@ -72,7 +72,7 @@ export class XssDetectionRule extends BaseRule {
       validation: (text: string) => this.validateFunctionConstructor(text)
     },
     
-    // High pattern: Template injection and dynamic content
+    // High - Template injection and dynamic content
     { 
       pattern: /\b(?:ejs|handlebars|mustache|pug)\.render\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'Template engine injection with user input',
@@ -101,7 +101,7 @@ export class XssDetectionRule extends BaseRule {
       validation: (text: string) => this.validateFlaskMarkup(text)
     },
     
-    // Medium pattern: React/Vue/Angular unsafe patterns
+    // Medium - React/Vue/Angular unsafe patterns
     { 
       pattern: /\bdangerouslySetInnerHTML\s*=\s*\{\s*__html:\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'React dangerouslySetInnerHTML with user input',
@@ -130,7 +130,7 @@ export class XssDetectionRule extends BaseRule {
       validation: (text: string) => this.validateAngularInnerHtml(text)
     },
     
-    // Low pattern: Legacy jQuery/AngularJS patterns
+    // Low - Legacy jQuery/AngularJS patterns
     { 
       pattern: /\$\([^)]*\)\.html\s*\(\s*(?:req\.|request\.|input\.|params\.|query\.|body\.|form\.|flask\.request\.|django\.request\.|rails\.params\.|c\.Request\.|HttpContext\.Request\.)/gi, 
       type: 'jQuery html() with user input',
@@ -298,22 +298,22 @@ export class XssDetectionRule extends BaseRule {
       const matches = this.findMatches(fileContent.content, pattern);
       
       for (const { line, column, lineContent } of matches) {
-        // Validates the pattern
+        // Validate the pattern
         if (!validation(lineContent)) {
           continue;
         }
-        
-        // Skips if sanitization is present in the same line or nearby lines
+
+        // Skip if sanitization is present in the same line or nearby lines
         if (this.hasSanitizationNearby(fileContent.content, line)) {
           continue;
         }
-        
-        // Determines final severity based on context
+
+        // Determine final severity based on context
         const finalSeverity = this.determineSeverity(severity, fileContent, line);
         
-        // Uses pattern framework if specified, otherwise uses detected framework
+        // Use pattern framework if specified, otherwise use detected framework
         const targetFramework = patternFramework !== 'all' ? patternFramework : framework;
-        
+
         issues.push(this.createIssue(
           fileContent.path,
           line,
@@ -609,7 +609,7 @@ export class XssDetectionRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, fileContent: FileContent, lineNumber: number): SeverityLevel {
-    // Downgrades severity in development/test contexts instead of skipping
+    // Downgrade severity in development/test contexts instead of skipping
     if (this.isDevelopmentContext(fileContent.content, lineNumber) || this.isTestFile(fileContent.path)) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -707,7 +707,7 @@ export class XssDetectionRule extends BaseRule {
 
   private hasSanitizationNearby(content: string, lineNumber: number): boolean {
     const lines = content.split('\n');
-    const contextRange = 3; // Checks 3 lines before and after
+    const contextRange = 3; // Check 3 lines before and after
     
     const startLine = Math.max(0, lineNumber - contextRange - 1);
     const endLine = Math.min(lines.length, lineNumber + contextRange);
