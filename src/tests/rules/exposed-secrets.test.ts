@@ -18,6 +18,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('AWS Credentials Detection', () => {
     it('should detect AWS Access Key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const awsKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -91,6 +92,7 @@ describe('ExposedSecretsRule', () => {
     });
 
     it('should detect Slack Token', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const slackToken = "xoxb-1234567890-abcdefghijklmnopqrstuvwx";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -107,6 +109,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Payment Service Keys', () => {
     it('should detect Stripe Live Secret Key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const stripeKey = "sk_live_1234567890abcdef1234567890";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -121,6 +124,7 @@ describe('ExposedSecretsRule', () => {
     });
 
     it('should detect Stripe Test Secret Key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const stripeTestKey = "sk_test_1234567890abcdef1234567890";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -137,6 +141,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Communication Service Keys', () => {
     it('should detect Twilio Secret Key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const twilioKey = "SK1234567890abcdef1234567890abcdef";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -310,6 +315,7 @@ describe('ExposedSecretsRule', () => {
     });
 
     it('should detect secrets in test files', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const testKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/__tests__/config.test.js',
@@ -323,6 +329,7 @@ describe('ExposedSecretsRule', () => {
     });
 
     it('should detect secrets in example files', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const exampleKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/example.js',
@@ -338,6 +345,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Test Prefix Detection', () => {
     it('should skip secrets with test prefix', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const testKey = "test-AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -365,6 +373,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Context-Aware Severity', () => {
     it('should have critical severity in env files', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'AWS_ACCESS_KEY=AKIA1234567890ABCDEF';
       const fileContent: FileContent = {
         path: 'src/.env',
@@ -378,6 +387,7 @@ describe('ExposedSecretsRule', () => {
     });
 
     it('should have critical severity in config files', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'aws_key: "AKIA1234567890ABCDEF"';
       const fileContent: FileContent = {
         path: 'src/config.yml',
@@ -406,6 +416,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Confidence Calculation', () => {
     it('should have high confidence for valid AWS key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const awsKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -434,6 +445,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Secret Masking', () => {
     it('should mask secrets in messages', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const awsKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/config.js',
@@ -533,6 +545,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Multiple Secrets Detection', () => {
     it('should detect multiple secrets in one file', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = `
         const awsKey = "AKIA1234567890ABCDEF";
         const apiKey = "AIzaSyB1234567890abcdefghijklmnopqrstuvwxyz";
@@ -554,6 +567,7 @@ describe('ExposedSecretsRule', () => {
 
   describe('Suggestion Generation', () => {
     it('should provide AWS-specific suggestions', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'const awsKey = "AKIA1234567890ABCDEF";';
       const fileContent: FileContent = {
         path: 'src/config.js',

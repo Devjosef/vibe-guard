@@ -200,6 +200,7 @@ describe('HardcodedSensitiveDataRule', () => {
 
   describe('Third-Party Service Patterns', () => {
     it('should detect Stripe secret key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'stripe_secret = "sk_test_1234567890abcdef"';
       const fileContent: FileContent = {
         path: 'src/config/payments.py',
@@ -242,6 +243,7 @@ describe('HardcodedSensitiveDataRule', () => {
 
   describe('Cloud Provider Patterns', () => {
     it('should detect AWS access key', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = 'aws_access_key = "AKIA1234567890ABCDEF"';
       const fileContent: FileContent = {
         path: 'src/config/aws.py',
@@ -544,6 +546,7 @@ describe('HardcodedSensitiveDataRule', () => {
 
   describe('Multiple Issues Detection', () => {
     it('should detect multiple sensitive data issues', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = `
         database_url = "postgresql://user:pass@localhost:5432/db"
         app_secret = "mysecretkey123456"
@@ -652,6 +655,7 @@ describe('HardcodedSensitiveDataRule', () => {
     });
 
     it('should handle complex nested configurations', () => {
+      // TEST DATA - NOT A REAL SECRET - This is dummy data for testing purposes
       const content = `
         config = {
           database: {
