@@ -27,7 +27,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
   readonly severity = 'critical' as const;
 
   private readonly injectionPatterns: InjectionPattern[] = [
-    // Critical pattern: Most dangerous injection types
+    // Critical - Most dangerous injection types
     { 
       pattern: /\b(?:prompt|input|query|message)\s*[:=]\s*['"`]?[^'"`]*(?:ignore|forget|system|assistant|user|previous|above|instructions)[^'"`]*['"`]?/gi, 
       type: 'Direct Prompt Injection',
@@ -57,7 +57,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
       validation: (text: string) => this.validateInstructionOverride(text)
     },
     
-    // High pattern: Dangerous but less critical
+    // High - Dangerous but less critical
     { 
       pattern: /\b(?:prompt|input|query|message)\s*[:=]\s*['"`]?[^'"`]*(?:you[_-]?are|act[_-]?as|pretend[_-]?to[_-]?be|behave[_-]?as|role[_-]?play)[^'"`]*(?:system|assistant|user|admin|developer)[^'"`]*['"`]?/gi, 
       type: 'Role Confusion Attack',
@@ -80,7 +80,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
       validation: (text: string) => this.validatePrivilegeEscalation(text)
     },
     
-    // Medium pattern: Less critical but still concerning
+    // Medium - Less critical but still concerning
     { 
       pattern: /\b(?:prompt|input|query|message)\s*[:=]\s*['"`]?[^'"`]*(?:context|memory|history|conversation)[^'"`]*(?:clear|reset|forget|ignore|delete)[^'"`]*['"`]?/gi, 
       type: 'Context Manipulation',
@@ -185,17 +185,17 @@ export class PromptInjectionDetectionRule extends BaseRule {
         const matchedText = match[0];
         const context = this.analyzeContext(fileContent, line, column, language, framework, aiFramework);
         
-        // Skips if in safe context (but not test files! We want to flag those with lower severity)
+        // Skip if in safe context (but not test files - we want to flag those with lower severity)
         if (this.isSafeContext(context) && !context.isInTestFile) {
           continue;
         }
         
-        // Validates the injection attempt
+        // Validate the injection attempt
         if (!validation(matchedText)) {
           continue;
         }
         
-        // Determines final severity based on context
+        // Determine final severity based on context
         const finalSeverity = this.determineSeverity(severity, context);
         
         issues.push(this.createIssue(
@@ -214,7 +214,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
   }
 
   private determineSeverity(baseSeverity: SeverityLevel, context: PromptInjectionContext): SeverityLevel {
-    // Downgrades severity in test/documentation contexts instead of skipping
+    // Downgrade severity in test/documentation contexts instead of skipping
     if (context.isInTestFile || context.isInDocumentation) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -225,7 +225,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
       }
     }
     
-    // Downgrades in development contexts
+    // Downgrade in development contexts
     if (this.isDevelopmentContext(context)) {
       switch (baseSeverity) {
         case 'critical': return 'high';
@@ -277,17 +277,18 @@ export class PromptInjectionDetectionRule extends BaseRule {
   }
 
   private isSafeContext(context: PromptInjectionContext): boolean {
-    
+    // Safe if in comment
     if (context.isInComment) return true;
     
-    
+    // Safe if in documentation (but not test files - we want to flag those)
     if (context.isInDocumentation && !context.isInTestFile) return true;
     
-    
+    // Safe if using security-related keywords
     if (this.safePatterns.some(pattern => pattern.test(context.surroundingCode))) {
       return true;
     }
     
+    // Safe if in sanitization/validation context
     if (context.surroundingCode.includes('sanitize') || 
         context.surroundingCode.includes('validate') ||
         context.surroundingCode.includes('escape') ||
@@ -414,7 +415,7 @@ export class PromptInjectionDetectionRule extends BaseRule {
     );
   }
 
-  // Validation methods!
+  // Validation methods for different injection types
   private validateDirectInjection(text: string): boolean {
     const injectionKeywords = ['ignore', 'forget', 'system', 'assistant', 'user', 'previous', 'above', 'instructions'];
     return injectionKeywords.some(keyword => text.toLowerCase().includes(keyword));
