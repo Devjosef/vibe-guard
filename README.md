@@ -1,6 +1,6 @@
 # 🛡️ Vibe-Guard Security Scanner
 
-**25 essential security rules to catch vulnerabilities before they catch you!** Zero dependencies, instant setup, works everywhere, optimized performance. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, and more.
+**Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 25 essential security rules.
 
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
@@ -24,7 +24,7 @@ vibe-guard demo
 
 ## Learning Security 
 
-Vibe-Guard is more than a scanner - it's an educational tool that teaches you about web security:
+Vibe-Guard is more than a scanner, it's an educational tool that teaches you about web security:
 
 ### **Understanding Vulnerabilities**
 
