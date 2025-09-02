@@ -1,0 +1,40 @@
+stages:
+  - security-scan
+
+# Security scan job
+security-scan:
+  stage: security-scan
+  image: node:20
+  before_script:
+    - npm --version
+    - node --version
+  script:
+    - echo "🛡️ Installing Vibe-Guard..."
+    - npm install -g vibe-guard
+    - echo "🛡️ Running security scan..."
+    - vibe-guard scan --format json --output-file results.json --severity high .
+    - echo "✅ Security scan completed"
+  artifacts:
+    reports:
+      # GitLab Security Report format (if you want GitLab to parse it)
+      # sast: results.json
+    paths:
+      - results.json
+    expire_in: 1 week
+  allow_failure: false
+  only:
+    - main
+    - merge_requests
+    - develop
+
+# Optional: Run scan with table output for human readable results in CI logs.
+security-scan-verbose:
+  stage: security-scan
+  image: node:20
+  script:
+    - npm install -g vibe-guard
+    - vibe-guard scan --format table --severity medium .
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
