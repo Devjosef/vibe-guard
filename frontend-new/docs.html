@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Vibe-Guard</title>
+    <meta name="description" content="Complete documentation for Vibe-Guard security scanner. Installation, usage, configuration, and security rules.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo-black-square.svg">
+</head>
+<body class="text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-black"></div>
+                    <a href="index-modular.html" class="text-xl font-black tracking-tight text-black">VIBE-GUARD</a>
+                </div>
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="features.html" class="text-black hover:text-primary transition-colors font-medium">
+                        FEATURES
+                    </a>
+                    <a href="docs.html" class="text-black hover:text-primary transition-colors font-medium">
+                        DOCS
+                    </a>
+                    <a href="https://github.com/Devjosef/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-black hover:text-primary transition-colors font-medium">
+                        GITHUB
+                    </a>
+                    <a href="getting-started.html" class="bg-black text-white px-6 py-2 font-medium hover:bg-gray-800 transition-colors">
+                        GET STARTED
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-6 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <!-- Hero Section -->
+            <div class="text-center mb-16 md:ml-8 lg:ml-16 xl:ml-24 2xl:ml-32">
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight text-black mb-4 text-center">
+                    DOCUMENTATION
+                </h1>
+                <div class="w-24 h-2 bg-black mx-auto mb-6"></div>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Complete guide to Vibe-Guard's security scanning capabilities, installation, and usage.
+                </p>
+            </div>
+
+            <!-- Documentation Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Left Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 sticky top-24">
+                        <nav class="space-y-4">
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Getting Started</div>
+                            <a href="#installation" class="block text-gray-700 hover:text-black transition-colors text-sm">Installation</a>
+                            <a href="#basic-usage" class="block text-gray-700 hover:text-black transition-colors text-sm">Basic Usage</a>
+                            <a href="#cli-options" class="block text-gray-700 hover:text-black transition-colors text-sm">CLI Options</a>
+                            
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Core Features</div>
+                            <a href="#security-rules" class="block text-gray-700 hover:text-black transition-colors text-sm">Security Rules</a>
+                            <a href="#scanning-engine" class="block text-gray-700 hover:text-black transition-colors text-sm">Scanning Engine</a>
+                            <a href="#output-formats" class="block text-gray-700 hover:text-black transition-colors text-sm">Output Formats</a>
+                            
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Configuration</div>
+                            <a href="#configuration" class="block text-gray-700 hover:text-black transition-colors text-sm">Configuration Files</a>
+                            
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Advanced</div>
+                            <a href="#performance" class="block text-gray-700 hover:text-black transition-colors text-sm">Performance Tuning</a>
+                            <a href="#troubleshooting" class="block text-gray-700 hover:text-black transition-colors text-sm">Troubleshooting</a>
+                            <a href="#api" class="block text-gray-700 hover:text-black transition-colors text-sm">CI/CD Integration</a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="lg:col-span-3 space-y-12">
+                    <!-- Installation Section -->
+                    <section id="installation" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Installation</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Installing Vibe-Guard globally makes it available across all your projects without per-project setup. The tool requires no Docker containers, complex dependencies, or configuration files to start scanning. Global installation enables seamless CI/CD integration and consistent command availability.
+                        </p>
+                        
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># Install Vibe-Guard globally</div>
+                            <div class="text-green-400">$ npm install -g vibe-guard</div>
+                            <div class="text-gray-400 mt-2">✓ Installation complete</div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Prerequisites</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 mb-6">
+                            <li>Node.js 16.0 or higher</li>
+                            <li>npm, yarn, or pnpm package manager</li>
+                            <li>Access to the target codebase</li>
+                        </ul>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Alternative Installation Methods</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">YARN</div>
+                                <div class="text-xs text-gray-600">yarn global add vibe-guard</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">PNPM</div>
+                                <div class="text-xs text-gray-600">pnpm add -g vibe-guard</div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-black mt-8 mb-4">Verify Installation</h3>
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># Check version</div>
+                            <div class="text-green-400">$ vibe-guard --version</div>
+                            <div class="text-gray-400 mt-2">vX.Y.Z</div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">Update</div>
+                                <div class="text-xs text-gray-600">npm update -g vibe-guard</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">Uninstall</div>
+                                <div class="text-xs text-gray-600">npm uninstall -g vibe-guard</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h4 class="text-yellow-800 font-bold mb-2">Common Issues</h4>
+                            <ul class="list-disc list-inside text-yellow-900 text-sm space-y-1">
+                                <li>Command not found: ensure global npm bin is on PATH (npm bin -g)</li>
+                                <li>Permission denied: use a Node version manager instead of sudo</li>
+                                <li>Proxy/firewall: configure npm registry or use a different network</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <!-- Basic Usage Section -->
+                    <section id="basic-usage" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Basic Usage</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Learn the fundamentals of security scanning with Vibe-Guard's command interface. This section covers how to interpret scan results, understand exit codes, and establish workflows for different development scenarios.
+                        </p>
+
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># Scan current directory</div>
+                            <div class="text-green-400">$ vibe-guard scan</div>
+                            <div class="text-gray-400 mt-2">✓ Scanning 47 files...</div>
+                            <div class="text-gray-400">✓ Analysis complete (0.8s)</div>
+                            <div class="text-gray-400">✓ Found 2 vulnerabilities</div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Common Commands</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">$ vibe-guard scan ./src</div>
+                                <div class="text-xs text-gray-600">Scan specific directory</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">$ vibe-guard scan --severity high</div>
+                                <div class="text-xs text-gray-600">Only show high and critical issues</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">$ vibe-guard scan --format json --output-file results.json</div>
+                                <div class="text-xs text-gray-600">Generate JSON report and save to file</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">$ vibe-guard scan --parallel --max-files 10</div>
+                                <div class="text-xs text-gray-600">Enable parallel processing with file limit</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">$ vibe-guard scan --exclude node_modules --include "*.ts"</div>
+                                <div class="text-xs text-gray-600">Exclude node_modules, only scan TypeScript files</div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-2xl font-black text-black mt-8 mb-4">Understanding the Output</h3>
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-4">
+                            <div class="text-white">SQL_INJECTION (critical)</div>
+                            <div class="text-green-400">File: src/db/user.ts:42</div>
+                            <div class="text-green-400">Snippet: db.query("SELECT ...")</div>
+                            <div class="text-green-400">Fix: Use parameterized queries</div>
+                        </div>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 mb-6">
+                            <li><span class="font-semibold text-black">Rule</span>: Identifier and severity</li>
+                            <li><span class="font-semibold text-black">Location</span>: File path and line number</li>
+                            <li><span class="font-semibold text-black">Snippet</span>: Context around the finding</li>
+                            <li><span class="font-semibold text-black">Remediation</span>: Concrete fix guidance</li>
+                        </ul>
+
+                        <h4 class="text-xl font-bold text-black mb-3">Exit Codes</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">0</div>
+                                <div class="text-xs text-gray-600">No issues or all below threshold</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">1</div>
+                                <div class="text-xs text-gray-600">Issues at/above threshold found</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">>1</div>
+                                <div class="text-xs text-gray-600">Reserved for internal errors</div>
+                            </div>
+                        </div>
+
+                        <h4 class="text-xl font-bold text-black mb-3">Typical Workflows</h4>
+                        <ul class="text-gray-600 text-sm space-y-2">
+                            <li><span class="font-semibold text-black">Local dev</span>: <code class="bg-gray-100 px-1 rounded">vibe-guard scan --severity high</code> before commit</li>
+                            <li><span class="font-semibold text-black">CI check</span>: <code class="bg-gray-100 px-1 rounded">vibe-guard scan --format json --output-file results.json</code> gate merges</li>
+                            <li><span class="font-semibold text-black">Audit</span>: <code class="bg-gray-100 px-1 rounded">vibe-guard scan --format html --output-file report.html</code> for sharing</li>
+                        </ul>
+                    </section>
+
+                    <!-- CLI Options Section -->
+                    <section id="cli-options" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">CLI Options</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Command-line flags customize scan behavior, output formats, and performance. Learn when and how to combine flags effectively to improve scan relevance, reduce noise, and optimize execution time.
+                        </p>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-gray-200">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="border border-gray-200 p-3 text-left text-black font-semibold">Option</th>
+                                        <th class="border border-gray-200 p-3 text-left text-black font-semibold">Description</th>
+                                        <th class="border border-gray-200 p-3 text-left text-black font-semibold">Default</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--format, -f</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Output format (table, json, sarif, html)</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">table</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--output-file, -o</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Write output to file</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">stdout</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--verbose, -v</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Verbose output</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">false</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--severity, -s</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Minimum severity level (critical, high, medium, low)</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">all levels</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--config, -c</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Path to configuration file</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">auto-detected</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--parallel</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Enable parallel processing</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">false</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--max-files</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Maximum files to process concurrently</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">unlimited</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--exclude</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Directories or files to exclude</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">node_modules, .git</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-200 p-3 font-mono text-sm text-black">--include</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">Specific files or patterns to include</td>
+                                        <td class="border border-gray-200 p-3 text-gray-600">all files</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h3 class="text-xl font-bold text-black mt-8 mb-4">When To Use Which Flag</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--severity</div>
+                                <div class="text-xs text-gray-600">Reduce noise locally; gate only high/critical in CI</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--parallel --max-files</div>
+                                <div class="text-xs text-gray-600">Large repos; tune to avoid I/O contention</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--include/--exclude</div>
+                                <div class="text-xs text-gray-600">Monorepos; focus scans or skip vendor dirs</div>
+                            </div>
+                        </div>
+
+                        <h4 class="text-xl font-bold text-black mb-3">Practical Combos</h4>
+                        <ul class="text-gray-600 text-sm space-y-2">
+                            <li><code class="bg-gray-100 px-1 rounded">--format json --output-file results.json</code> for CI artifacts</li>
+                            <li><code class="bg-gray-100 px-1 rounded">--severity high --parallel</code> for fast red/green feedback</li>
+                            <li><code class="bg-gray-100 px-1 rounded">--exclude node_modules dist --include "src/**/*.ts"</code> targeted scans</li>
+                        </ul>
+                    </section>
+
+                    <!-- Security Rules Section -->
+                    <section id="security-rules" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Security Rules</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Security rules target specific vulnerability patterns found in real-world applications. Rules are categorized by severity to help teams prioritize fixes. Understanding why patterns are dangerous and how to fix them reduces security debt and prevents future vulnerabilities.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                                <h4 class="text-red-800 font-bold mb-2">Critical Severity</h4>
+                                <ul class="text-red-700 text-sm space-y-1">
+                                    <li>• SQL Injection</li>
+                                    <li>• Exposed Secrets</li>
+                                    <li>• Hardcoded Credentials</li>
+                                    <li>• AI Data Leakage</li>
+                                </ul>
+                            </div>
+                            <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                                <h4 class="text-orange-800 font-bold mb-2">High Severity</h4>
+                                <ul class="text-orange-700 text-sm space-y-1">
+                                    <li>• XSS Detection</li>
+                                    <li>• Directory Traversal</li>
+                                    <li>• CSRF Protection</li>
+                                    <li>• Broken Access Control</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <a href="features.html" class="inline-block bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors rounded-lg">
+                                View All 25 Rules →
+                            </a>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                                <div class="text-black font-semibold mb-1">Why it matters</div>
+                                <div class="text-gray-600 text-sm">Severity helps prioritize fixes that reduce real risk first.</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                                <div class="text-black font-semibold mb-1">Fix it</div>
+                                <div class="text-gray-600 text-sm">Prefer parameterized queries, output encoding, CSRF tokens, least privilege, validated inputs, and secret management.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Scanning Engine Section -->
+                    <section id="scanning-engine" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Scanning Engine</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            The scanning engine uses pattern matching and AST analysis to balance speed with accuracy. This approach minimizes false positives while maintaining fast scan times on large codebases. Understanding the engine's methods helps you interpret results and tune scans effectively.
+                        </p>
+
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2">// How Vibe-Guard works internally</div>
+                            <div class="text-green-400">1. File discovery and filtering</div>
+                            <div class="text-green-400">2. Content parsing and AST generation</div>
+                            <div class="text-green-400">3. Rule application and pattern matching</div>
+                            <div class="text-green-400">4. Result aggregation and reporting</div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Supported File Types</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/javascript-logo-svgrepo-com.svg" alt="JavaScript" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">JavaScript</div>
+                                <div class="text-xs text-gray-500">.js, .jsx</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/typescript-logo-svgrepo-com.svg" alt="TypeScript" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">TypeScript</div>
+                                <div class="text-xs text-gray-500">.ts, .tsx</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/python-svgrepo-com.svg" alt="Python" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Python</div>
+                                <div class="text-xs text-gray-500">.py</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/go-svgrepo-com.svg" alt="Go" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Go</div>
+                                <div class="text-xs text-gray-500">.go</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/java-svgrepo-com.svg" alt="Java" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Java</div>
+                                <div class="text-xs text-gray-500">.java</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/ruby-svgrepo-com.svg" alt="Ruby" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Ruby</div>
+                                <div class="text-xs text-gray-500">.rb</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/rust-svgrepo-com.svg" alt="Rust" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Rust</div>
+                                <div class="text-xs text-gray-500">.rs</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <img src="assets/yaml-16-svgrepo-com.svg" alt="YAML / Config" class="w-8 h-8 mx-auto mb-2" />
+                                <div class="text-sm font-medium text-black">Config Files</div>
+                                <div class="text-xs text-gray-500">.json, .yaml, .env</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-gray-600">Plus C++, C#, PHP, Swift, Dart, Scala, and more...</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-black font-semibold mb-2">Detection Methods</div>
+                                <ul class="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                                    <li>Pattern matching for fast, broad coverage</li>
+                                    <li>AST hints to reduce common false positives</li>
+                                    <li>Context-aware exclusions (tests, mocks, fixtures)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-black font-semibold mb-2">Philosophy</div>
+                                <ul class="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                                    <li>Bias toward signal with actionable remediation</li>
+                                    <li>Keep scans fast; fail quickly on high risk</li>
+                                    <li>Make tuning easy per project via config</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Output Formats Section -->
+                    <section id="output-formats" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Output Formats</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Choose the right output format for your workflow. Tables work well for local development, JSON for automation and CI/CD, SARIF for security platforms, and HTML for detailed reports. Each format serves different integration needs.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-lg font-bold text-black mb-3">CLI Output</h4>
+                                <p class="text-gray-600 text-sm mb-4">Human-readable output with color coding and severity indicators.</p>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    ✓ No critical issues found<br>
+                                    ⚠️ 2 medium issues found<br>
+                                    Security Score: 85/100
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-lg font-bold text-black mb-3">JSON Output</h4>
+                                <p class="text-gray-600 text-sm mb-4">Machine-readable format for CI/CD integration and automation.</p>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    {<br>
+                                    &nbsp;&nbsp;"issues": [...],<br>
+                                    &nbsp;&nbsp;"summary": {...}<br>
+                                    }
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-lg font-bold text-black mb-3">HTML Report</h4>
+                                <p class="text-gray-600 text-sm mb-4">Detailed visual report with code snippets and remediation guidance.</p>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    &lt;html&gt;<br>
+                                    &nbsp;&nbsp;&lt;body&gt;<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;Security Report<br>
+                                    &nbsp;&nbsp;&lt;/body&gt;<br>
+                                    &lt;/html&gt;
+                                </div>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold text-black mt-8 mb-3">How to Consume</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">jq</div>
+                                <div class="text-xs text-gray-600">vibe-guard scan --format json | jq '.summary'</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">GitHub Summary</div>
+                                <div class="text-xs text-gray-600">echo "## Security" >> $GITHUB_STEP_SUMMARY</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">HTML</div>
+                                <div class="text-xs text-gray-600">Open report.html locally or publish to artifacts</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Configuration Section -->
+                    <section id="configuration" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Configuration</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Configuration files ensure consistent scan behavior across team members and environments. They reduce command-line complexity and adapt to project needs like monorepos, legacy code exclusions, and team risk tolerance. Environment variables provide flexibility for CI/CD deployments.
+                        </p>
+
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2">vibe-guard.json</div>
+                            <div class="text-green-400">{</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"outputFormat": "table",</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"severity": "medium",</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"exclude": ["node_modules", ".git"],</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"include": [],</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"verbose": false,</div>
+                            <div class="text-green-400">&nbsp;&nbsp;"rules": {</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;"sql-injection": { "enabled": true, "severity": "high" }</div>
+                            <div class="text-green-400">&nbsp;&nbsp;}</div>
+                            <div class="text-green-400">}</div>
+                        </div>
+                        <p class="text-xs text-gray-500 -mt-4 mb-6">Also supported: <code class="bg-gray-100 px-1 rounded">.vibe-guard.json</code>, <code class="bg-gray-100 px-1 rounded">vibe-guard.config.json</code>. CLI flags override config.</p>
+                        <h4 class="text-xl font-bold text-black mb-4">Practical Configurations</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-semibold text-black mb-2">Speed (local dev)</div>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    {<br>
+                                    &nbsp;&nbsp;"severity": "high",<br>
+                                    &nbsp;&nbsp;"exclude": ["node_modules", "dist"],<br>
+                                    &nbsp;&nbsp;"verbose": false<br>
+                                    }
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-semibold text-black mb-2">Strict CI</div>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    {<br>
+                                    &nbsp;&nbsp;"severity": "medium",<br>
+                                    &nbsp;&nbsp;"outputFormat": "json",<br>
+                                    &nbsp;&nbsp;"rules": { "xss-detection": { "enabled": true } }<br>
+                                    }
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-semibold text-black mb-2">Monorepo</div>
+                                <div class="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                    {<br>
+                                    &nbsp;&nbsp;"include": ["packages/*/src/**/*.ts"],<br>
+                                    &nbsp;&nbsp;"exclude": ["**/fixtures/**", "**/mocks/**"]<br>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-bold text-black mb-4">Environment Variables</h3>
+                        <div class="space-y-3">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">VIBE_GUARD_CONFIG_PATH</div>
+                                <div class="text-xs text-gray-600">Path to configuration file</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">VIBE_GUARD_LOG_LEVEL</div>
+                                <div class="text-xs text-gray-600">Logging level (debug, info, warn, error)</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">VIBE_GUARD_TIMEOUT</div>
+                                <div class="text-xs text-gray-600">Scan timeout in milliseconds</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Performance Section -->
+                    <section id="performance" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Performance & Benchmarks</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Performance optimization maintains developer productivity and enables practical CI/CD integration. Vibe-Guard prioritizes speed through parallel processing, intelligent file filtering, and optimized pattern matching. Understanding tuning options helps achieve optimal scan times while maintaining accuracy.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white border-2 border-gray-200 p-6 text-center hover:border-black transition-colors">
+                                <div class="text-3xl font-black text-black mb-2">&lt; 1s</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide">Average Scan Time</div>
+                            </div>
+                            <div class="bg-white border-2 border-gray-200 p-6 text-center hover:border-black transition-colors">
+                                <div class="text-3xl font-black text-black mb-2">1000+</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide">Files Per Second</div>
+                            </div>
+                            <div class="bg-white border-2 border-gray-200 p-6 text-center hover:border-black transition-colors">
+                                <div class="text-3xl font-black text-black mb-2">0 MB</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide">Additional Memory</div>
+                            </div>
+                            <div class="bg-white border-2 border-gray-200 p-6 text-center hover:border-black transition-colors">
+                                <div class="text-3xl font-black text-black mb-2">100%</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wide">CPU Utilization</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="text-blue-800 font-bold mb-2">💡 Performance Tip</h4>
+                            <p class="text-blue-700 text-sm">Use the <code class="bg-blue-100 px-1 rounded">--parallel</code> flag to utilize all CPU cores for faster scanning on large codebases.</p>
+                        </div>
+                        <h4 class="text-xl font-bold text-black mt-8 mb-3">Tuning Recipes</h4>
+                        <ul class="text-gray-600 text-sm space-y-2">
+                            <li><span class="font-semibold text-black">I/O bound</span>: <code class="bg-gray-100 px-1 rounded">--parallel --max-files 8</code> to cap concurrency</li>
+                            <li><span class="font-semibold text-black">CPU bound</span>: <code class="bg-gray-100 px-1 rounded">--parallel --max-files 2x cores</code> for throughput</li>
+                            <li><span class="font-semibold text-black">Noise reduction</span>: exclude generated/vendor dirs; include only source globs</li>
+                        </ul>
+                    </section>
+
+                    <!-- Troubleshooting Section -->
+                    <section id="troubleshooting" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">Troubleshooting</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            Most problems stem from file system permissions, memory constraints, or overly broad scan patterns. This section provides systematic approaches to diagnosing issues, interpreting error messages, and optimizing scan parameters for reliable operation.
+                        </p>
+
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-yellow-400 pl-4">
+                                <h4 class="text-lg font-bold text-black mb-2">Scan is taking too long</h4>
+                                <p class="text-gray-600 mb-2">Large codebases can take time to scan. Try these solutions:</p>
+                                <ul class="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                                    <li>Use <code class="bg-gray-100 px-1 rounded">--exclude</code> to skip unnecessary directories</li>
+                                    <li>Enable parallel processing with <code class="bg-gray-100 px-1 rounded">--parallel</code></li>
+                                    <li>Scan specific directories instead of entire codebase</li>
+                                </ul>
+                            </div>
+
+                            <div class="border-l-4 border-red-400 pl-4">
+                                <h4 class="text-lg font-bold text-black mb-2">Too many false positives</h4>
+                                <p class="text-gray-600 mb-2">Adjust sensitivity and create custom rules:</p>
+                                <ul class="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                                    <li>Increase minimum severity with <code class="bg-gray-100 px-1 rounded">--severity high</code></li>
+                                    <li>Create custom rule exclusions in configuration</li>
+                                    <li>Use <code class="bg-gray-100 px-1 rounded">--ignore-patterns</code> for specific cases</li>
+                                </ul>
+                            </div>
+
+                            <div class="border-l-4 border-blue-400 pl-4">
+                                <h4 class="text-lg font-bold text-black mb-2">Memory issues on large projects</h4>
+                                <p class="text-gray-600 mb-2">Optimize memory usage:</p>
+                                <ul class="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                                    <li>Use <code class="bg-gray-100 px-1 rounded">--max-files</code> to limit concurrent file processing</li>
+                                    <li>Enable streaming mode with <code class="bg-gray-100 px-1 rounded">--stream</code></li>
+                                    <li>Scan in smaller batches</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">False negatives</div>
+                                <div class="text-xs text-gray-600">Lower threshold and re-run; broaden include patterns</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">Unstable timings</div>
+                                <div class="text-xs text-gray-600">Pin <code class="bg-gray-100 px-1 rounded">--max-files</code> to avoid I/O spikes</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-1">Too much output</div>
+                                <div class="text-xs text-gray-600">Use <code class="bg-gray-100 px-1 rounded">--severity high</code> and save full JSON to file</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Integration Section -->
+                    <section id="api" class="bg-white border border-gray-200 rounded-lg p-8">
+                        <h2 class="text-3xl font-black text-black mb-6 border-b-2 border-black pb-2">CI/CD Integration</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                            CI/CD integration transforms security scanning from occasional audits into continuous protection. Successful integration requires balancing thoroughness with build performance and implementing appropriate gating strategies. This section covers platform-specific configurations and proven patterns.
+                        </p>
+
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># GitHub Actions Example</div>
+                            <div class="text-green-400">name: Security Scan</div>
+                            <div class="text-green-400">on: [push, pull_request]</div>
+                            <div class="text-green-400"></div>
+                            <div class="text-green-400">jobs:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;security:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;runs-on: ubuntu-latest</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;steps:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: actions/checkout@v3</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: npm install -g vibe-guard</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: vibe-guard scan ./src --severity high</div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Pipeline Integration Patterns</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-black font-semibold mb-2">PR Gate Pattern</div>
+                                <div class="text-xs text-gray-600 mb-2">Fail fast on high/critical issues</div>
+                                <div class="bg-gray-900 text-green-400 p-2 rounded font-mono text-xs">
+                                    vibe-guard scan --severity high<br>
+                                    exit_code=$?<br>
+                                    if [ $exit_code -eq 1 ]; then<br>
+                                    &nbsp;&nbsp;echo "Security gate failed"<br>
+                                    &nbsp;&nbsp;exit 1<br>
+                                    fi
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-black font-semibold mb-2">Audit Pattern</div>
+                                <div class="text-xs text-gray-600 mb-2">Collect all findings, never fail build</div>
+                                <div class="bg-gray-900 text-green-400 p-2 rounded font-mono text-xs">
+                                    vibe-guard scan --format json \<br>
+                                    &nbsp;&nbsp;--output-file security.json \<br>
+                                    &nbsp;&nbsp;|| true<br>
+                                    # Always upload artifacts
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Automation Tips</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--severity high</div>
+                                <div class="text-xs text-gray-600">Use in CI to only fail on high/critical issues</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--format json</div>
+                                <div class="text-xs text-gray-600">Generate machine-readable output for parsing</div>
+                            </div>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="text-sm font-mono text-black mb-2">--output-file results.json</div>
+                                <div class="text-xs text-gray-600">Save results for later analysis or reporting</div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-black mt-8 mb-4">GitLab CI <span class="text-sm text-green-600 font-normal">✓ Tested</span></h3>
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># .gitlab-ci.yml</div>
+                            <div class="text-green-400">scan:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;image: node:20</div>
+                            <div class="text-green-400">&nbsp;&nbsp;script:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;- npm i -g vibe-guard</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;- vibe-guard scan --format json --output-file results.json --severity high</div>
+                            <div class="text-green-400">&nbsp;&nbsp;artifacts:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;paths: [results.json]</div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">CircleCI <span class="text-sm text-gray-500 font-normal">(Untested)</span></h3>
+                        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-6">
+                            <div class="text-white mb-2"># .circleci/config.yml</div>
+                            <div class="text-green-400">jobs:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;scan:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;docker:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- image: cimg/node:20.10</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;steps:</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: npm i -g vibe-guard</div>
+                            <div class="text-green-400">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: vibe-guard scan ./src --severity high</div>
+                        </div>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                            <h4 class="text-yellow-800 font-bold mb-2">⚠️ Note</h4>
+                            <p class="text-yellow-700 text-sm">This CircleCI configuration is a theoretical example and has not been tested. Vibe-Guard works as a standard CLI tool, but this specific integration pattern requires verification in your CircleCI environment.</p>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-black mb-4">Gating Strategies</h3>
+                        <ul class="text-gray-600 text-sm space-y-2">
+                            <li>Fail builds only on <code class="bg-gray-100 px-1 rounded">--severity high</code> initially; tighten later</li>
+                            <li>Produce JSON artifacts for auditing even when passing</li>
+                            <li>Schedule full scans nightly using broader include patterns</li>
+                        </ul>
+                    </section>
+                </div>
+
+                <!-- Navigation Arrows -->
+                <div class="flex justify-between items-center mt-12 pt-8 border-t border-gray-200">
+                    <button id="prev-arrow" class="flex items-center text-gray-600 hover:text-primary transition-colors" style="display: none;">
+                        <svg class="w-5 h-5 mr-2 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Previous</span>
+                    </button>
+                    
+                    <button id="next-arrow" class="flex items-center text-gray-600 hover:text-primary transition-colors">
+                        <span class="text-sm font-medium">Next</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-black"></div>
+                        <span class="text-lg font-black tracking-tight text-black">VIBE-GUARD</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Open-source security scanning for modern applications.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-black">PRODUCT</h4>
+                    <div class="space-y-2 text-sm">
+                        <a href="features.html" class="block text-gray-600 hover:text-black transition-colors">Features</a>
+
+                        <a href="#" class="block text-gray-600 hover:text-black transition-colors">Changelog</a>
+                    </div>
+                </div>
+                                    <div>
+                        <h4 class="font-bold mb-4 text-black">RESOURCES</h4>
+                        <div class="space-y-2 text-sm">
+                            <a href="docs.html" class="block text-gray-600 hover:text-black transition-colors">Documentation</a>
+                            <a href="performance.html" class="block text-gray-600 hover:text-black transition-colors">Metrics</a>
+                        </div>
+                    </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-black">COMMUNITY</h4>
+                    <div class="flex items-center gap-4 mb-4">
+                        <a href="https://github.com/Devjosef/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-black transition-colors">
+                            <img src="assets/github-142-svgrepo-com.svg" alt="GitHub" class="w-8 h-8">
+                        </a>
+                        <a href="https://www.npmjs.com/package/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-black transition-colors">
+                            <img src="assets/npm-svgrepo-com.svg" alt="NPM" class="w-8 h-8">
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-200 text-center">
+                <p class="text-gray-600 text-sm">
+                    Copyright © 2025-present Josef Royem & Vibe-Guard contributors.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Single-section docs navigation (Hono-style) with fade transitions and keyboard nav
+        const sectionOrder = [
+            'installation', 'basic-usage', 'cli-options',
+            'security-rules', 'scanning-engine', 'output-formats',
+            'configuration', 'performance', 'troubleshooting', 'api'
+        ];
+
+        function getSectionTitle(id) {
+            const el = document.getElementById(id);
+            if (!el) return id;
+            const h2 = el.querySelector('h2');
+            return h2 ? h2.textContent.trim() : id;
+        }
+
+        function setActiveLink(id) {
+            document.querySelectorAll('.sticky nav a[href^="#"]').forEach(a => {
+                a.classList.remove('text-black', 'font-medium');
+                a.classList.add('text-gray-700');
+                a.removeAttribute('aria-current');
+            });
+            const active = document.querySelector(`.sticky nav a[href="#${id}"]`);
+            if (active) {
+                active.classList.remove('text-gray-700');
+                active.classList.add('text-black', 'font-medium');
+                active.setAttribute('aria-current', 'true');
+            }
+        }
+
+        function updateArrows(id) {
+            const idx = sectionOrder.indexOf(id);
+            const prevId = sectionOrder[idx - 1];
+            const nextId = sectionOrder[idx + 1];
+            const prevBtn = document.getElementById('prev-arrow');
+            const nextBtn = document.getElementById('next-arrow');
+
+            if (prevBtn) {
+                if (prevId) {
+                    prevBtn.style.display = 'flex';
+                    const label = prevBtn.querySelector('span');
+                    if (label) label.textContent = `Previous: ${getSectionTitle(prevId)}`;
+                    prevBtn.setAttribute('aria-label', `Go to previous section: ${getSectionTitle(prevId)}`);
+                    prevBtn.onclick = () => showSection(prevId, true);
+                } else {
+                    prevBtn.style.display = 'none';
+                }
+            }
+
+            if (nextBtn) {
+                if (nextId) {
+                    nextBtn.style.display = 'flex';
+                    const label = nextBtn.querySelector('span');
+                    if (label) label.textContent = `Next: ${getSectionTitle(nextId)}`;
+                    nextBtn.setAttribute('aria-label', `Go to next section: ${getSectionTitle(nextId)}`);
+                    nextBtn.onclick = () => showSection(nextId, true);
+                } else {
+                    nextBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function prepareTransitions() {
+            sectionOrder.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('transition-opacity', 'duration-300');
+                }
+            });
+        }
+
+        function hideAllSections() {
+            sectionOrder.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('opacity-0', 'hidden');
+                    el.setAttribute('aria-hidden', 'true');
+                }
+            });
+        }
+
+        function showSection(id, pushHash = false) {
+            // Hide all non-target sections immediately
+            sectionOrder.forEach(otherId => {
+                if (otherId === id) return;
+                const other = document.getElementById(otherId);
+                if (other) {
+                    other.classList.add('opacity-0');
+                    // Delay adding hidden slightly to avoid layout jank
+                    if (!other.classList.contains('hidden')) {
+                        setTimeout(() => other.classList.add('hidden'), 150);
+                    }
+                    other.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            // Show target section with fade-in
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('hidden');
+                el.classList.add('opacity-0');
+                // Next frame -> fade to 100
+                requestAnimationFrame(() => {
+                    el.classList.remove('opacity-0');
+                    el.classList.add('opacity-100');
+                });
+                el.setAttribute('aria-hidden', 'false');
+                const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+            }
+
+            setActiveLink(id);
+            updateArrows(id);
+            if (pushHash) {
+                history.pushState(null, '', `#${id}`);
+            } else {
+                if (location.hash !== `#${id}`) {
+                    history.replaceState(null, '', `#${id}`);
+                }
+            }
+        }
+
+        function initDocsNavigation() {
+            prepareTransitions();
+
+            // Sidebar link clicks
+            document.querySelectorAll('.sticky nav a[href^="#"]').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const id = a.getAttribute('href').slice(1);
+                    if (sectionOrder.includes(id)) showSection(id, true);
+                });
+            });
+
+            // Initial section
+            const hashId = location.hash.replace('#','');
+            const firstExisting = sectionOrder.find(id => document.getElementById(id));
+            const initial = sectionOrder.includes(hashId) ? hashId : (firstExisting || sectionOrder[0]);
+            hideAllSections();
+            showSection(initial);
+
+            // Back/forward
+            window.addEventListener('hashchange', () => {
+                const id = location.hash.replace('#','');
+                if (sectionOrder.includes(id)) showSection(id);
+            });
+
+            // Keyboard navigation (Left: prev, Right: next)
+            document.addEventListener('keydown', (e) => {
+                // Skip when typing in inputs/textareas/selects
+                const tag = (document.activeElement && document.activeElement.tagName) || '';
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+                const currentId = location.hash ? location.hash.slice(1) : sectionOrder[0];
+                const idx = sectionOrder.indexOf(currentId);
+                if (e.key === 'ArrowLeft' && idx > 0) {
+                    e.preventDefault();
+                    showSection(sectionOrder[idx - 1], true);
+                } else if (e.key === 'ArrowRight' && idx < sectionOrder.length - 1) {
+                    e.preventDefault();
+                    showSection(sectionOrder[idx + 1], true);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initDocsNavigation);
+    </script>
+</body>
+</html>
