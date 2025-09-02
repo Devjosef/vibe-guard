@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - Vibe-Guard</title>
+    <meta name="description" content="Get started with Vibe-Guard in under 30 seconds. Installation guides for npm, Homebrew, and direct download.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo-black-square.svg">
+    
+    <style>
+        /* Tab Styles */
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #6b7280;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            color: #000000;
+            border-bottom-color: #000000;
+        }
+
+        .tab-button:hover {
+            color: #000000;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Code Block Styles */
+        .code-block {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .code-header {
+            background: #000000;
+            color: white;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .code-content {
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: #000000;
+        }
+
+        .code-content .comment {
+            color: #6b7280;
+        }
+
+        .code-content .string {
+            color: #059669;
+        }
+
+        .code-content .keyword {
+            color: #dc2626;
+        }
+
+        /* Step Styles */
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .step-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #000000;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+            color: #000000;
+        }
+
+        .step-content p {
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        /* Example Card Styles */
+        .example-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #000000;
+        }
+
+        .example-card h3 {
+            margin-bottom: 1rem;
+            color: #000000;
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+            color: #d97706;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-black"></div>
+                    <a href="index-modular.html" class="text-xl font-black tracking-tight text-black">VIBE-GUARD</a>
+                </div>
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="features.html" class="text-black hover:text-primary transition-colors font-medium">
+                        FEATURES
+                    </a>
+                    <a href="docs.html" class="text-black hover:text-primary transition-colors font-medium">
+                        DOCS
+                    </a>
+                    <a href="https://github.com/Devjosef/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-black hover:text-primary transition-colors font-medium">
+                        GITHUB
+                    </a>
+                    <a href="getting-started.html" class="bg-black text-white px-6 py-2 font-medium hover:bg-gray-800 transition-colors">
+                        GET STARTED
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-6 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <!-- Hero Section -->
+            <div class="text-center mb-16">
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight text-black mb-4">
+                    GET STARTED IN 30 SECONDS
+                </h1>
+                <div class="w-24 h-2 bg-black mx-auto mb-6"></div>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Choose your preferred installation method and start scanning for security vulnerabilities immediately.
+                </p>
+            </div>
+
+            <!-- Installation Tabs -->
+            <div class="mb-16">
+                <div class="flex gap-0.5 mb-8 border-b border-gray-200 overflow-x-auto">
+                    <button class="tab-button active" onclick="showTab('npm')">npm</button>
+                    <button class="tab-button" onclick="showTab('homebrew')">Homebrew</button>
+                    <button class="tab-button" onclick="showTab('binary')">Direct Download</button>
+                    <button class="tab-button" onclick="showTab('docker')">Docker</button>
+                </div>
+
+                <!-- npm Tab -->
+                <div id="npm" class="tab-content active">
+                    <div class="space-y-8">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Install Vibe-Guard</h3>
+                                <p>Install globally using npm or use npx for one-time usage.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Install globally</span>
+<span class="keyword">npm</span> install -g vibe-guard
+
+<span class="comment"># Or use npx (no installation needed)</span>
+<span class="keyword">npx</span> vibe-guard scan .
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Scan Your Project</h3>
+                                <p>Run a security scan on your codebase.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Scan current directory</span>
+<span class="keyword">vibe-guard</span> scan .
+
+<span class="comment"># Scan specific file</span>
+<span class="keyword">vibe-guard</span> scan src/app.js
+
+<span class="comment"># Get JSON output for CI/CD</span>
+<span class="keyword">vibe-guard</span> scan . --format json
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Review Results</h3>
+                                <p>Vibe-Guard will show you detailed vulnerability reports with file locations and remediation guidance.</p>
+                                <div class="alert alert-success">
+                                    <strong>✅ Success!</strong> You're now ready to scan your projects for security vulnerabilities.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Homebrew Tab -->
+                <div id="homebrew" class="tab-content">
+                    <div class="space-y-8">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Install via Homebrew</h3>
+                                <p>Install Vibe-Guard using Homebrew package manager.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Install Vibe-Guard</span>
+<span class="keyword">brew</span> install devjosef/tap/vibe-guard
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Start Scanning</h3>
+                                <p>Use the same commands as npm installation.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Scan your project</span>
+<span class="keyword">vibe-guard</span> scan .
+
+<span class="comment"># Check version</span>
+<span class="keyword">vibe-guard</span> --version
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Direct Download Tab -->
+                <div id="binary" class="tab-content">
+                    <div class="space-y-8">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Download Binary</h3>
+                                <p>Download the appropriate binary for your platform from GitHub releases.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># macOS (Intel)</span>
+<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64
+
+<span class="comment"># macOS (Apple Silicon)</span>
+<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-arm64
+
+<span class="comment"># Linux (x64)</span>
+<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-linux-x64
+
+<span class="comment"># Windows</span>
+<span class="keyword">curl</span> -L -o vibe-guard.exe https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-windows-x64.exe
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Make Executable & Run</h3>
+                                <p>Make the binary executable and start scanning.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Make executable (macOS/Linux)</span>
+<span class="keyword">chmod</span> +x vibe-guard
+
+<span class="comment"># Run scan</span>
+./vibe-guard scan .
+
+<span class="comment"># Or move to PATH</span>
+<span class="keyword">sudo</span> mv vibe-guard /usr/local/bin/
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docker Tab -->
+                <div id="docker" class="tab-content">
+                    <div class="space-y-8">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Pull Docker Image</h3>
+                                <p>Pull the official Vibe-Guard Docker image.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Pull latest image</span>
+<span class="keyword">docker</span> pull devjosef/vibe-guard:latest
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Run Container</h3>
+                                <p>Mount your project directory and run the scan.</p>
+                                <div class="code-block">
+                                    <div class="code-header">Terminal</div>
+                                    <div class="code-content">
+<span class="comment"># Scan current directory</span>
+<span class="keyword">docker</span> run --rm -v <span class="string">$(pwd):/app</span> devjosef/vibe-guard:latest scan /app
+
+<span class="comment"># Or use docker-compose</span>
+<span class="keyword">docker-compose</span> run --rm vibe-guard scan .
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Usage Examples -->
+            <div class="mb-16">
+                <h2 class="text-4xl font-black text-black text-center mb-12">COMMON USAGE EXAMPLES</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">Basic Scan</h3>
+                        <p class="text-base font-medium">Scan your entire project for security vulnerabilities.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> scan .
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">Specific Files</h3>
+                        <p class="text-base font-medium">Scan specific files or directories.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> scan src/
+<span class="keyword">vibe-guard</span> scan app.js config.js
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">Exclude Files</h3>
+                        <p class="text-base font-medium">Exclude certain files or directories from scanning.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> scan . --exclude node_modules,dist
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">JSON Output</h3>
+                        <p class="text-base font-medium">Get results in JSON format for CI/CD integration.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> scan . --format json > results.json
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">List Rules</h3>
+                        <p class="text-base font-medium">View all available security rules.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> rules
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-card">
+                        <h3 class="text-xl font-bold">Custom Rules</h3>
+                        <p class="text-base font-medium">Use custom rule patterns for specific needs.</p>
+                        <div class="code-block">
+                            <div class="code-content">
+<span class="keyword">vibe-guard</span> scan . --pattern "password.*=.*['\"]"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Tip -->
+            <div class="alert alert-info mb-12">
+                <strong>💡 Pro Tip:</strong> Add Vibe-Guard to your CI/CD pipeline to automatically scan for vulnerabilities on every commit or pull request.
+            </div>
+
+            <!-- CTA Section -->
+            <div class="text-center">
+                <a href="features.html" class="inline-block bg-black text-white px-8 py-4 text-lg font-bold hover:bg-gray-800 transition-colors mb-4">
+                    View Security Rules
+                </a>
+                <div class="mt-4">
+                    <a href="index-modular.html" class="inline-block border-2 border-black text-black px-8 py-4 text-lg font-bold hover:bg-black hover:text-white transition-colors">
+                        ← Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-black"></div>
+                        <span class="text-lg font-black tracking-tight text-black">VIBE-GUARD</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Open-source security scanning for modern applications.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-black">PRODUCT</h4>
+                    <div class="space-y-2 text-sm">
+                        <a href="features.html" class="block text-gray-600 hover:text-black transition-colors">Features</a>
+
+                        <a href="#" class="block text-gray-600 hover:text-black transition-colors">Changelog</a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-black">RESOURCES</h4>
+                    <div class="space-y-2 text-sm">
+                        <a href="docs.html" class="block text-gray-600 hover:text-black transition-colors">Documentation</a>
+                        <a href="performance.html" class="block text-gray-600 hover:text-black transition-colors">Metrics</a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-black">COMMUNITY</h4>
+                    <div class="flex items-center gap-4 mb-4">
+                        <a href="https://github.com/Devjosef/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-black transition-colors">
+                            <img src="assets/github-142-svgrepo-com.svg" alt="GitHub" class="w-8 h-8">
+                        </a>
+                        <a href="https://www.npmjs.com/package/vibe-guard" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-black transition-colors">
+                            <img src="assets/npm-svgrepo-com.svg" alt="NPM" class="w-8 h-8">
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-200 text-center">
+                <p class="text-gray-600 text-sm">
+                    Copyright © 2025-present Josef Royem & Vibe-Guard contributors.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
