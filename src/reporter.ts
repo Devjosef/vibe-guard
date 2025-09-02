@@ -270,7 +270,7 @@ export class Reporter {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛡️ Vibe-Guard Security Report</h1>
+            <h1>██ Vibe-Guard Security Report</h1>
             <p>Security scan completed on ${new Date().toLocaleDateString()}</p>
         </div>
         
@@ -418,17 +418,22 @@ export class Reporter {
   }
 
   private formatSuccess(result: ScanResult): string {
-    const header = chalk.green.bold('🛡️  Vibe-Guard Security Scan Complete');
-    const summary = chalk.green(`✅ No security issues found in ${result.filesScanned} files`);
+    const header = chalk.green.bold('╔══════════════════════════════════════════════════════════════════════════════╗');
+    const title = chalk.green.bold('║                           VIBE-GUARD SECURITY SCAN COMPLETE                    ║');
+    const subtitle = chalk.green.bold('║                                NO THREATS DETECTED                            ║');
+    const summary = chalk.green(`║  ✅ No security issues found in ${result.filesScanned} files`);
+    const footer = chalk.green.bold('╚══════════════════════════════════════════════════════════════════════════════╝');
     
-    return `${header}\n\n${summary}\n`;
+    return `${header}\n${title}\n${subtitle}\n${summary.padEnd(75)} ║\n${footer}\n`;
   }
 
   private formatHeader(result: ScanResult): string {
-    const title = chalk.red.bold('🚨 Vibe-Guard Security Issues Detected');
-    const subtitle = chalk.yellow(`Found ${result.issuesFound} security issues in ${result.filesScanned} files`);
+    const header = chalk.red.bold('╔══════════════════════════════════════════════════════════════════════════════╗');
+    const title = chalk.red.bold('║                        VIBE-GUARD SECURITY ISSUES DETECTED                     ║');
+    const subtitle = chalk.yellow.bold(`║                           ${result.issuesFound} THREATS FOUND IN ${result.filesScanned} FILES                           ║`);
+    const footer = chalk.red.bold('╚══════════════════════════════════════════════════════════════════════════════╝');
     
-    return `${title}\n${subtitle}`;
+    return `${header}\n${title}\n${subtitle}\n${footer}\n`;
   }
 
   private formatSummary(result: ScanResult): string {
@@ -436,29 +441,35 @@ export class Reporter {
     const parts: string[] = [];
 
     if (summary.critical > 0) {
-      parts.push(chalk.red.bold(`${summary.critical} Critical`));
+      parts.push(chalk.red.bold(`${summary.critical} CRITICAL`));
     }
     if (summary.high > 0) {
-      parts.push(chalk.red(`${summary.high} High`));
+      parts.push(chalk.red(`${summary.high} HIGH`));
     }
     if (summary.medium > 0) {
-      parts.push(chalk.yellow(`${summary.medium} Medium`));
+      parts.push(chalk.yellow(`${summary.medium} MEDIUM`));
     }
     if (summary.low > 0) {
-      parts.push(chalk.blue(`${summary.low} Low`));
+      parts.push(chalk.blue(`${summary.low} LOW`));
     }
 
     const summaryText = parts.length > 0 ? parts.join(' | ') : 'No issues';
     
-    return chalk.bold('Summary: ') + summaryText + '\n\n' + this.formatRecommendations();
+    return chalk.bold('╔══════════════════════════════════════════════════════════════════════════════╗\n') +
+           chalk.bold('║                                    SUMMARY                                    ║\n') +
+           chalk.bold('║  ') + summaryText.padEnd(73) + chalk.bold('║\n') +
+           chalk.bold('╚══════════════════════════════════════════════════════════════════════════════╝\n\n') +
+           this.formatRecommendations();
   }
 
   private formatRecommendations(): string {
-    return chalk.cyan.bold('💡 Recommendations:\n') +
-      chalk.cyan('• Review and fix critical and high severity issues immediately\n') +
-      chalk.cyan('• Consider implementing security linting in your CI/CD pipeline\n') +
-      chalk.cyan('• Run Vibe-Guard regularly during development\n') +
-      chalk.cyan('• Check our documentation for detailed fix suggestions');
+    return chalk.cyan.bold('╔══════════════════════════════════════════════════════════════════════════════╗\n') +
+           chalk.cyan.bold('║                                RECOMMENDATIONS                               ║\n') +
+           chalk.cyan.bold('║  • Review and fix critical and high severity issues immediately').padEnd(73) + chalk.cyan.bold('║\n') +
+           chalk.cyan.bold('║  • Consider implementing security linting in your CI/CD pipeline').padEnd(73) + chalk.cyan.bold('║\n') +
+           chalk.cyan.bold('║  • Run Vibe-Guard regularly during development').padEnd(73) + chalk.cyan.bold('║\n') +
+           chalk.cyan.bold('║  • Check our documentation for detailed fix suggestions').padEnd(73) + chalk.cyan.bold('║\n') +
+           chalk.cyan.bold('╚══════════════════════════════════════════════════════════════════════════════╝');
   }
 
   // Colors the severity
