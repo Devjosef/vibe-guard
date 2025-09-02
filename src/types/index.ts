@@ -15,6 +15,10 @@ export interface ScanOptions {
   target: string;
   format: 'table' | 'json' | 'sarif' | 'html';
   verbose: boolean;
+  severity?: SeverityLevel;
+  config?: string;
+  parallel?: boolean;
+  maxFiles?: number;
   exclude?: string[];
   include?: string[];
 }
