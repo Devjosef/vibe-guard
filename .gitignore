@@ -151,3 +151,6 @@ hashnode-post-*.md
 
 # Local packaged binaries (use GitHub Releases instead)
 binaries/
+
+# Discord
+discord_setup.md
