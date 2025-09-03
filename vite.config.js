@@ -4,6 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   base: '/vibe-guard/',
   root: 'frontend-new',
+  publicDir: 'assets',
   build: {
     outDir: '../dist/docs',
     emptyOutDir: true,
@@ -17,7 +18,8 @@ export default defineConfig({
       }
     },
     cssCodeSplit: false,
-    assetsInlineLimit: 4096
+    assetsInlineLimit: 4096,
+    assetsDir: 'assets'
   },
   server: {
     port: 3000,
@@ -28,5 +30,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: []
-  }
+  },
+  assetsInclude: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif']
 }); 

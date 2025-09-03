@@ -45,6 +45,8 @@ jobs:
         [ -f README.md ] && cp README.md dist/docs/ || true
         [ -f LICENSE ] && cp LICENSE dist/docs/ || true
         [ -f CHANGELOG.md ] && cp CHANGELOG.md dist/docs/ || true
+        # Ensure all assets are copied
+        if [ -d frontend-new/assets ]; then cp -r frontend-new/assets/* dist/docs/assets/ 2>/dev/null || true; fi
       
     - name: Setup Pages
       uses: actions/configure-pages@v4
