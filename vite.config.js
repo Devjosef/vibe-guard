@@ -3,17 +3,17 @@ import { resolve } from 'path';
 
 export default defineConfig({
   base: '/vibe-guard/',
-  root: 'documents',
+  root: 'frontend-new',
   build: {
     outDir: '../dist/docs',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'documents/index.html'),
-        gettingStarted: resolve(__dirname, 'documents/getting-started.html'),
-        rules: resolve(__dirname, 'documents/rules.html'),
-        docs: resolve(__dirname, 'documents/docs.html'),
-        performance: resolve(__dirname, 'documents/performance.html')
+        main: resolve(__dirname, 'frontend-new/index.html'),
+        features: resolve(__dirname, 'frontend-new/features.html'),
+        docs: resolve(__dirname, 'frontend-new/docs.html'),
+        gettingStarted: resolve(__dirname, 'frontend-new/getting-started.html'),
+        performance: resolve(__dirname, 'frontend-new/performance.html')
       }
     },
     cssCodeSplit: false,
