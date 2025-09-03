@@ -38,7 +38,7 @@ jobs:
     - name: Run Vibe-Guard Security Scan
       id: security-scan
       run: |
-        echo "🛡️ Running Vibe-Guard security scan..."
+        echo "██ Running Vibe-Guard security scan..."
         npx vibe-guard --format table .
       continue-on-error: true
       
@@ -106,7 +106,7 @@ jobs:
             const summary = report.summary || {};
             const filesScanned = report.filesScanned || 0;
             
-            let comment = `## 🛡️ Vibe-Guard Security Scan Results\n\n`;
+            let comment = `## ██ Vibe-Guard Security Scan Results\n\n`;
             
             if (issuesFound === 0) {
               comment += `✅ **No security issues detected!**\n\n`;

@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
-echo -e "${BLUE}🛡️  Vibe-Guard Security Scanner Installer${NC}"
+echo -e "${BLUE}██  Vibe-Guard Security Scanner Installer${NC}"
 echo -e "${BLUE}===========================================${NC}"
 
 # Determine the binary name based on platform and architecture

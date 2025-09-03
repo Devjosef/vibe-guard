@@ -159,7 +159,7 @@ async function displayResults(results: VibeGuardResult): Promise<void> {
   // Show summary in output channel
   const outputChannel = vscode.window.createOutputChannel('Vibe-Guard');
   outputChannel.clear();
-  outputChannel.appendLine('🛡️ Vibe-Guard Security Scan Results');
+          outputChannel.appendLine('██ Vibe-Guard Security Scan Results');
   outputChannel.appendLine('=====================================');
   outputChannel.appendLine(results.summary);
   outputChannel.appendLine('');

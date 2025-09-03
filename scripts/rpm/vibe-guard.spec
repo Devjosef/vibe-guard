@@ -3,7 +3,7 @@
 
 # Basic package information
 Name:           vibe-guard
-Version:        1.1.2
+Version:        1.1.5
 Release:        1%{?dist}  # Distribution-specific release number
 Summary:        Security scanner for developers who code fast
 Vendor:         Vibe-Guard
@@ -46,7 +46,7 @@ install -m 755 vibe-guard %{buildroot}%{_bindir}/
 
 # Changelog
 %changelog
-* %(date "+%a %b %d %Y") Josef <devjosef@github.com> - 1.1.2-1
-- Version 1.1.4: Complete 25 security rules, enhanced detection, and improved documentation
+* %(date "+%a %b %d %Y") Josef <devjosef@github.com> - 1.1.5-1
+- Version 1.1.5: Enhanced CLI with ASCII art, modular frontend, 25 security rules, and improved documentation
 * %(date "+%a %b %d %Y") Josef <devjosef@github.com> - 1.0.0-1
 - Initial release 

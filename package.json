@@ -1,7 +1,7 @@
 {
   "name": "vibe-guard",
   "version": "1.1.5",
-  "description": "🛡️ Vibe-Guard Security Scanner - 25 essential security rules to catch vulnerabilities before they catch you! Zero dependencies, instant setup, works everywhere, optimized performance. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, and more.",
+  "description": "██ Vibe-Guard Security Scanner - 25 essential security rules to catch vulnerabilities before they catch you! Zero dependencies, instant setup, works everywhere, optimized performance. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, and more.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {

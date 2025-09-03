@@ -29,7 +29,7 @@
 ## 🔄 Update Triggers
 
 ### Immediate Updates
-- 🔒 Security vulnerabilities
+- ██ Security vulnerabilities
 - 🐛 Critical bugs
 - ⚠️ Breaking changes in dependencies
 

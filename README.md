@@ -1,4 +1,4 @@
-# 🛡️ Vibe-Guard Security Scanner
+# ██ Vibe-Guard Security Scanner
 
 **Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 25 essential security rules.
 

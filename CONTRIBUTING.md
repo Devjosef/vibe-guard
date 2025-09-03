@@ -347,4 +347,4 @@ By contributing to Vibe-Guard, you agree that your contributions will be license
 
 ---
 
-**Thank you for contributing to Vibe-Guard! 🛡️** 
+**Thank you for contributing to Vibe-Guard! ██** 

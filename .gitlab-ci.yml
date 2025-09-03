@@ -9,9 +9,9 @@ security-scan:
     - npm --version
     - node --version
   script:
-    - echo "🛡️ Installing Vibe-Guard..."
+          - echo "██ Installing Vibe-Guard..."
     - npm install -g vibe-guard
-    - echo "🛡️ Running security scan..."
+          - echo "██ Running security scan..."
     - vibe-guard scan --format json --output-file results.json --severity high .
     - echo "✅ Security scan completed"
   artifacts:

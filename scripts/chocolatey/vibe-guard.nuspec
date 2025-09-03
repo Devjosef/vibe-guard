@@ -4,7 +4,7 @@
   <metadata>
     <!-- Basic package information -->
     <id>vibe-guard</id>
-    <version>1.1.2</version>
+    <version>1.1.5</version>
     <title>Vibe-Guard</title>
     <authors>Josef</authors>
     <owners>devjosef</owners>
@@ -18,11 +18,11 @@
 
     <!-- Package metadata -->
     <tags>security scanner development</tags>
-    <summary>🛡️ Security scanner for developers who code fast</summary>
+    <summary>██ Security scanner for developers who code fast</summary>
     <description>Vibe-Guard is a security scanner designed for developers who code fast. It helps identify security vulnerabilities in your codebase.
 
 This is an open source project maintained by Josef and the Vibe-Guard community.</description>
-    <releaseNotes>Version 1.1.4: Complete 25 security rules, enhanced detection, and improved documentation</releaseNotes>
+    <releaseNotes>Version 1.1.5: Enhanced CLI with ASCII art, modular frontend, 25 security rules, and improved documentation</releaseNotes>
 
     <!-- Legal information -->
     <licenseUrl>https://github.com/Devjosef/vibe-guard/blob/main/LICENSE</licenseUrl>
