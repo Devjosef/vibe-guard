@@ -25,9 +25,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:vibe-guard.scan"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
