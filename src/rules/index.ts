@@ -24,6 +24,9 @@ import { AiAgentAccessControlRule } from './ai-agent-access-control';
 import { AiDataLeakagePreventionRule } from './ai-data-leakage-prevention';
 import { McpServerSecurityRule } from './mcp-server-security';
 import { PromptInjectionDetectionRule } from './prompt-injection-detection';
+import { DockerfileSecurityRule } from './dockerfile-security';
+import { KubernetesSecurityRule } from './kubernetes-security';
+import { ContainerRegistrySecurityRule } from './container-registry-security';
 
 export function getAllRules(): BaseRule[] {
   return [
@@ -52,6 +55,9 @@ export function getAllRules(): BaseRule[] {
     new AiDataLeakagePreventionRule(),
     new McpServerSecurityRule(),
     new PromptInjectionDetectionRule(),
+    new DockerfileSecurityRule(),
+    new KubernetesSecurityRule(),
+    new ContainerRegistrySecurityRule(),
   ];
 }
 
@@ -81,6 +87,9 @@ export {
   AiDataLeakagePreventionRule,
   McpServerSecurityRule,
   PromptInjectionDetectionRule,
+  DockerfileSecurityRule,
+  KubernetesSecurityRule,
+  ContainerRegistrySecurityRule,
 };
 
 export * from '../types'; 
