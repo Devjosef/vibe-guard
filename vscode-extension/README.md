@@ -1,6 +1,6 @@
 # Vibe-Guard VS Code Extension
 
-A VS Code extension that integrates Vibe-Guard security scanning directly into your editor.
+A VS Code extension that integrates Vibe-Guard security scanning directly into your editor. Now includes container security scanning for Kubernetes, Dockerfiles, and container registries.
 
 ## Features
 
@@ -8,6 +8,8 @@ A VS Code extension that integrates Vibe-Guard security scanning directly into y
 - **Inline Diagnostics**: View security issues directly in your code with proper severity highlighting
 - **Output Channel**: Detailed scan results in a dedicated output panel
 - **Progress Tracking**: Visual feedback during scan execution
+- **Container Security**: Scan Kubernetes manifests, Dockerfiles, and container registry configurations
+- **28 Security Rules**: Comprehensive coverage including container security vulnerabilities
 
 ## Installation
 

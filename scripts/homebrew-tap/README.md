@@ -18,10 +18,11 @@ Vibe-Guard is a zero-dependency security scanner that helps developers identify 
 
 ### Features
 - **Zero Setup**: Download and run, no Node.js or dependencies required
-- **10 Essential Rules**: Catches the most common security issues
+- **28 Essential Rules**: Catches the most common security issues including container security
 - **Made by Developers**: We know what actually breaks in production
 - **Works Everywhere**: macOS, Linux, Windows, Docker, CI/CD
 - **ARM64 Support**: Native support for Apple Silicon and ARM64 Linux
+- **Container Security**: Kubernetes, Dockerfile, and container registry vulnerability detection
 
 ### Supported Platforms
 - macOS (Intel & Apple Silicon)

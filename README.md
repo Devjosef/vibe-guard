@@ -1,6 +1,6 @@
 # ██ Vibe-Guard Security Scanner
 
-**Professional Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 25 essential security rules.
+**Professional Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 28 essential security rules including container security.
 
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
@@ -65,6 +65,36 @@ const API_KEY = 'sk-1234567890abcdef'; // Secret exposed in source code!
 const API_KEY = process.env.API_KEY; // Environment variable
 ```
 
+**Container Security:**
+```yaml
+# ❌ Vulnerable Kubernetes manifest
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: nginx:latest  # Latest tag vulnerability
+        securityContext:
+          runAsUser: 0       # Root user vulnerability
+          privileged: true   # Privileged container vulnerability
+
+# ✅ Secure Kubernetes manifest
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.21.6@sha256:abc123...  # Pinned digest
+        securityContext:
+          runAsUser: 1000    # Non-root user
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+```
+
 ### Security Best Practices
 
 1. **Input Validation** - Always validate and sanitize user input
@@ -73,9 +103,11 @@ const API_KEY = process.env.API_KEY; // Environment variable
 4. **Environment Variables** - Never hardcode secrets in source code
 5. **Security Headers** - Implement proper HTTP security headers
 
+6. **Container Security** - Use non-root users, pinned image digests, and proper security contexts
+
 ## Comprehensive Security Coverage
 
-Vibe-Guard detects 25 types of vulnerabilities across multiple categories:
+Vibe-Guard detects 28 types of vulnerabilities across multiple categories:
 
 - **Authentication & Authorization**: Missing authentication, broken access control, session management
 - **Input Validation**: SQL injection, XSS, unvalidated input, directory traversal
@@ -83,6 +115,7 @@ Vibe-Guard detects 25 types of vulnerabilities across multiple categories:
 - **Configuration**: Insecure configuration, missing security headers, CORS issues
 - **Modern Threats**: CSRF protection, AI-generated code validation, prompt injection
 - **Dependencies**: Insecure dependencies, outdated packages, vulnerability assessment
+- **Container Security**: Kubernetes security, Dockerfile vulnerabilities, container registry issues
 
 ## Professional Use Cases
 
@@ -163,22 +196,24 @@ curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-gua
 **Built for developers who code fast and need security that keeps up:**
 
 - **Zero Dependencies** - Lightweight, fast, and reliable
-- **25 Security Rules** - Comprehensive coverage of modern threats
+- **28 Security Rules** - Comprehensive coverage of modern threats including container security
 - **Cross-Platform** - Works seamlessly across all operating systems
 - **Educational Focus** - Learn security while you scan
 - **OWASP Aligned** - Industry best practices and standards
 - **Developer-Friendly** - Simple, intuitive CLI interface
 - **Interactive Mode** - Guided learning with `vibe-guard start`
+- **Container Security** - Kubernetes, Dockerfile, and registry security scanning
 
 ## Impact & Adoption
 
 Every scan contributes to a more secure web ecosystem:
 
 - **500+ total downloads** on NPM with growing adoption
-- **25 security rules** covering contemporary threat vectors
+- **28 security rules** covering contemporary threat vectors including container security
 - **Cross-platform support** for Linux, macOS, and Windows
 - **Zero dependencies** ensuring maximum compatibility
 - **Educational approach** - building security awareness
+- **Container security** - Kubernetes, Dockerfile, and registry vulnerability detection
 
 ## License
 
