@@ -1,4 +1,4 @@
-const Table = require('cli-table3');
+import Table = require('cli-table3');
 import chalk from 'chalk';
 import { SecurityIssue, ScanResult, SeverityLevel } from './types';
 

@@ -108,21 +108,21 @@ export class KubernetesSecurityRule extends BaseRule {
       suggestion: 'Set allowPrivilegeEscalation: false'
     },
     {
-      pattern: /add:\s*\[[^\]]*["\']SYS_ADMIN["\'][^\]]*\]/gm,
+      pattern: /add:\s*\[[^\]]*['"]SYS_ADMIN['"][^\]]*\]/gm,
       type: 'Dangerous Capabilities',
       severity: 'critical',
       description: 'Container has SYS_ADMIN capability - dangerous kernel-level access',
       suggestion: 'Remove SYS_ADMIN capability and use minimal required capabilities'
     },
     {
-      pattern: /add:\s*\[[^\]]*["\']NET_ADMIN["\'][^\]]*\]/gm,
+      pattern: /add:\s*\[[^\]]*['"]NET_ADMIN['"][^\]]*\]/gm,
       type: 'Dangerous Capabilities',
       severity: 'high',
       description: 'Container has NET_ADMIN capability - dangerous kernel-level access',
       suggestion: 'Remove NET_ADMIN capability unless absolutely necessary'
     },
     {
-      pattern: /add:\s*\[[^\]]*["\'](?:SYS_TIME|SYS_MODULE|SYS_RAWIO|SYS_PTRACE)["\'][^\]]*\]/gm,
+      pattern: /add:\s*\[[^\]]*['"](?:SYS_TIME|SYS_MODULE|SYS_RAWIO|SYS_PTRACE)['"][^\]]*\]/gm,
       type: 'Dangerous Capabilities',
       severity: 'high',
       description: 'Container has dangerous capabilities - kernel-level access',

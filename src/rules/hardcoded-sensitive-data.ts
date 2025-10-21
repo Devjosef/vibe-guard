@@ -101,7 +101,7 @@ export class HardcodedSensitiveDataRule extends BaseRule {
       validation: (text: string) => this.validateStripeKey(text)
     },
     { 
-      pattern: /(?:sendgrid_api_key)\s*[:=]\s*['"`](SG\.[a-zA-Z0-9_\-\.]+)['"`]/gi, 
+  pattern: /(?:sendgrid_api_key)\s*[:=]\s*['"`](SG\.[a-zA-Z0-9_.-]+)['"`]/gi, 
       type: 'SendGrid API Key',
       confidence: 0.95,
       severity: 'critical' as const,

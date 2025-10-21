@@ -390,7 +390,7 @@ export class InsecureHttpRule extends BaseRule {
   }
 
   private calculateSeverity(baseSeverity: string, confidence: number, context: HttpContext): 'critical' | 'high' | 'medium' | 'low' {
-    let severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
+    const severity = baseSeverity as 'critical' | 'high' | 'medium' | 'low';
     
     // Never downgrades critical issues below high
     if (baseSeverity === 'critical' && confidence < 0.8) {

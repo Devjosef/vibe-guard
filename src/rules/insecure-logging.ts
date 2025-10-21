@@ -39,7 +39,7 @@ export class InsecureLoggingRule extends BaseRule {
     
     // JWT token logging - with word boundaries
     { 
-      pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*eyJ[a-zA-Z0-9_\-]*\.eyJ[a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]*[^)]*\)/gi, 
+  pattern: /(?:console\.log|console\.warn|console\.error|logger\.(?:log|warn|error|info)|print|echo|printf|System\.out\.println|puts|Console\.WriteLine)\s*\(\s*[^)]*eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*[^)]*\)/gi, 
       type: 'JWT token logging',
       severity: 'critical' as const
     },
