@@ -108,6 +108,36 @@ export class MyNewRule extends BaseRule {
 4. Test your rule with various code samples
 5. Update the README and SECURITY_RULES.md with your new rule
 
+## Rule files and lint exceptions
+
+Rule implementations under `src/rules/` operate on raw source text and ASTs and intentionally use
+regexes, special characters, and sometimes `any` for AST node typing. Because of that, some
+automatic lint rules can produce noisy false positives for perfectly valid rule code.
+
+We provide a focused ESLint override for `src/rules/**` (see `.eslintrc.cjs`) that relaxes a small
+set of rules such as `no-useless-escape`, `@typescript-eslint/no-explicit-any`,
+`@typescript-eslint/no-var-requires`, and `prefer-const` so contributors aren't blocked by false
+positives while working on rules.
+
+Guidance for contributors:
+
+- Prefer using the shared override in `.eslintrc.cjs` rather than disabling rules project-wide.
+- If only a single file needs a targeted exception, prefer a file-level comment with a brief
+  justification, for example:
+
+```ts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- uses raw AST nodes
+const node: any = parseSomeAst(...);
+```
+
+- Always document the reason for any lint disablement in your PR so reviewers can evaluate the
+  trade-offs.
+- Run `npm run lint` locally and include lint results in your PR description if you make
+  intentional exceptions.
+
+Keeping exceptions small and well-documented helps reviewers and maintainers keep the rule set
+secure and maintainable.
+
 ## Performance Optimization Guidelines
 
 When adding or modifying security rules, follow these optimization principles:
