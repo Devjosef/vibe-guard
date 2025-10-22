@@ -138,6 +138,39 @@ const node: any = parseSomeAst(...);
 Keeping exceptions small and well-documented helps reviewers and maintainers keep the rule set
 secure and maintainable.
 
+## SARIF reporting (test results)
+
+We generate SARIF from the Jest test suite to help surface test failures in GitHub Code Scanning.
+Because jest does not emit SARIF directly in all environments, we use a small converter that
+transforms Jest's JSON output into SARIF. This is a best-effort conversion that includes:
+
+- basic `runs.tool.driver` metadata
+- rule metadata derived from test titles (short/full descriptions)
+- result locations: the converter attempts to parse stack traces to extract `file:line:column`
+  and populates SARIF `region` fields when possible
+
+Local workflow (quick):
+
+```bash
+# run tests and write raw jest JSON
+npx jest --json --outputFile=jest-output.json
+
+# convert to SARIF
+node scripts/jest-to-sarif.js jest-output.json test-results.sarif
+
+# inspect or upload test-results.sarif
+```
+
+CI behavior:
+
+- The CI workflow runs Jest (only on manual dispatch by default) and converts the JSON output
+  to SARIF and uploads it with `github/codeql-action/upload-sarif@v2`.
+- The converter is best-effort — it may not capture precise line/column for every failure. If you
+  see missing locations, please include the failing stack trace in your PR description.
+
+If you want richer SARIF (stable rule IDs, better locations), open an issue or PR! we can
+improve the converter to map tests to stable rule metadata.
+
 ## Performance Optimization Guidelines
 
 When adding or modifying security rules, follow these optimization principles:

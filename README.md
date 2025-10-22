@@ -5,6 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![License](https://img.shields.io/npm/l/vibe-guard.svg)](https://github.com/Devjosef/vibe-guard/blob/main/LICENSE)
+[![Test Scanning](https://github.com/Devjosef/vibe-guard/actions/workflows/test-scanning.yml/badge.svg)](https://github.com/Devjosef/vibe-guard/actions/workflows/test-scanning.yml)
 
 ## Quick Start
 
@@ -125,6 +126,21 @@ Vibe-Guard detects 28 types of vulnerabilities across multiple categories:
 - name: Security Scan
   run: vibe-guard scan . --format sarif --output-file security-report.sarif
 ```
+
+## SARIF test reporting
+
+This repository can produce SARIF from the Jest test suite for integration with GitHub Code Scanning.
+Locally you can run:
+
+```bash
+# run tests and produce JSON
+npx jest --json --outputFile=jest-output.json
+
+# convert to SARIF
+node scripts/jest-to-sarif.js jest-output.json test-results.sarif
+```
+
+CI converts Jest JSON to SARIF and uploads the SARIF file when the tests are run in the CI workflow.
 
 **Pre-commit Hook:**
 ```bash
