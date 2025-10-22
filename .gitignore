@@ -66,6 +66,10 @@ web_modules/
 # Optional REPL history
 .node_repl_history
 
+# Jest and SARIF outputs
+jest-output.json
+test-results.sarif
+
 # Output of 'npm pack'
 *.tgz
 
