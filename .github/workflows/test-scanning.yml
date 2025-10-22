@@ -34,7 +34,7 @@ jobs:
           node scripts/jest-to-sarif.js jest-output.json test-results.sarif
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: test-results.sarif
           category: test-results

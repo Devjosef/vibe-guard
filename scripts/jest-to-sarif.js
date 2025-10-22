@@ -169,7 +169,7 @@ function toSarif(jestJson) {
       }
     } : null;
 
-    if (summary) runs[0].invocation = summary.invocation;
+   // if (summary) runs[0].invocation = summary.invocation;
   } catch (e) {
     // ignore
   }
