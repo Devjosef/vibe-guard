@@ -1,16 +1,15 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
 import chalk from 'chalk';
 import VibeGuard from '../index';
 import { ScanOptions, SeverityLevel } from '../types';
 import { VERSION } from '../types/version';
+import * as fs from 'fs';
+import * as readline from 'readline';
 
 const program = new Command();
 
 // ASCII Art Logo
 function displayLogo() {
-  // Professional blue gradient effect
   const logo = [
     '██╗   ██╗██╗██████╗ ███████╗     ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ ',
     '╚██╗ ██╔╝██║██╔══██╗██╔════╝    ██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗',
@@ -19,8 +18,7 @@ function displayLogo() {
     '   ██║   ██║██████╔╝███████╗    ╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝',
     '   ╚═╝   ╚═╝╚═════╝ ╚══════╝     ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ '
   ];
-  
-  // Subtle gradient from dark blue to lighter blue
+
   logo.forEach((line, index) => {
     let color;
     switch (index) {
@@ -34,9 +32,59 @@ function displayLogo() {
     }
     console.log(color.bold(line));
   });
-  
-  // Clean subtitle with subtle accent
+
   console.log(chalk.blue.bold('                           ██  SECURITY SCANNER  ██\n'));
+}
+
+/**
+ * Run a scan and return an exit code instead of terminating the process.
+ * Returns: 0 = success (no issues), 1 = issues found, 2 = error/invalid args
+ */
+async function handleScan(target: string, options: any): Promise<number> {
+  try {
+    console.log(chalk.blue.bold('╔══════════════════════════════════════════════════════════════════════════════╗'));
+    console.log(chalk.blue.bold('║                        STARTING VIBE-GUARD SECURITY SCAN                        ║'));
+    console.log(chalk.blue.bold('║                              THREAT DETECTION ACTIVE                           ║'));
+    console.log(chalk.blue.bold('╚══════════════════════════════════════════════════════════════════════════════╝\n'));
+
+    if (options.severity && !['critical', 'high', 'medium', 'low'].includes(options.severity)) {
+      console.error(chalk.red.bold('❌ Error: Invalid severity level. Must be one of: critical, high, medium, low'));
+      return 2;
+    }
+
+    const scanOptions: ScanOptions = {
+      target,
+      format: options.format as 'table' | 'json' | 'sarif' | 'html',
+      verbose: options.verbose,
+      exclude: options.exclude,
+      include: options.include
+    };
+
+    if (options.severity) scanOptions.severity = options.severity as SeverityLevel;
+    if (options.config) scanOptions.config = options.config;
+    if (options.parallel) scanOptions.parallel = options.parallel;
+    if (options.maxFiles) scanOptions.maxFiles = parseInt(options.maxFiles);
+
+    const vibeGuard = new VibeGuard();
+    const output = await vibeGuard.scanAndFormat(scanOptions);
+
+    if (options.outputFile) {
+      fs.writeFileSync(options.outputFile, output);
+      console.log(chalk.green(`✅ Results written to: ${options.outputFile}`));
+    } else {
+      console.log(output);
+    }
+
+    const result = await vibeGuard.scan(scanOptions);
+    if (result.issuesFound > 0) {
+      return 1;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error(chalk.red.bold('❌ Error:'), error instanceof Error ? error.message : 'Unknown error');
+    return 2;
+  }
 }
 
 program
@@ -47,53 +95,84 @@ program
     displayLogo();
   });
 
-import * as fs from 'fs';
+program
+  .command('start')
+  .description('Start interactive Vibe-Guard session')
+  .action(() => {
+    // Persistent menu implemented with callback-style readline.
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-async function handleScan(target: string, options: any) {
-  try {
-    console.log(chalk.blue.bold('╔══════════════════════════════════════════════════════════════════════════════╗'));
-    console.log(chalk.blue.bold('║                        STARTING VIBE-GUARD SECURITY SCAN                        ║'));
-    console.log(chalk.blue.bold('║                              THREAT DETECTION ACTIVE                           ║'));
-    console.log(chalk.blue.bold('╚══════════════════════════════════════════════════════════════════════════════╝\n'));
-    
-    // Validate severity level if provided
-    if (options.severity && !['critical', 'high', 'medium', 'low'].includes(options.severity)) {
-      console.error(chalk.red.bold('❌ Error: Invalid severity level. Must be one of: critical, high, medium, low'));
-      process.exit(1);
-    }
-    
-    const scanOptions: ScanOptions = {
-      target,
-      format: options.format as 'table' | 'json' | 'sarif' | 'html',
-      verbose: options.verbose,
-      exclude: options.exclude,
-      include: options.include
+    const menu = `\nChoose an option:\n1. 🔍 Scan a file or directory\n2. 📋 View all security rules\n3. ⚙️  Create configuration file\n4. 📊 Show sample configuration\n5. ℹ️  About Vibe-Guard\n6. 🚪 Exit\n\nPlease enter your choice (1-6): `;
+
+    // Display logo once at start
+    displayLogo();
+
+  const pause = (next: () => void) => rl.question(chalk.gray('\nPress Enter to continue...'), () => next());
+
+  const showMenu = () => {
+      rl.question(menu, (answer: string) => {
+        const choice = answer.trim();
+        switch (choice) {
+          case '1': {
+            rl.question('Enter file or directory to scan (default: .): ', (target: string) => {
+              Promise.resolve(handleScan(target || '.', { verbose: false }))
+                .catch(err => console.error(chalk.red('Scan error:'), err))
+                .finally(() => pause(() => showMenu()));
+            });
+            break;
+          }
+          case '2': {
+            const vibeGuard = new VibeGuard();
+            const rules = vibeGuard.getRules();
+            console.log(chalk.blue.bold('\nAvailable Security Rules:\n'));
+            rules.forEach(rule => {
+              const severityColor = rule.severity === 'critical' ? chalk.red.bold :
+                                   rule.severity === 'high' ? chalk.red :
+                                   rule.severity === 'medium' ? chalk.yellow :
+                                   chalk.blue;
+              console.log(`${chalk.bold(rule.name)} ${severityColor(`[${rule.severity.toUpperCase()}]`)}`);
+              console.log(`  ${chalk.gray(rule.description)}\n`);
+            });
+            pause(() => showMenu());
+            break;
+          }
+          case '3': {
+            const vibeGuard = new VibeGuard();
+            vibeGuard.createConfigFile();
+            pause(() => showMenu());
+            break;
+          }
+          case '4': {
+            const vibeGuard = new VibeGuard();
+            console.log(chalk.blue.bold('\nSample vibe-guard.json Configuration:\n'));
+            console.log(vibeGuard.generateConfig());
+            pause(() => showMenu());
+            break;
+          }
+          case '5': {
+            console.log(chalk.white('\nVibe-Guard Security Scanner - Designed for fast and secure development with AI-powered scanning.\n'));
+            pause(() => showMenu());
+            break;
+          }
+          case '6': {
+            console.log(chalk.green('\nExiting Vibe-Guard. Stay secure! 🚀'));
+            rl.close();
+            break;
+          }
+          default: {
+            console.log(chalk.red('\nInvalid choice. Please select 1-6.'));
+            showMenu();
+          }
+        }
+      });
     };
-    
-    // Add optional properties only when they have values
-    if (options.severity) scanOptions.severity = options.severity as SeverityLevel;
-    if (options.config) scanOptions.config = options.config;
-    if (options.parallel) scanOptions.parallel = options.parallel;
-    if (options.maxFiles) scanOptions.maxFiles = parseInt(options.maxFiles);
-    const vibeGuard = new VibeGuard();
-    const output = await vibeGuard.scanAndFormat(scanOptions);
-    
-    if (options.outputFile) {
-      fs.writeFileSync(options.outputFile, output);
-      console.log(chalk.green(`✅ Results written to: ${options.outputFile}`));
-    } else {
-      console.log(output);
-    }
-    
-    const result = await vibeGuard.scan(scanOptions);
-    if (result.issuesFound > 0) {
-      process.exit(1);
-    }
-  } catch (error) {
-    console.error(chalk.red.bold('❌ Error:'), error instanceof Error ? error.message : 'Unknown error');
-    process.exit(1);
-  }
-}
+
+    showMenu();
+
+    rl.on('close', () => {
+      process.exit(0);
+    });
+  });
 
 program
   .command('scan')
@@ -108,7 +187,11 @@ program
   .option('--max-files <number>', 'Maximum files to process concurrently')
   .option('--exclude <patterns...>', 'Exclude patterns')
   .option('--include <patterns...>', 'Include patterns')
-  .action(handleScan);
+  .action(async (target: string, options: any) => {
+    const code = await handleScan(target, options);
+    // Exit with the same semantics as the previous implementation
+    process.exit(code);
+  });
 
 program
   .command('rules')
@@ -152,37 +235,7 @@ program
     vibeGuard.createConfigFile();
   });
 
-program
-  .command('start')
-  .description('Start interactive Vibe-Guard session')
-  .action(async () => {
-    console.log(chalk.blue.bold('╔══════════════════════════════════════════════════════════════════════════════╗'));
-    console.log(chalk.blue.bold('║                        WELCOME TO VIBE-GUARD INTERACTIVE                        ║'));
-    console.log(chalk.blue.bold('║                              INTERACTIVE SECURITY SCANNING                      ║'));
-    console.log(chalk.blue.bold('╚══════════════════════════════════════════════════════════════════════════════╝\n'));
-    
-    console.log(chalk.cyan.bold('Choose an option:\n'));
-    console.log(chalk.white('1. 🔍 Scan a file or directory'));
-    console.log(chalk.white('2. 📋 View all security rules'));
-    console.log(chalk.white('3. ⚙️  Create configuration file'));
-    console.log(chalk.white('4. 📊 Show sample configuration'));
-    console.log(chalk.white('5. ℹ️  About Vibe-Guard'));
-    console.log(chalk.white('6. 🚪 Exit\n'));
-    
-    // For now, just show the menu and exit
-    // In a full implementation, you'd use a library like 'inquirer' for interactive prompts
-    console.log(chalk.yellow('💡 Tip: Use specific commands for direct access:'));
-    console.log(chalk.gray('   vibe-guard scan <target>     - Scan files/directories'));
-    console.log(chalk.gray('   vibe-guard rules             - View security rules'));
-    console.log(chalk.gray('   vibe-guard init              - Create config file'));
-    console.log(chalk.gray('   vibe-guard config            - Show sample config'));
-    console.log(chalk.gray('   vibe-guard version           - Show version info\n'));
-    
-    console.log(chalk.blue.bold('╔══════════════════════════════════════════════════════════════════════════════╗'));
-    console.log(chalk.blue.bold('║                              THANK YOU FOR USING VIBE-GUARD                    ║'));
-    console.log(chalk.blue.bold('║                              STAY SECURE! 🚀                                ║'));
-    console.log(chalk.blue.bold('╚══════════════════════════════════════════════════════════════════════════════╝'));
-  });
+
 
 program
   .command('config')

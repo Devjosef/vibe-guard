@@ -13,6 +13,9 @@
 # Install globally
 npm install -g vibe-guard
 
+# For Development with no build step(run this first)
+npm run dev
+
 # Start interactive session
 vibe-guard start
 
