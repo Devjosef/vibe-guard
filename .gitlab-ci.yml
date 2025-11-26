@@ -27,7 +27,7 @@ security-scan:
     - merge_requests
     - develop
 
-# Optional: Run scan with table output for human readable results in CI logs.
+# Run scan with table output for human readable results in CI logs.
 security-scan-verbose:
   stage: security-scan
   image: node:20

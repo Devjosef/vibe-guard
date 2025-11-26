@@ -19,7 +19,7 @@ ARCH="$(uname -m)"
 echo -e "${BLUE}██  Vibe-Guard Security Scanner Installer${NC}"
 echo -e "${BLUE}===========================================${NC}"
 
-# Determine the binary name based on platform and architecture
+# Determine the binary name based on the platform and architecture
 case "$OS" in
     Darwin)
         if [ "$ARCH" = "arm64" ]; then
