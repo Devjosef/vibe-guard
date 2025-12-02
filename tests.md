@@ -15,7 +15,7 @@ This document defines how tests should be written and managed for the VibeGuard 
 
 ### 2. Keep It Clean
 - Each test should serve one clear purpose.
-- Avoid copy-paste: reuse utility functions when possible.
+- Avoid copy-paste: and reuse utility functions when possible.
 - Use descriptive test names that explain the behavior being tested.
 - Write code that’s easy to change later.
 
@@ -23,5 +23,6 @@ This document defines how tests should be written and managed for the VibeGuard 
 - Each test runs independently.
 - Cover both normal and edge cases.
 - Keep tests small and focused on one behavior.
-- Avoid hard dependencies on specific test frameworks.gnostic** - Tests should work regardless of implementation details
+- Avoid hard dependencies on specific test frameworks.
+- Agnostic tests should run regardless of implementation.
 
