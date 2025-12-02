@@ -13,7 +13,7 @@ security-scan:
     - npm install -g vibe-guard
           - echo "██ Running security scan..."
     - vibe-guard scan --format json --output-file results.json --severity high .
-    - echo "✅ Security scan completed"
+    - echo "Security scan completed"
   artifacts:
     reports:
       # GitLab Security Report format (if you want GitLab to parse it)
