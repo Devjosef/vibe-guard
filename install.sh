@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Vibe-Guard Installation Script
 # Usage: curl -L https://raw.githubusercontent.com/user/vibe-guard/main/install.sh | bash
 
