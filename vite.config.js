@@ -1,3 +1,4 @@
+// Specific configuration for the frontend.
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
