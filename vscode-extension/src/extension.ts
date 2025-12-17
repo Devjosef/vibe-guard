@@ -4,6 +4,7 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
+// Maps vibe-guard CLI output to VS Code diagnostics
 interface VibeGuardIssue {
   rule: string;
   severity: string;
@@ -18,80 +19,57 @@ interface VibeGuardResult {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Vibe-Guard extension is now active!');
-
-  // Register the scan command
-  let disposable = vscode.commands.registerCommand('vibe-guard.scan', async () => {
-    await runSecurityScan();
-  });
-
+  let disposable = vscode.commands.registerCommand('vibe-guard.scan', runSecurityScan);
   context.subscriptions.push(disposable);
 }
 
-async function runSecurityScan(): Promise<void> {
+async function runSecurityScan() {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
     vscode.window.showErrorMessage('No workspace folder found');
     return;
   }
 
-  // Show progress
   await vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
-    title: "Running Vibe-Guard Security Scan",
+    title: "Vibe-Guard Security Scan",
     cancellable: false
-  }, async (progress) => {
+  }, async () => {
     try {
-      progress.report({ message: 'Starting scan...' });
-      
-      // Run vibe-guard scan
-      const { stdout, stderr } = await execAsync('vibe-guard scan . --format json', {
+      const { stdout } = await execAsync('vibe-guard scan . --format json', {
         cwd: workspaceFolder.uri.fsPath
       });
 
-      if (stderr) {
-        console.error('Vibe-Guard stderr:', stderr);
-      }
-
-      progress.report({ message: 'Parsing results...' });
-      
-      // Parse the results
       const results = parseVibeGuardOutput(stdout);
-      
-      // Display results
       await displayResults(results);
-      
-      vscode.window.showInformationMessage(`Security scan complete: ${results.issues.length} issues found`);
-      
+      vscode.window.showInformationMessage(`Scan complete: ${results.issues.length} issues`);
     } catch (error) {
-      console.error('Vibe-Guard scan error:', error);
-      vscode.window.showErrorMessage(`Security scan failed: ${error}`);
+      vscode.window.showErrorMessage(`Scan failed: ${error}`);
     }
   });
 }
 
+// JSON primary, table fallback for CLI output variations
 function parseVibeGuardOutput(output: string): VibeGuardResult {
   try {
-    // Try to parse JSON output
     const data = JSON.parse(output);
     return {
       issues: data.issues || data.vulnerabilities || [],
       summary: data.summary || 'Scan completed'
     };
-  } catch (error) {
-    // Fallback to parsing text output
+  } catch {
     return parseTextOutput(output);
   }
 }
 
+// Parses vibe-guard table format (delimited rows)
 function parseTextOutput(output: string): VibeGuardResult {
   const issues: VibeGuardIssue[] = [];
   const lines = output.split('\n');
   
-  // Simple parsing of the table format
   for (const line of lines) {
     if (line.includes('│') && !line.includes('Rule')) {
-      const parts = line.split('│').map(p => p.trim()).filter(p => p);
+      const parts = line.split('│').map(p => p.trim()).filter(Boolean);
       if (parts.length >= 5) {
         issues.push({
           rule: parts[0],
@@ -104,90 +82,57 @@ function parseTextOutput(output: string): VibeGuardResult {
     }
   }
   
-  return {
-    issues,
-    summary: `Found ${issues.length} security issues`
-  };
+  return { issues, summary: `Found ${issues.length} issues` };
 }
 
-async function displayResults(results: VibeGuardResult): Promise<void> {
-  // Create diagnostics collection
-  const diagnosticCollection = vscode.languages.createDiagnosticCollection('vibe-guard');
+async function displayResults(results: VibeGuardResult) {
+  const diagnostics = vscode.languages.createDiagnosticCollection('vibe-guard');
   
-  // Group issues by file
+  // Group by file to batch diagnostics
   const issuesByFile = new Map<string, VibeGuardIssue[]>();
-  
   for (const issue of results.issues) {
-    const filePath = issue.file;
-    if (!issuesByFile.has(filePath)) {
-      issuesByFile.set(filePath, []);
-    }
-    issuesByFile.get(filePath)!.push(issue);
+    if (!issuesByFile.has(issue.file)) issuesByFile.set(issue.file, []);
+    issuesByFile.get(issue.file)!.push(issue);
   }
-  
-  // Create diagnostics for each file
+
   for (const [filePath, issues] of issuesByFile) {
-    const diagnostics: vscode.Diagnostic[] = [];
-    
-    for (const issue of issues) {
-      const range = new vscode.Range(
-        new vscode.Position(issue.line - 1, 0),
-        new vscode.Position(issue.line - 1, 100)
-      );
-      
-      const severity = getDiagnosticSeverity(issue.severity);
-      
-      const diagnostic = new vscode.Diagnostic(
-        range,
-        `[${issue.rule}] ${issue.message}`,
-        severity
-      );
-      
-      diagnostic.source = 'Vibe-Guard';
-      diagnostics.push(diagnostic);
-    }
-    
-    // Add diagnostics to the collection
+    const fileDiagnostics: vscode.Diagnostic[] = issues.map(issue => {
+      const range = new vscode.Range(issue.line - 1, 0, issue.line - 1, 100);
+      return new vscode.Diagnostic(range, `[${issue.rule}] ${issue.message}`, getDiagnosticSeverity(issue.severity));
+    });
+
     try {
-      const uri = vscode.Uri.file(filePath);
-      diagnosticCollection.set(uri, diagnostics);
-    } catch (error) {
-      console.error(`Error creating URI for ${filePath}:`, error);
-    }
+      diagnostics.set(vscode.Uri.file(filePath), fileDiagnostics);
+    } catch {}
   }
-  
-  // Show summary in output channel
-  const outputChannel = vscode.window.createOutputChannel('Vibe-Guard');
-  outputChannel.clear();
-          outputChannel.appendLine('██ Vibe-Guard Security Scan Results');
-  outputChannel.appendLine('=====================================');
-  outputChannel.appendLine(results.summary);
-  outputChannel.appendLine('');
-  
-  for (const issue of results.issues) {
-    outputChannel.appendLine(`${issue.severity.toUpperCase()}: ${issue.file}:${issue.line}`);
-    outputChannel.appendLine(`  ${issue.rule}: ${issue.message}`);
-    outputChannel.appendLine('');
-  }
-  
-  outputChannel.show();
+
+  showOutput(results);
 }
 
+// Critical / High=Error, Medium = Warning, else = Info
 function getDiagnosticSeverity(severity: string): vscode.DiagnosticSeverity {
   switch (severity.toLowerCase()) {
     case 'critical':
-      return vscode.DiagnosticSeverity.Error;
-    case 'high':
-      return vscode.DiagnosticSeverity.Error;
-    case 'medium':
-      return vscode.DiagnosticSeverity.Warning;
-    case 'low':
-      return vscode.DiagnosticSeverity.Information;
-    default:
-      return vscode.DiagnosticSeverity.Warning;
+    case 'high': return vscode.DiagnosticSeverity.Error;
+    case 'medium': return vscode.DiagnosticSeverity.Warning;
+    default: return vscode.DiagnosticSeverity.Information;
   }
 }
 
-export function deactivate() {
-  console.log('Vibe-Guard extension deactivated');
+function showOutput(results: VibeGuardResult) {
+  const output = vscode.window.createOutputChannel('Vibe-Guard');
+  output.clear();
+  output.appendLine('Vibe-Guard Results');
+  output.appendLine('================');
+  output.appendLine(results.summary);
+  
+  for (const issue of results.issues) {
+    output.appendLine('');
+    output.appendLine(`${issue.severity.toUpperCase()}: ${issue.file}:${issue.line}`);
+    output.appendLine(`  ${issue.rule}: ${issue.message}`);
+  }
+  
+  output.show();
 }
+
+export function deactivate() {}

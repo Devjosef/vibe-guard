@@ -1,107 +1,51 @@
-# Vibe-Guard Installation Script
-# Usage: curl -L https://raw.githubusercontent.com/user/vibe-guard/main/install.sh | bash
+#!/bin/bash
+set -euo pipefail
 
-set -e
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Detect platform
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
-echo -e "${BLUE}██  Vibe-Guard Security Scanner Installer${NC}"
-echo -e "${BLUE}===========================================${NC}"
-
-# Determine the binary name based on the platform and architecture
 case "$OS" in
-    Darwin)
-        if [ "$ARCH" = "arm64" ]; then
-            BINARY_NAME="vibe-guard-macos-arm64"
-        else
-            BINARY_NAME="vibe-guard-macos-x64"
-        fi
-        INSTALL_DIR="/usr/local/bin"
-        ;;
-    Linux)
-        if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-            BINARY_NAME="vibe-guard-linux-arm64"
-        else
-            BINARY_NAME="vibe-guard-linux-x64"
-        fi
-        INSTALL_DIR="/usr/local/bin"
-        ;;
-    MINGW*|MSYS*|CYGWIN*)
-        BINARY_NAME="vibe-guard-windows-x64.exe"
-        INSTALL_DIR="/usr/local/bin"
-        ;;
-    *)
-        echo -e "${RED}❌ Unsupported operating system: $OS${NC}"
-        exit 1
-        ;;
+  Darwin)
+    if [[ "$ARCH" = arm64 ]]; then
+      BINARY="vibe-guard-macos-arm64"
+      EXPECTED_SHA256="cc5dc2f9768e681b7b5eefe4244d686e55006e76650d63a3d66dcd6c104f9c71"
+    else
+      BINARY="vibe-guard-macos-x64"
+      EXPECTED_SHA256="4a498734c448e002bf9c759d711530a350179b0683261d3047153e973fe2067b"
+    fi
+    ;;
+  Linux)
+    if [[ "$ARCH" =~ ^(aarch64|arm64)$ ]]; then
+      BINARY="vibe-guard-linux-arm64"
+      EXPECTED_SHA256="7ddaa5461a46bbbcbac7c144d1d7beaef7408ecadb1a9884c9fc7d9d928834f5"
+    else
+      BINARY="vibe-guard-linux-x64"
+      EXPECTED_SHA256="80d25b4c31cf43e10962836e50265b1b9c601eb0413f1083328778200400fa05"
+    fi
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    BINARY="vibe-guard-windows-x64.exe"
+    EXPECTED_SHA256="6ba2c5f4e09825391164f8a1626e0886e8893daf5a9b86dcc85d311191a4daa1"
+    ;;
+  *)
+    echo "Unsupported: $OS $ARCH" >&2
+    exit 1
+    ;;
 esac
 
-echo -e "${YELLOW}📋 Detected platform: $OS ($ARCH)${NC}"
-echo -e "${YELLOW}📦 Binary: $BINARY_NAME${NC}"
+URL="https://github.com/Devjosef/vibe-guard/releases/latest/download/$BINARY"
+DEST="/usr/local/bin/vibe-guard"
+TEMP="/tmp/vibe-guard.$$"
 
-# GitHub release URL
-GITHUB_REPO="Devjosef/vibe-guard"
-RELEASE_URL="https://github.com/$GITHUB_REPO/releases/latest/download/$BINARY_NAME"
+echo "Installing $BINARY to $DEST"
 
-# Download location
-TEMP_FILE="/tmp/vibe-guard-download"
-FINAL_LOCATION="$INSTALL_DIR/vibe-guard"
-
-echo -e "${BLUE}⬇️  Downloading Vibe-Guard...${NC}"
-
-# Download the binary
-if command -v curl >/dev/null 2>&1; then
-    curl -L "$RELEASE_URL" -o "$TEMP_FILE"
-elif command -v wget >/dev/null 2>&1; then
-    wget "$RELEASE_URL" -O "$TEMP_FILE"
+curl -Lfs "$URL" -o "$TEMP"
+echo "$EXPECTED_SHA256  $TEMP" | sha256sum -c - || { echo "Checksum failed" >&2; rm "$TEMP"; exit 1; }
+ 
+if [[ ! -w "$(dirname "$DEST")" ]]; then
+  sudo mv "$TEMP" "$DEST" && sudo chmod +x "$DEST"
 else
-    echo -e "${RED}❌ Neither curl nor wget found. Please install one of them.${NC}"
-    exit 1
+  mv "$TEMP" "$DEST" && chmod +x "$DEST"
 fi
 
-# Check if download was successful
-if [ ! -f "$TEMP_FILE" ]; then
-    echo -e "${RED}❌ Download failed${NC}"
-    exit 1
-fi
-
-echo -e "${BLUE}📦 Installing to $FINAL_LOCATION...${NC}"
-
-# Install the binary
-if [ -w "$INSTALL_DIR" ]; then
-    mv "$TEMP_FILE" "$FINAL_LOCATION"
-    chmod +x "$FINAL_LOCATION"
-else
-    echo -e "${YELLOW}🔐 Requesting sudo access to install to $INSTALL_DIR${NC}"
-    sudo mv "$TEMP_FILE" "$FINAL_LOCATION"
-    sudo chmod +x "$FINAL_LOCATION"
-fi
-
-# Verify installation
-if [ -x "$FINAL_LOCATION" ]; then
-    echo -e "${GREEN}✅ Vibe-Guard installed successfully!${NC}"
-    echo ""
-    echo -e "${BLUE}🚀 Quick start:${NC}"
-    echo -e "  ${GREEN}vibe-guard scan .${NC}          # Scan current directory"
-    echo -e "  ${GREEN}vibe-guard scan file.js${NC}    # Scan a specific file"
-    echo -e "  ${GREEN}vibe-guard rules${NC}           # List available rules"
-    echo -e "  ${GREEN}vibe-guard --help${NC}          # Show help"
-    echo ""
-    echo -e "${YELLOW}💡 Pro tip: Add vibe-guard to your CI/CD pipeline!${NC}"
-    
-    # Test the installation
-    echo -e "${BLUE}🧪 Testing installation...${NC}"
-    "$FINAL_LOCATION" version
-else
-    echo -e "${RED}❌ Installation failed${NC}"
-    exit 1
-fi 
+"$DEST" version && echo "Done."
