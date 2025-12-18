@@ -24,15 +24,20 @@ import { InsecureLoggingRule } from './rules/insecure-logging';
 import { InsecureSessionManagementRule } from './rules/insecure-session-management';
 import { InsecureErrorHandlingRule } from './rules/insecure-error-handling';
 import { InsecureConfigurationRule } from './rules/insecure-configuration';
-import { VERSION } from './types/version';
+import { PromptInjectionDetectionRule } from './rules/prompt-injection-detection';
+import { AiGeneratedCodeValidationRule } from './rules/ai-generated-code-validation';
+import { AiAgentAccessControlRule } from './rules/ai-agent-access-control';
+import { AiDataLeakagePreventionRule } from './rules/ai-data-leakage-prevention';
+import { McpServerSecurityRule } from './rules/mcp-server-security';
+import { KubernetesSecurityRule } from './rules/kubernetes-security';
+import { DockerfileSecurityRule } from './rules/dockerfile-security';
+import { ContainerRegistrySecurityRule } from './rules/container-registry-security';
 
-// Main class for the VibeGuard application
 export class VibeGuard {
-  private scanner: FileScanner;
-  private reporter: Reporter;
-  private rules: BaseRule[];
+  private readonly scanner = new FileScanner();
+  private readonly reporter = new Reporter();
+  private readonly rules: BaseRule[];
 
-  // Constructor for the VibeGuard class
   constructor() {
     this.rules = [
       new ExposedSecretsRule(),
@@ -54,72 +59,37 @@ export class VibeGuard {
       new InsecureLoggingRule(),
       new InsecureSessionManagementRule(),
       new InsecureErrorHandlingRule(),
-      new InsecureConfigurationRule()
+      new InsecureConfigurationRule(),
+      new PromptInjectionDetectionRule(),
+      new AiGeneratedCodeValidationRule(),
+      new AiAgentAccessControlRule(),
+      new AiDataLeakagePreventionRule(),
+      new McpServerSecurityRule(),
+      new KubernetesSecurityRule(),
+      new DockerfileSecurityRule(),
+      new ContainerRegistrySecurityRule()
     ];
-    this.scanner = new FileScanner();
-    this.reporter = new Reporter();
   }
 
-  // Scans the target path for security issues
   async scan(options: ScanOptions): Promise<ScanResult> {
     const config = ConfigLoader.loadConfig(options.target);
     const mergedOptions = ConfigLoader.mergeConfig(config, options);
     const targetPath = path.resolve(mergedOptions.target);
     
-    if (mergedOptions.verbose) {
-      console.log('Configuration loaded from:', ConfigLoader.findConfigFile(options.target) || 'none');
-      console.log('Number of rules:', this.rules.length);
-    }
-    
     if (!fs.existsSync(targetPath)) {
       throw new Error(`Target path does not exist: ${targetPath}`);
     }
 
-    const stats = fs.statSync(targetPath);
-    
-    if (mergedOptions.verbose) {
-      console.log('Target type:', stats.isFile() ? 'file' : 'directory');
-    }
-    
-    if (stats.isFile()) {
-      if (mergedOptions.verbose) {
-        console.log('Scanning single file...');
-      }
-      const result = await this.scanner.scanFile(targetPath, this.rules);
-      if (mergedOptions.verbose) {
-        console.log('Scan completed:', {
-          filesScanned: result.filesScanned,
-          issuesFound: result.issuesFound,
-          summary: result.summary
-        });
-      }
-      return result;
-    } else if (stats.isDirectory()) {
-      if (mergedOptions.verbose) {
-        console.log('Scanning directory...');
-      }
-      return await this.scanner.scanDirectory(targetPath, this.rules);
-    } else {
-      throw new Error(`Target path is neither a file nor a directory: ${targetPath}`);
-    }
+    return this.scanner.scan(targetPath, this.rules);
   }
 
-  // Formats the scan results
-  formatResults(result: ScanResult, format: 'table' | 'json' | 'sarif' | 'html' = 'table'): string {
-    switch (format) {
-      case 'json':
-        return this.reporter.formatJson(result);
-      case 'sarif':
-        return this.reporter.formatSarif(result);
-      case 'html':
-        return this.reporter.formatHtml(result);
-      case 'table':
-      default:
-        return this.reporter.formatTable(result);
-    }
+  formatResults(result: ScanResult, format: string = 'table'): string {
+  if (format === 'json') {
+    return this.reporter.formatJson(result);
   }
+  return this.reporter.formatTable(result); 
+}
 
-  // Scans and formats the results
   async scanAndFormat(options: ScanOptions): Promise<string> {
     const result = await this.scan(options);
     return this.formatResults(result, options.format);
@@ -133,30 +103,15 @@ export class VibeGuard {
     return this.rules.find(rule => rule.name === name);
   }
 
-  getVersion(): string {
-    return VERSION;
-  }
-
   generateConfig(): string {
     return ConfigLoader.generateSampleConfig();
   }
 
   createConfigFile(): void {
     const configPath = path.join(process.cwd(), 'vibe-guard.json');
-    if (fs.existsSync(configPath)) {
-      console.log('Configuration file already exists: vibe-guard.json');
-      return;
-    }
-
-    const configContent = ConfigLoader.generateSampleConfig();
-    fs.writeFileSync(configPath, configContent);
-    console.log('Created configuration file: vibe-guard.json');
+    if (fs.existsSync(configPath)) return;
+    fs.writeFileSync(configPath, ConfigLoader.generateSampleConfig());
   }
 }
 
-export * from './types';
-export * from './rules';
-export { FileScanner } from './scanner';
-export { Reporter } from './reporter';
-
-export default VibeGuard; 
+export default VibeGuard;
