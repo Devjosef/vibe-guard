@@ -143,6 +143,12 @@ npx jest --json --outputFile=jest-output.json
 node scripts/jest-to-sarif.js jest-output.json test-results.sarif
 ```
 
+The `jest-to-sarif` converter supports two optional flags: `--include-passed` (include passed/skipped assertions in SARIF) and `--relative-paths` (output relative file paths instead of file:// URIs). Example:
+
+```bash
+node scripts/jest-to-sarif.js jest-output.json test-results.sarif --include-passed --relative-paths
+```
+
 CI converts Jest JSON to SARIF and uploads the SARIF file when the tests are run in the CI workflow.
 
 **Pre-commit Hook:**
