@@ -24,7 +24,7 @@ export class Reporter {
       return '';
     }
 
-    let sanitized = path.posix.normalize(filePath)
+    const sanitized = path.posix.normalize(filePath)
       .replace(/\\/g, '/') 
       .replace(/^\/+/, '')
       .replace(/^(\.\.[/\\])+/, '');
