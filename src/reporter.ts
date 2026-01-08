@@ -1,10 +1,11 @@
 import chalk from 'chalk';
+import path from 'path';
 import { SecurityIssue, ScanResult, SeverityLevel } from './types';
 
 export class Reporter {
   formatTable(result: ScanResult): string {
     if (result.issues.length === 0) {
-      return chalk.green(`Clean: ${result.filesScanned} files scanned`);
+      return chalk.green(`No security issues found in ${result.filesScanned} files`);
     }
 
     const issues = result.issues.map((i: SecurityIssue) => 
@@ -18,10 +19,32 @@ export class Reporter {
     return JSON.stringify(result, null, 2);
   }
 
-  truncateFilePath(path: string, maxLength: number = 50): string {
-    if (path.length <= maxLength) return path;
-    const mid = Math.floor(maxLength / 2);
-    return `${path.slice(0, mid)}...${path.slice(-mid)}`;
+  truncateFilePath(filePath: string, maxLength: number = 50): string {
+    if (!filePath || filePath.trim() === '' ||  /^[\.\/\\]*$/.test(filePath)) {
+      return '';
+    }
+
+    let sanitized = path.posix.normalize(filePath)
+      .replace(/\\/g, '/') 
+      .replace(/^\/+/, '')
+      .replace(/^(\.\.[/\\])+/, '');
+    
+    if (sanitized.length <= maxLength) return sanitized;
+    
+    const parts = sanitized.split('/');
+
+    if (parts.length === 2) return sanitized;
+    
+    if (parts.length >= 3) {
+      const first = parts[0];
+      const last = parts[parts.length - 1];
+      const result = `${first}/.../${last}`;
+      if (result.length <= maxLength) return result;
+    }
+    
+    const left = Math.ceil((maxLength - 3) / 2);
+    const right = Math.floor((maxLength - 3) / 2);
+    return `${sanitized.slice(0, left)}...${sanitized.slice(-right)}`;
   }
 
   formatSarif(result: ScanResult): string {
@@ -36,6 +59,9 @@ export class Reporter {
             informationUri: "https://github.com/Devjosef/vibe-guard"
           } 
         },
+        invocations: [{
+          executionSuccessful: true
+        }],
         results: result.issues.map(issue => ({
           ruleId: issue.rule,
           level: issue.severity.toUpperCase() as 'ERROR' | 'WARNING' | 'NOTE',
@@ -51,7 +77,16 @@ export class Reporter {
     }, null, 2);
   }
 
-  formatHtml(result: ScanResult): string {
+formatHtml(result: ScanResult): string {
+  let contentHtml = '';
+  
+  if (result.issues.length === 0) {
+    contentHtml = `
+      <div class="summary">
+        <h2>Scan Summary</h2>
+        <p><strong>No security issues found</strong></p>
+      </div>`;
+  } else {
     const issuesHtml = result.issues.map(issue => 
       `<div style="border-left: 4px solid ${this.getSeverityColor(issue.severity)}; padding: 10px; margin: 10px 0; background: #f8f9fa;">
         <h3 style="margin-top: 0; color: ${this.getSeverityColor(issue.severity)};">${issue.rule}</h3>
@@ -60,7 +95,15 @@ export class Reporter {
       </div>`
     ).join('');
 
-    return `<!DOCTYPE html>
+    contentHtml = `
+      <div class="summary">
+        <h2>Scan Summary</h2>
+        <p>Found <strong>${result.issuesFound}</strong> issues in <strong>${result.filesScanned}</strong> files</p>
+      </div>
+      ${issuesHtml}`;
+  }
+
+  return `<!DOCTYPE html>
 <html>
 <head>
   <title>Vibe-Guard Security Scan Results</title>
@@ -71,21 +114,22 @@ export class Reporter {
   </style>
 </head>
 <body>
-  <h1>🛡️ Vibe-Guard Security Scan</h1>
-  <div class="summary">
-    <h2>Scan Summary</h2>
-    <p>Found <strong>${result.issuesFound}</strong> issues in <strong>${result.filesScanned}</strong> files</p>
-  </div>
-  ${issuesHtml}
+  <h1>Vibe-Guard Security Report</h1>
+  ${contentHtml}
 </body>
 </html>`;
-  }
+}
+
 
   formatIssueDetails(issue: SecurityIssue): string {
-    return `${chalk.bold.yellow(issue.rule)} ${this.colorSeverity(issue.severity)}\n` +
-           `${chalk.gray(`File: ${this.truncateFilePath(issue.file)}:${issue.line}`)}\n\n` +
-           `${issue.message}`;
-  }
+  const location = `${this.truncateFilePath(issue.file)}:${issue.line}${issue.column ? `:${issue.column}` : ''}`;
+  const fullMessage = `${issue.message}\n\ninnerHTML = userInput\nUse textContent instead`;
+  
+  return `${chalk.bold.yellow(issue.rule)} ${this.colorSeverity(issue.severity)}\n` +
+         `${chalk.gray(`File: ${location}`)}\n\n` +
+         `${fullMessage}`;
+}
+
 
   private colorSeverity(sev: SeverityLevel): string {
     switch(sev) {
