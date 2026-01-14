@@ -25,14 +25,45 @@ jobs:
       - name: Install rpm tools
         run: |
           sudo apt-get update
-          # 'rpmdevtools' is not available on some Ubuntu runners; install rpm and rpm-build instead
-          sudo apt-get install -y rpm rpm-build build-essential curl
+          # Ensure package database is up-to-date and handle dpkg locks by extending lock timeout
+          sudo apt-get -o DPkg::Lock::Timeout=120 dist-upgrade -y || true
+          # Ensure 'universe' repo is enabled on Ubuntu (rpm-build may live in universe)
+          sudo add-apt-repository -y universe || true
+          sudo apt-get update || true
+
+          # Try installing full rpm tooling; fall back to minimal 'rpm' if 'rpm-build' is unavailable
+          if sudo apt-get install -y --no-install-recommends rpm rpm-build build-essential curl; then
+            echo "Installed rpm and rpm-build"
+          else
+            echo "Failed to install rpm-build via apt; installing minimal rpm tooling and continuing"
+            sudo apt-get install -y --no-install-recommends rpm build-essential curl || true
+          fi
+
           mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: "Fallback: Build RPM in Fedora container if rpmbuild missing"
+        run: |
+          # If rpmbuild is available, skip container fallback
+          if command -v rpmbuild >/dev/null 2>&1; then
+            echo "rpmbuild available on runner; skipping container fallback"
+            exit 0
+          fi
+
+          echo "rpmbuild not available on runner — using Fedora container to build RPM"
+          ARCH="${{ matrix.arch }}"
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$ARCH" = "x86_64" ]; then ASSET="vibe-guard-linux-x64"; else ASSET="vibe-guard-linux-arm64"; fi
+          echo "Downloading asset: $ASSET"
+          curl -L -s -o $HOME/rpmbuild/SOURCES/$ASSET "https://github.com/Devjosef/vibe-guard/releases/download/v${VERSION}/$ASSET"
+
+          # Use Docker to run a Fedora container that has dnf/rpmbuild available
+          docker run --rm -v $PWD:/work -v $HOME/rpmbuild:/rpmbuild -w /work fedora:latest /bin/bash -lc "dnf install -y rpm-build curl && cp /work/scripts/rpm/vibe-guard.spec /rpmbuild/SPECS/ && cd /rpmbuild && rpmbuild -bb --target $ARCH SPECS/vibe-guard.spec"
 
       - name: Download release binary for arch
         run: |
+          ARCH="${{ matrix.arch }}"
           VERSION=$(node -p "require('./package.json').version")
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then ASSET="vibe-guard-linux-x64"; else ASSET="vibe-guard-linux-arm64"; fi
+          if [ "$ARCH" = "x86_64" ]; then ASSET="vibe-guard-linux-x64"; else ASSET="vibe-guard-linux-arm64"; fi
           echo "Downloading asset: $ASSET"
           curl -L -s -o $HOME/rpmbuild/SOURCES/$ASSET "https://github.com/Devjosef/vibe-guard/releases/download/v${VERSION}/$ASSET"
           ls -l $HOME/rpmbuild/SOURCES/
