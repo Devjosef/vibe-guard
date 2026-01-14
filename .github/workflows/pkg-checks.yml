@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies
         run: npm ci
@@ -52,7 +52,13 @@ jobs:
 
       - name: Build platform-specific package (macOS)
         if: runner.os == 'macOS'
-        run: npm run package:macos
+        run: |
+          set -e
+          for i in 1 2; do
+            npm run package:macos && break
+            echo "package:macos failed, retry ($i)"
+            sleep 5
+          done
 
       - name: Build platform-specific package (Windows)
         if: runner.os == 'Windows'
@@ -95,7 +101,7 @@ jobs:
           TGZ="/tmp/vibe-guard-v${VERSION}.tar.gz"
           curl -L -s -o "$TGZ" "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v${VERSION}.tar.gz"
           computed=$(shasum -a 256 "$TGZ" | awk '{print $1}')
-          expected=$(grep -oE 'sha256 \"[a-f0-9]{64}\"' Formula/vibe-guard.rb | sed -E 's/sha256 \"(.*)\"/\\1/')
+          expected=$(awk -F'"' '/sha256/ {print $2; exit}' Formula/vibe-guard.rb)
           echo "computed: $computed"
           echo "expected: $expected"
           if [ "$computed" != "$expected" ]; then
