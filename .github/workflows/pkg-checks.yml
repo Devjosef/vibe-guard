@@ -29,6 +29,7 @@ jobs:
         run: npm run build
 
       - name: Verify manifests version matches package.json
+        shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "Package version: $VERSION"
@@ -109,9 +110,6 @@ jobs:
             exit 1
           fi
 
-      - name: Smoke test binary (help/version)
+      - name: Verify built binaries (cross-platform)
         run: |
-          # Use the built (platform) binary if present, or fallback to `npm start` binary
-          if [ -f "binaries/vibe-guard-linux-x64" ]; then ./binaries/vibe-guard-linux-x64 --version || true; fi
-          if [ -f "binaries/vibe-guard-macos-x64" ]; then ./binaries/vibe-guard-macos-x64 --version || true; fi
-          if [ -f "binaries/vibe-guard-windows-x64.exe" ]; then echo "Windows binary exists" || true; fi
+          node scripts/verify-binaries.js
