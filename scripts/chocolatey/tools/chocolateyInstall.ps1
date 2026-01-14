@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $packageName = 'vibe-guard'
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $url = 'https://github.com/Devjosef/vibe-guard/releases/download/v1.2.1/vibe-guard-windows-x64.exe'
-$checksum = 'd29bc63db398129a8e31aabcf70d0cfeefb46bf1d471fdab996c4bce42be4f52'
+$checksum = '033dc0a9be1d108b480a35f075ae18cee96585fe1972f6384980894571dcfa1a'
 $checksumType = 'sha256' 
 
 # Download and install the executable

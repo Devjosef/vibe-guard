@@ -4,7 +4,8 @@
 # Basic package information
 Name:           vibe-guard
 Version:        1.2.1
-Release:        1%{?dist}  # Distribution-specific release number
+Release:        1%{?dist}
+# Distribution-specific release number
 Summary:        Security scanner for developers who code fast
 Vendor:         Vibe-Guard
 Packager:       Josef <devjosef@github.com>
