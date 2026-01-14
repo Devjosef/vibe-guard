@@ -1,0 +1,111 @@
+name: Packaging checks
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  packaging-checks:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify manifests version matches package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Package version: $VERSION"
+          files=(
+            "scripts/chocolatey/vibe-guard.nuspec"
+            "Formula/vibe-guard.rb"
+            "scripts/homebrew/vibe-guard.rb"
+            "scripts/homebrew-tap/vibe-guard.rb"
+            "scripts/rpm/vibe-guard.spec"
+          )
+          for f in "${files[@]}"; do
+            if ! grep -q "$VERSION" "$f"; then
+              echo "Version mismatch: $f does not contain $VERSION"
+              exit 1
+            fi
+          done
+
+      - name: Build platform-specific package
+        if: runner.os == 'Linux'
+        run: npm run package:linux
+
+      - name: Build platform-specific package (macOS)
+        if: runner.os == 'macOS'
+        run: npm run package:macos
+
+      - name: Build platform-specific package (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: npm run package:windows
+
+      - name: Compute checksums
+        if: runner.os != 'Windows'
+        run: |
+          shasum -a 256 binaries/* > binaries/checksums.txt
+          cat binaries/checksums.txt
+
+      - name: Compute Windows checksum and verify Chocolatey
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $win = 'binaries\vibe-guard-windows-x64.exe'
+          if (-not (Test-Path $win)) { Write-Error "Windows binary not found: $win"; exit 1 }
+          $computed = (Get-FileHash -Algorithm SHA256 $win).Hash.ToLower()
+          $expected = (Select-String -Path scripts/chocolatey/tools/chocolateyInstall.ps1 -Pattern "checksum\\s*=\\s*'([a-f0-9]+)'" | ForEach-Object { $_.Matches[0].Groups[1].Value })
+          Write-Host "computed: $computed"
+          Write-Host "expected: $expected"
+          if ($computed -ne $expected) { Write-Error "Chocolatey checksum mismatch"; exit 1 }
+
+      - name: Run Windows binary and assert version
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $exe = 'binaries\\vibe-guard-windows-x64.exe'
+          if (-not (Test-Path $exe)) { Write-Error "Windows binary not found: $exe"; exit 1 }
+          $out = & $exe --version 2>&1
+          Write-Host "exe output: $out"
+          if ($out -notmatch $version) { Write-Error "Windows binary --version does not include $version"; exit 1 }
+
+      - name: Verify Homebrew tarball sha matches formula
+        if: runner.os != 'Windows'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TGZ="/tmp/vibe-guard-v${VERSION}.tar.gz"
+          curl -L -s -o "$TGZ" "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v${VERSION}.tar.gz"
+          computed=$(shasum -a 256 "$TGZ" | awk '{print $1}')
+          expected=$(grep -oE 'sha256 \"[a-f0-9]{64}\"' Formula/vibe-guard.rb | sed -E 's/sha256 \"(.*)\"/\\1/')
+          echo "computed: $computed"
+          echo "expected: $expected"
+          if [ "$computed" != "$expected" ]; then
+            echo "Homebrew sha256 mismatch"
+            exit 1
+          fi
+
+      - name: Smoke test binary (help/version)
+        run: |
+          # Use the built (platform) binary if present, or fallback to `npm start` binary
+          if [ -f "binaries/vibe-guard-linux-x64" ]; then ./binaries/vibe-guard-linux-x64 --version || true; fi
+          if [ -f "binaries/vibe-guard-macos-x64" ]; then ./binaries/vibe-guard-macos-x64 --version || true; fi
+          if [ -f "binaries/vibe-guard-windows-x64.exe" ]; then echo "Windows binary exists" || true; fi

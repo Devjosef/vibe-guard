@@ -1,0 +1,53 @@
+name: RPM build & verify
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install rpm tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm build-essential rpmdevtools curl
+          mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: Download release binary for arch
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then ASSET="vibe-guard-linux-x64"; else ASSET="vibe-guard-linux-arm64"; fi
+          echo "Downloading asset: $ASSET"
+          curl -L -s -o $HOME/rpmbuild/SOURCES/$ASSET "https://github.com/Devjosef/vibe-guard/releases/download/v${VERSION}/$ASSET"
+          ls -l $HOME/rpmbuild/SOURCES/
+
+      - name: Build RPM
+        run: |
+          rpmbuild -bb --define "_topdir $HOME/rpmbuild" --target ${{ matrix.arch }} scripts/rpm/vibe-guard.spec
+
+      - name: Verify RPM contains binary
+        run: |
+          RPM=$(ls -1 $HOME/rpmbuild/RPMS/*/*.rpm | head -n1)
+          echo "Built RPM: $RPM"
+          rpm -qpl "$RPM" | grep "bin/vibe-guard" || (echo "vibe-guard not found in rpm" && exit 1)
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.arch }}
+          path: $HOME/rpmbuild/RPMS/*/*.rpm
