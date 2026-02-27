@@ -31,7 +31,7 @@ vibe-guard demo
 
 ## Interactive Security Learning
 
-Vibe-Guard is more than a scanner—it's an educational platform that teaches you about web security through hands-on experience:
+Vibe-Guard is more than a scanner, it is an educational platform that teaches you about web security through hands on experience
 
 ### Understanding Vulnerabilities
 
