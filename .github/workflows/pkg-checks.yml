@@ -81,7 +81,7 @@ jobs:
           $ps1Path = "scripts\chocolatey\tools\chocolateyInstall.ps1"
           $content = Get-Content $ps1Path -Raw
           
-          $content = $content -replace "`$checksum\s*=\s*'([a-f0-9]{64})'", "`$checksum = '$checksum'"
+          $content = $content -replace '\{\{\s*CHECKSUM\s*\}\}', $checksum
           
           # Write back
           Set-Content $ps1Path $content -NoNewline -Encoding UTF8
