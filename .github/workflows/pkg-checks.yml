@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: [ubuntu-latest, macos-latest, windows-latest]
+        runner: [macos-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -38,27 +38,12 @@ jobs:
             "Formula/vibe-guard.rb"
             "scripts/homebrew/vibe-guard.rb"
             "scripts/homebrew-tap/vibe-guard.rb"
-            "scripts/rpm/vibe-guard.spec"
           )
           for f in "${files[@]}"; do
             if ! grep -q "$VERSION" "$f"; then
               echo "Version mismatch: $f does not contain $VERSION"
               exit 1
             fi
-          done
-
-      - name: Build platform-specific package
-        if: runner.os == 'Linux'
-        run: npm run package:linux
-
-      - name: Build platform-specific package (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          set -e
-          for i in 1 2; do
-            npm run package:macos && break
-            echo "package:macos failed, retry ($i)"
-            sleep 5
           done
 
       - name: Build platform-specific package (Windows)

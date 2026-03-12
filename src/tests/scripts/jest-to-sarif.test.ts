@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @ts-ignore
+// ts-expect-error
 import { extractStackLocations, toSarif } from '../../../scripts/jest-to-sarif.js';
 
 describe('jest-to-sarif script helpers', () => {
