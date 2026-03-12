@@ -40,20 +40,21 @@ export class FileScanner {
     let _filesSkipped = 0;
 
     for (const filePath of files) {
-      try {
-        const fileContent = await this.readFile(filePath);
-        if (fileContent) {
-          filesScanned++;
-          for (const rule of rules) {
-            issues.push(...rule.check(fileContent));
-          }
-        } else {
-          _filesSkipped++;
-        }
-      } catch (error) {
-        _filesSkipped++;
+  try {
+    const fileContent = await this.readFile(filePath);
+    if (fileContent) {
+      filesScanned++;
+      for (const rule of rules) {
+        issues.push(...rule.check(fileContent));
       }
+    } else {
+      _filesSkipped++;
     }
+  } catch (_error) { 
+    _filesSkipped++;
+  }
+}
+
 
     // intentionally reference _filesSkipped to avoid unused variable lint warnings
     void _filesSkipped;

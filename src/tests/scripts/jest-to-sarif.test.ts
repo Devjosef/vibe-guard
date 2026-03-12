@@ -1,4 +1,5 @@
-const { extractStackLocations, toSarif } = require('../../../scripts/jest-to-sarif.js');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { extractStackLocations, toSarif } from '../../../scripts/jest-to-sarif.js';
 
 describe('jest-to-sarif script helpers', () => {
   test('extractStackLocations parses stack traces', () => {
@@ -24,8 +25,8 @@ describe('jest-to-sarif script helpers', () => {
     };
 
     const sarif = toSarif(jestJson, { includePassed: false, relativePaths: true });
-    expect(sarif.runs[0].results).toHaveLength(1);
-    expect(sarif.runs[0].tool.driver.rules).toHaveLength(1);
+    expect(sarif!.runs[0].results).toHaveLength(1);
+    expect(sarif!.runs[0].tool.driver.rules).toHaveLength(1);
   });
 
   test('toSarif includes passed assertions when flag set', () => {
@@ -42,7 +43,9 @@ describe('jest-to-sarif script helpers', () => {
     };
 
     const sarif = toSarif(jestJson, { includePassed: true, relativePaths: true });
-    expect(sarif.runs[0].results).toHaveLength(2);
-    expect(sarif.runs[0].tool.driver.rules).toHaveLength(2);
+    expect(sarif!.runs[0].results).toHaveLength(2);
+    expect(sarif!.runs[0].tool.driver.rules).toHaveLength(2);
   });
 });
+
+export {};

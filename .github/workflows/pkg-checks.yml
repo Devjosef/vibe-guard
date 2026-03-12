@@ -66,11 +66,29 @@ jobs:
         shell: bash
         run: npm run package:windows
 
-      - name: Compute checksums
-        if: runner.os != 'Windows'
+      - name: Update Chocolatey checksum
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          shasum -a 256 binaries/* > binaries/checksums.txt
-          cat binaries/checksums.txt
+          $exePath = "binaries\vibe-guard-windows-x64.exe"
+          if (-not (Test-Path $exePath)) { 
+            Write-Error "Binary not found: $exePath"; exit 1 
+          }
+          
+          $checksum = (Get-FileHash $exePath -Algorithm SHA256).Hash.ToLower()
+          Write-Host "Computed checksum: $checksum"
+          
+          $ps1Path = "scripts\chocolatey\tools\chocolateyInstall.ps1"
+          $content = Get-Content $ps1Path -Raw
+          
+          $content = $content -replace "`$checksum\s*=\s*'([a-f0-9]{64})'", "`$checksum = '$checksum'"
+          
+          # Write back
+          Set-Content $ps1Path $content -NoNewline -Encoding UTF8
+          
+          Write-Host "Updated chocolateyInstall.ps1:"
+          Get-Content $ps1Path
+
 
       - name: Compute Windows checksum and verify Chocolatey
         if: runner.os == 'Windows'
