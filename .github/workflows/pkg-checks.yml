@@ -83,7 +83,7 @@ jobs:
           if (-not (Test-Path $win)) { Write-Error "Windows binary not found: $win"; exit 1 }
           $computed = (Get-FileHash -Algorithm SHA256 $win).Hash.ToLower()
           $script = Get-Content -Raw scripts/chocolatey/tools/chocolateyInstall.ps1
-          if ($script -match "\$checksum\s*=\s*'([a-f0-9]{64})'") { $expected = $matches[1] } else { $expected = '' }
+          if ($script -match "\$checksum\s*=\s*'([0-9a-f]{64})'") { $expected = $matches[1] } else { $expected = '' }
           Write-Host "computed: $computed"
           Write-Host "expected: $expected"
           if ($expected -eq '') { Write-Error "Could not extract Chocolatey checksum from scripts/chocolatey/tools/chocolateyInstall.ps1"; exit 1 }
