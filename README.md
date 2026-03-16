@@ -5,7 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![License](https://img.shields.io/npm/l/vibe-guard.svg)](https://github.com/Devjosef/vibe-guard/blob/main/LICENSE)
-[![Test Scanning](https://github.com/Devjosef/vibe-guard/actions/workflows/test-scanning.yml/badge.svg)](https://github.com/Devjosef/vibe-guard/actions/workflows/test-scanning.yml)
+
 
 ## Quick Start
 
