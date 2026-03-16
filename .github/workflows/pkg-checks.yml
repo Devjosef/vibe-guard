@@ -57,26 +57,33 @@ jobs:
         run: |
           $exePath = "binaries\vibe-guard-windows-x64.exe"
           if (-not (Test-Path $exePath)) { 
-            Write-Error "Binary not found: $exePath"; exit 1 
+            Write-Error "Binary not found: $exePath"
+            exit 1 
           }
           
           $checksum = (Get-FileHash $exePath -Algorithm SHA256).Hash.ToLower()
           Write-Host "Computed checksum: $checksum"
           
           $ps1Path = "scripts\chocolatey\tools\chocolateyInstall.ps1"
-          $content = Get-Content $ps1Path -Raw
+          Write-Host "Reading from: $ps1Path"
           
+          $content = Get-Content $ps1Path -Raw
+          $originalContent = $content
+          
+          # Replace the placeholder - match the exact format in the file
           $content = $content -replace '\{\{\s*CHECKSUM\s*\}\}', $checksum
           
-          if ($content -notmatch $checksum) {
-            Write-Error "Failed to inject checksum into $ps1Path"
+          if ($content -eq $originalContent) {
+            Write-Host "Pattern not replaced. File content:"
+            Write-Host $originalContent
+            Write-Error "Checksum placeholder pattern not found in $ps1Path"
             exit 1
           }
           
-          # Write back
-          Set-Content $ps1Path $content -NoNewline -Encoding UTF8
+          Write-Host "Pattern replaced successfully"
+          Set-Content -Path $ps1Path -Value $content -NoNewline -Encoding UTF8
           
-          Write-Host "Updated chocolateyInstall.ps1:"
+          Write-Host "File updated:"
           Get-Content $ps1Path
 
 
@@ -87,12 +94,39 @@ jobs:
           $win = 'binaries\vibe-guard-windows-x64.exe'
           if (-not (Test-Path $win)) { Write-Error "Windows binary not found: $win"; exit 1 }
           $computed = (Get-FileHash -Algorithm SHA256 $win).Hash.ToLower()
-          $script = Get-Content -Raw scripts/chocolatey/tools/chocolateyInstall.ps1
-          if ($script -match "\$checksum\s*=\s*'([0-9A-Fa-f]{64})'") { $expected = $matches[1].ToLower() } else { $expected = '' }
+          
+          $ps1Path = 'scripts\chocolatey\tools\chocolateyInstall.ps1'
+          Write-Host "Reading from: $ps1Path"
+          
+          if (-not (Test-Path $ps1Path)) {
+            Write-Error "Script file not found: $ps1Path"
+            exit 1
+          }
+          
+          $script = [System.IO.File]::ReadAllText($ps1Path)
+          Write-Host "File content (first 500 chars):"
+          Write-Host $script.Substring(0, [Math]::Min(500, $script.Length))
+          
+          if ($script -match "\`$checksum\s*=\s*'([0-9A-Fa-f]{64})'") { 
+            $expected = $matches[1].ToLower() 
+          } else { 
+            $expected = '' 
+          }
+          
           Write-Host "computed: $computed"
           Write-Host "expected: $expected"
-          if ($expected -eq '') { Write-Error "Could not extract Chocolatey checksum from scripts/chocolatey/tools/chocolateyInstall.ps1"; exit 1 }
-          if ($computed -ne $expected) { Write-Error "Chocolatey checksum mismatch (computed != expected)"; exit 1 }
+          
+          if ($expected -eq '') { 
+            Write-Error "Could not extract Chocolatey checksum. Script content:"
+            Write-Host $script
+            exit 1 
+          }
+          
+          if ($computed -ne $expected) { 
+            Write-Error "Chocolatey checksum mismatch (computed != expected)"; exit 1 
+          }
+          
+          Write-Host "Checksum verified successfully!"
 
       - name: Run Windows binary and assert version
         if: runner.os == 'Windows'
