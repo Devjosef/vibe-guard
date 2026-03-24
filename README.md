@@ -1,5 +1,9 @@
 # ██ Vibe-Guard Security Scanner
 
+*Update March 2026*
+The Linux/Arch binary packages are currently not working. I’ve taken them down, so please avoid downloading them.
+For now, I recommend using the Windows or macOS releases instead. Any help, debugging, or suggestions are very welcome!
+
 **Professional Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 28 essential security rules including container security.
 
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
@@ -185,9 +189,6 @@ brew install devjosef/tap/vibe-guard
 
 **Direct Download:**
 ```bash
-# Linux
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-linux-x64 -o vibe-guard
-chmod +x vibe-guard
 
 # macOS
 curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64 -o vibe-guard
@@ -235,7 +236,7 @@ Every scan contributes to a more secure web ecosystem:
 
 - **500+ total downloads** on NPM with growing adoption
 - **28 security rules** covering contemporary threat vectors including container security
-- **Cross-platform support** for Linux, macOS, and Windows
+- **Cross-platform support** for macOS, and Windows
 - **Zero dependencies** ensuring maximum compatibility
 - **Educational approach** - building security awareness
 - **Container security** - Kubernetes, Dockerfile, and registry vulnerability detection
