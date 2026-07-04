@@ -41,13 +41,13 @@ Vibe-Guard is more than a scanner, it is an educational platform that teaches yo
 
 **XSS (Cross-Site Scripting):**
 ```javascript
-// ❌ Vulnerable code
+// Vulnerable code
 app.get('/user', (req, res) => {
   const userInput = req.query.name;
   res.send('<h1>Hello ' + userInput + '</h1>'); // XSS vulnerability!
 });
 
-// ✅ Secure code
+// Secure code
 app.get('/user', (req, res) => {
   const userInput = req.query.name;
   res.send('<h1>Hello ' + escapeHtml(userInput) + '</h1>');
@@ -56,26 +56,26 @@ app.get('/user', (req, res) => {
 
 **SQL Injection:**
 ```javascript
-// ❌ Vulnerable code
+// Vulnerable code
 const query = 'SELECT * FROM users WHERE id = ' + userId; // SQL injection risk!
 
-// ✅ Secure code
+// Secure code
 const query = 'SELECT * FROM users WHERE id = ?';
 db.query(query, [userId]);
 ```
 
 **Exposed Secrets:**
 ```javascript
-// ❌ Vulnerable code
+// Vulnerable code
 const API_KEY = 'sk-1234567890abcdef'; // Secret exposed in source code!
 
-// ✅ Secure code
+// Secure code
 const API_KEY = process.env.API_KEY; // Environment variable
 ```
 
 **Container Security:**
 ```yaml
-# ❌ Vulnerable Kubernetes manifest
+# Vulnerable Kubernetes manifest
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -88,7 +88,7 @@ spec:
           runAsUser: 0       # Root user vulnerability
           privileged: true   # Privileged container vulnerability
 
-# ✅ Secure Kubernetes manifest
+# Secure Kubernetes manifest
 apiVersion: apps/v1
 kind: Deployment
 spec:
