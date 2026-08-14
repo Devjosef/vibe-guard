@@ -234,7 +234,7 @@ curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-gua
 
 Every scan contributes to a more secure web ecosystem:
 
-- **500+ total downloads** on NPM with growing adoption
+- **3.1k+ total downloads** on NPM with growing adoption
 - **28 security rules** covering contemporary threat vectors including container security
 - **Cross-platform support** for macOS, and Windows
 - **Zero dependencies** ensuring maximum compatibility
