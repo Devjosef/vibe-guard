@@ -720,7 +720,7 @@ export class XssDetectionRule extends BaseRule {
   private getRemediationMessage(sink: string, severity: SeverityLevel, framework?: string): string {
     const messages: Record<string, Record<string, string>> = {
       'innerHTML/outerHTML': {
-        'critical': 'CRITICAL: Never use user input directly in innerHTML/outerHTML. This can lead to XSS attacks.',
+        'critical': 'CRITICAL: Never use user input directly in innerHTML/outerHTML. Use textContent for plain text, or sanitize required HTML with a vetted allowlist.',
         'high': 'HIGH: Avoid using user input in innerHTML/outerHTML. Use textContent instead.',
         'medium': 'MEDIUM: Consider using textContent instead of innerHTML for user input.',
         'low': 'LOW: Review innerHTML usage for security.'

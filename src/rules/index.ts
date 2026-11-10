@@ -27,6 +27,8 @@ import { PromptInjectionDetectionRule } from './prompt-injection-detection';
 import { DockerfileSecurityRule } from './dockerfile-security';
 import { KubernetesSecurityRule } from './kubernetes-security';
 import { ContainerRegistrySecurityRule } from './container-registry-security';
+import { UnsafeLlmPromptConstructionRule } from './unsafe-llm-prompt-construction';
+import { UnpinnedSupplyChainDependenciesRule } from './unpinned-supply-chain-dependencies';
 
 export function getAllRules(): BaseRule[] {
   return [
@@ -58,6 +60,8 @@ export function getAllRules(): BaseRule[] {
     new DockerfileSecurityRule(),
     new KubernetesSecurityRule(),
     new ContainerRegistrySecurityRule(),
+    new UnsafeLlmPromptConstructionRule(),
+    new UnpinnedSupplyChainDependenciesRule(),
   ];
 }
 
@@ -90,6 +94,8 @@ export {
   DockerfileSecurityRule,
   KubernetesSecurityRule,
   ContainerRegistrySecurityRule,
+  UnsafeLlmPromptConstructionRule,
+  UnpinnedSupplyChainDependenciesRule,
 };
 
 export * from '../types'; 

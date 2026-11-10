@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import path from 'path';
 import { SecurityIssue, ScanResult, SeverityLevel } from './types';
+import { VERSION } from './types/version';
 
 export class Reporter {
   formatTable(result: ScanResult): string {
@@ -8,9 +9,10 @@ export class Reporter {
       return chalk.green(`No security issues found in ${result.filesScanned} files`);
     }
 
-    const issues = result.issues.map((i: SecurityIssue) => 
-      `${this.colorSeverity(i.severity)} ${i.rule.padEnd(25)} ${this.truncateFilePath(i.file)}:${i.line} ${i.message}`
-    ).join('\n');
+    const issues = result.issues.map((i: SecurityIssue) => {
+      const finding = `${this.colorSeverity(i.severity)} ${i.rule.padEnd(25)} ${this.truncateFilePath(i.file)}:${i.line} ${i.message}`;
+      return i.suggestion ? `${finding}\n  Remediation: ${i.suggestion}` : finding;
+    }).join('\n');
 
     return `${chalk.red.bold(`Found ${result.issuesFound} issues in ${result.filesScanned} files`)}\n${issues}`;
   }
@@ -55,7 +57,7 @@ export class Reporter {
         tool: { 
           driver: { 
             name: "Vibe-Guard", 
-            version: "1.2.1",
+            version: VERSION,
             informationUri: "https://github.com/Devjosef/vibe-guard"
           } 
         },
@@ -64,13 +66,19 @@ export class Reporter {
         }],
         results: result.issues.map(issue => ({
           ruleId: issue.rule,
-          level: issue.severity.toUpperCase() as 'ERROR' | 'WARNING' | 'NOTE',
-          message: { text: issue.message },
-          locations: [{ 
-            physicalLocation: { 
-              artifactLocation: { uri: issue.file }, 
-              region: { startLine: issue.line } 
-            } 
+          level: issue.severity === 'critical' || issue.severity === 'high'
+            ? 'error'
+            : issue.severity === 'medium' ? 'warning' : 'note',
+          message: {
+            text: issue.suggestion
+              ? `${issue.message}\nRemediation: ${issue.suggestion}`
+              : issue.message
+          },
+          locations: [{
+            physicalLocation: {
+              artifactLocation: { uri: issue.file },
+              region: { startLine: issue.line }
+            }
           }]
         }))
       }]
@@ -87,13 +95,18 @@ formatHtml(result: ScanResult): string {
         <p><strong>No security issues found</strong></p>
       </div>`;
   } else {
-    const issuesHtml = result.issues.map(issue => 
-      `<div style="border-left: 4px solid ${this.getSeverityColor(issue.severity)}; padding: 10px; margin: 10px 0; background: #f8f9fa;">
-        <h3 style="margin-top: 0; color: ${this.getSeverityColor(issue.severity)};">${issue.rule}</h3>
-        <p><strong>File:</strong> ${this.truncateFilePath(issue.file)}:${issue.line}</p>
-        <p>${issue.message}</p>
-      </div>`
-    ).join('');
+    const issuesHtml = result.issues.map(issue => {
+      const rule = this.escapeHtml(issue.rule);
+      const file = this.escapeHtml(this.truncateFilePath(issue.file));
+      const message = this.escapeHtml(issue.message);
+      const suggestion = this.escapeHtml(issue.suggestion);
+      return `<div style="border-left: 4px solid ${this.getSeverityColor(issue.severity)}; padding: 10px; margin: 10px 0; background: #f8f9fa;">
+        <h3 style="margin-top: 0; color: ${this.getSeverityColor(issue.severity)};">${rule}</h3>
+        <p><strong>File:</strong> ${file}:${issue.line}</p>
+        <p>${message}</p>
+        ${suggestion ? `<p><strong>Suggested fix:</strong> ${suggestion}</p>` : ''}
+      </div>`;
+    }).join('');
 
     contentHtml = `
       <div class="summary">
@@ -123,7 +136,8 @@ formatHtml(result: ScanResult): string {
 
   formatIssueDetails(issue: SecurityIssue): string {
   const location = `${this.truncateFilePath(issue.file)}:${issue.line}${issue.column ? `:${issue.column}` : ''}`;
-  const fullMessage = `${issue.message}\n\ninnerHTML = userInput\nUse textContent instead`;
+  const fullMessage = `${issue.message}\n\n${issue.code}` +
+    (issue.suggestion ? `\nSuggested fix: ${issue.suggestion}` : '');
   
   return `${chalk.bold.yellow(issue.rule)} ${this.colorSeverity(issue.severity)}\n` +
          `${chalk.gray(`File: ${location}`)}\n\n` +
@@ -149,5 +163,14 @@ formatHtml(result: ScanResult): string {
       case 'low': return '#0d6efd';
       default: return '#6c757d';
     }
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

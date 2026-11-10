@@ -54,9 +54,21 @@ export class ExposedSecretsRule extends BaseRule {
       confidence: 0.95,
       validation: (secret: string) => this.validateGitHubToken(secret)
     },
+    {
+  pattern: /sk-ant-api\d{2}-[a-zA-Z0-9_-]{20,}/g,
+  type: 'Anthropic API Key',
+  confidence: 0.95,
+  validation: (secret: string) => this.validateGenericSecret(secret)
+    },
+    {
+  pattern: /hf_[a-zA-Z0-9]{30,}/g,
+  type: 'Hugging Face Access Token',
+  confidence: 0.95,
+  validation: (secret: string) => this.validateGenericSecret(secret)
+    },
     { 
   pattern: /AIza[0-9A-Za-z_-]{35}/g, 
-      type: 'Google API Key',
+  type: 'Google API Key',
       confidence: 0.9,
       validation: (secret: string) => this.validateGoogleKey(secret)
     },
@@ -387,6 +399,8 @@ export class ExposedSecretsRule extends BaseRule {
       'GitHub Personal Access Token': 'Use GitHub Actions secrets or environment variables. Rotate tokens regularly.',
       'GitHub App Token': 'Use GitHub App installation tokens or environment variables.',
       'GitHub Refresh Token': 'Use GitHub OAuth refresh tokens securely.',
+      'Anthropic API Key': 'Store Anthropic API keys in a secret manager or environment variable.',
+      'Hugging Face Access Token': 'Store Hugging Face tokens in a secret manager or environment variable.',
       'Google API Key': 'Restrict API key usage and use environment variables.',
       'Slack Token': 'Use Slack app configuration or environment variables.',
       'Stripe Live Secret Key': 'Use Stripe webhook endpoints and environment variables for live keys.',

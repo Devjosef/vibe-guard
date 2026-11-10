@@ -2,7 +2,7 @@ import { Reporter } from '../../reporter';
 import { SecurityIssue, ScanResult, SeverityLevel } from '../../types';
 
 const makeIssue = (rule: string, severity: SeverityLevel, file: string, line: number): SecurityIssue => ({
-  rule, severity, file, line, column: 1, code: `${rule}-001`, message: `${rule} detected`, suggestion: ''
+  rule, severity, file, line, column: 1, code: `${rule}-001`, message: `${rule} detected`, suggestion: `${rule} remediation`
 });
 
 describe('Reporter', () => {
@@ -55,6 +55,7 @@ describe('Reporter', () => {
       expect(output).toContain('SQLI');
       expect(output).toContain('app.js:42');
       expect(output).toContain('Found 1 issues');
+      expect(output).toContain('SQLI remediation');
     });
   });
 
@@ -71,6 +72,8 @@ describe('Reporter', () => {
       expect(parsed.$schema).toContain('sarif-2.1.0');
       expect(parsed.version).toBe('2.1.0');
       expect(parsed.runs[0].results[0].ruleId).toBe('SQLI');
+      expect(parsed.runs[0].results[0].level).toBe('error');
+      expect(parsed.runs[0].results[0].message.text).toContain('SQLI remediation');
     });
 
     it('handles empty results', () => {
@@ -99,6 +102,27 @@ describe('Reporter', () => {
       expect(html).toContain('Vibe-Guard Security Scan Results');
       expect(html).toContain('SQLI');
       expect(html).toContain('app.js:42');
+      expect(html).toContain('SQLI remediation');
+    });
+
+    it('escapes finding text in HTML reports', () => {
+      const result: ScanResult = {
+        issues: [{
+          ...makeIssue('SQLI', 'high', '/app.js', 42),
+          message: '<script>alert(1)</script>',
+          suggestion: '<img src=x onerror=alert(1)>'
+        }],
+        filesScanned: 1,
+        issuesFound: 1,
+        summary: { critical: 0, high: 1, medium: 0, low: 0 }
+      };
+
+      const html = reporter.formatHtml(result);
+
+      expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+      expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+      expect(html).not.toContain('<script>');
+      expect(html).not.toContain('<img');
     });
   });
 });

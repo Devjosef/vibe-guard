@@ -32,6 +32,8 @@ import { McpServerSecurityRule } from './rules/mcp-server-security';
 import { KubernetesSecurityRule } from './rules/kubernetes-security';
 import { DockerfileSecurityRule } from './rules/dockerfile-security';
 import { ContainerRegistrySecurityRule } from './rules/container-registry-security';
+import { UnsafeLlmPromptConstructionRule } from './rules/unsafe-llm-prompt-construction';
+import { UnpinnedSupplyChainDependenciesRule } from './rules/unpinned-supply-chain-dependencies';
 
 export class VibeGuard {
   private readonly scanner = new FileScanner();
@@ -67,7 +69,9 @@ export class VibeGuard {
       new McpServerSecurityRule(),
       new KubernetesSecurityRule(),
       new DockerfileSecurityRule(),
-      new ContainerRegistrySecurityRule()
+      new ContainerRegistrySecurityRule(),
+      new UnsafeLlmPromptConstructionRule(),
+      new UnpinnedSupplyChainDependenciesRule()
     ];
   }
 
@@ -86,6 +90,12 @@ export class VibeGuard {
   formatResults(result: ScanResult, format: string = 'table'): string {
   if (format === 'json') {
     return this.reporter.formatJson(result);
+  }
+  if (format === 'sarif') {
+    return this.reporter.formatSarif(result);
+  }
+  if (format === 'html') {
+    return this.reporter.formatHtml(result);
   }
   return this.reporter.formatTable(result); 
 }

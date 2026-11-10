@@ -76,6 +76,36 @@ describe('ExposedSecretsRule', () => {
     });
   });
 
+  describe('AI Provider Token Detection', () => {
+    it('should detect an Anthropic API key', () => {
+      const content = 'const anthropicKey = "sk-ant-api03-0123456789abcdefABCDEF0123456789abcdef";';
+      const fileContent: FileContent = {
+        path: 'src/ai-config.ts',
+        content,
+        lines: [content]
+      };
+
+      const issues = rule.check(fileContent);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]?.message).toContain('Anthropic API Key');
+      expect(issues[0]?.severity).toBe('critical');
+    });
+
+    it('should detect a Hugging Face access token', () => {
+      const content = 'const hfToken = "hf_0123456789abcdefghijABCDEFGHIJKLMN";';
+      const fileContent: FileContent = {
+        path: 'src/ai-config.ts',
+        content,
+        lines: [content]
+      };
+
+      const issues = rule.check(fileContent);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]?.message).toContain('Hugging Face Access Token');
+      expect(issues[0]?.severity).toBe('critical');
+    });
+  });
+
   describe('API Keys Detection', () => {
     it('should detect Google API Key', () => {
       const content = 'const apiKey = "AIzaSyB1234567890abcdefghijklmnopqrstuvwxyz";';

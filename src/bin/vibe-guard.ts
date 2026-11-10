@@ -1,12 +1,18 @@
-import { Command } from 'commander';
+#!/usr/bin/env node
+import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import VibeGuard from '../index';
-import { ScanOptions, SeverityLevel } from '../types';
+import { ScanOptions } from '../types';
 import { VERSION } from '../types/version';
 import * as fs from 'fs';
 import * as readline from 'readline';
 
 const program = new Command();
+
+interface ScanCliOptions {
+  format?: 'table' | 'json' | 'sarif' | 'html';
+  outputFile?: string;
+}
 
 // ASCII Art Logo
 function displayLogo() {
@@ -40,42 +46,25 @@ function displayLogo() {
  * Run a scan and return an exit code instead of terminating the process.
  * Returns: 0 = success (no issues), 1 = issues found, 2 = error/invalid args
  */
-async function handleScan(target: string, options: any): Promise<number> {
+async function handleScan(target: string, options: ScanCliOptions): Promise<number> {
   try {
-    console.log(chalk.blue.bold('╔══════════════════════════════════════════════════════════════════════════════╗'));
-    console.log(chalk.blue.bold('║                        STARTING VIBE-GUARD SECURITY SCAN                        ║'));
-    console.log(chalk.blue.bold('║                              THREAT DETECTION ACTIVE                           ║'));
-    console.log(chalk.blue.bold('╚══════════════════════════════════════════════════════════════════════════════╝\n'));
-
-    if (options.severity && !['critical', 'high', 'medium', 'low'].includes(options.severity)) {
-      console.error(chalk.red.bold('Error: Invalid severity level. Must be one of: critical, high, medium, low'));
-      return 2;
-    }
-
     const scanOptions: ScanOptions = {
       target,
-      format: options.format as 'table' | 'json' | 'sarif' | 'html',
-      verbose: options.verbose,
-      exclude: options.exclude,
-      include: options.include
+      format: options.format ?? 'table',
+      verbose: false
     };
 
-    if (options.severity) scanOptions.severity = options.severity as SeverityLevel;
-    if (options.config) scanOptions.config = options.config;
-    if (options.parallel) scanOptions.parallel = options.parallel;
-    if (options.maxFiles) scanOptions.maxFiles = parseInt(options.maxFiles);
-
     const vibeGuard = new VibeGuard();
-    const output = await vibeGuard.scanAndFormat(scanOptions);
+    const result = await vibeGuard.scan(scanOptions);
+    const output = vibeGuard.formatResults(result, scanOptions.format);
 
     if (options.outputFile) {
       fs.writeFileSync(options.outputFile, output);
-      console.log(chalk.green(`Results written to: ${options.outputFile}`));
+      console.error(chalk.green(`Results written to: ${options.outputFile}`));
     } else {
       console.log(output);
     }
 
-    const result = await vibeGuard.scan(scanOptions);
     if (result.issuesFound > 0) {
       return 1;
     }
@@ -90,10 +79,7 @@ async function handleScan(target: string, options: any): Promise<number> {
 program
   .name('vibe-guard')
   .description('██  Vibe-Guard Security Scanner - Catch security issues before they catch you!')
-  .version(VERSION)
-  .hook('preAction', () => {
-    displayLogo();
-  });
+  .version(VERSION);
 
 program
   .command('start')
@@ -113,7 +99,7 @@ program
         switch (choice) {
           case '1': {
             rl.question('Enter file or directory to scan (default: .): ', (target: string) => {
-              Promise.resolve(handleScan(target || '.', { verbose: false }))
+              Promise.resolve(handleScan(target || '.', {}))
                 .catch(err => console.error(chalk.red('Scan error:'), err))
                 .finally(() => pause(() => showMenu()));
             });
@@ -176,5 +162,12 @@ program
   .command('scan')
   .description('Scan files or directories for security issues')
   .argument('<target>', 'File or directory to scan')
-  .option('-f, --format <format>', 'Output format (table, json, sarif, html)')
-  .option('-o, --output-file <file>', 'Write output to file')
+  .addOption(new Option('-f, --format <format>', 'Output format')
+    .choices(['table', 'json', 'sarif', 'html'])
+    .default('table'))
+  .option('-o, --output-file <file>', 'Write output to a file')
+  .action(async (target: string, options: ScanCliOptions) => {
+    process.exitCode = await handleScan(target, options);
+  });
+
+void program.parseAsync(process.argv);
