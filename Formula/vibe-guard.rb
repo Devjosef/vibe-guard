@@ -1,8 +1,8 @@
 class VibeGuard < Formula
   desc "Vibe-Guard Security Scanner - 30 pattern-based security rules for applications and containers."
   homepage "https://github.com/Devjosef/vibe-guard"
-  url "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v1.2.1.tar.gz"
-  sha256 "21880b7a6b0d4ef586c684bfb71240a85735844afea5b6668a2f11249b848581"
+  url "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v2.1.0.tar.gz"
+  sha256 "67d3da715678eb6debcce9f600908d9dcb8f92357721517de3736129d6750ba7"
   license "MIT"
   head "https://github.com/Devjosef/vibe-guard.git", branch: "main"
 
