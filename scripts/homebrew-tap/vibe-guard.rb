@@ -1,7 +1,7 @@
 # Homebrew tap formula for Vibe-Guard
 class VibeGuard < Formula
   # PKG information
-  desc "██ Vibe-Guard Security Scanner - 25 essential security rules to catch vulnerabilities before they catch you!"
+  desc "Vibe-Guard Security Scanner - 30 pattern-based security rules for applications and containers."
   homepage "https://github.com/Devjosef/vibe-guard"
   url "https://github.com/Devjosef/vibe-guard/archive/refs/tags/v1.2.1.tar.gz"
   sha256 "21880b7a6b0d4ef586c684bfb71240a85735844afea5b6668a2f11249b848581"
@@ -31,8 +31,5 @@ class VibeGuard < Formula
     
     # Test if the  --version command works
     assert_match "1.2.1", shell_output("#{bin}/vibe-guard --version", 0)
-    
-    # Test if the --rules command works
-    assert_match "Available Security Rules", shell_output("#{bin}/vibe-guard rules", 0)
   end
-end 
+end

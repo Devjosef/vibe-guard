@@ -1,10 +1,8 @@
 # ██ Vibe-Guard Security Scanner
 
-*Update March 2026*
-The Linux/Arch binary packages are currently not working. I’ve taken them down, so please avoid downloading them.
-For now, I recommend using the Windows or macOS releases instead. Any help, debugging, or suggestions are very welcome!
+Vibe-Guard gives you a quick security pass over source code and configuration files, with 30 pattern-based rules covering common application, AI, dependency, and container risks. Findings include a suggested next step, so scans can also help you learn what to look for.
 
-**Professional Security Scanner** - Zero dependencies, instant setup, works everywhere. Optimized performance for security scanning. Current ruleset: 28 essential security rules including container security.
+It is a heuristic scanner, not a substitute for code review or a full security audit. It requires Node.js 20 or newer; npm installs its declared third-party runtime dependencies for you.
 
 [![npm version](https://img.shields.io/npm/v/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
 [![Downloads (total)](https://img.shields.io/npm/dt/vibe-guard.svg)](https://www.npmjs.com/package/vibe-guard)
@@ -17,27 +15,19 @@ For now, I recommend using the Windows or macOS releases instead. Any help, debu
 # Install globally
 npm install -g vibe-guard
 
-# For Development with no build step(run this first)
-npm run dev
-
-# Start interactive session
+# Interactive menu (scan and view rules)
 vibe-guard start
 
 # Scan your project
 vibe-guard scan .
 
-# Learn about security concepts
-vibe-guard learn xss-detection
-
-# Try with demo files
-vibe-guard demo
+# Export a SARIF report
+vibe-guard scan . --format sarif --output-file security-report.sarif
 ```
 
-## Interactive Security Learning
+`vibe-guard scan` requires a target path. Supported formats are `table`, `json`, `sarif`, and `html`. A scan with findings exits with code 1; scan errors exit with code 2. The interactive `start` menu lets you scan, view the rule list, and create or view a configuration file. There are no separate `learn`, `demo`, or `stats` commands.
 
-Vibe-Guard is more than a scanner, it is an educational platform that teaches you about web security through hands on experience
-
-### Understanding Vulnerabilities
+## Common issues and safer patterns
 
 **XSS (Cross-Site Scripting):**
 ```javascript
@@ -96,7 +86,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: nginx:1.21.6@sha256:abc123...  # Pinned digest
+        image: nginx:1.21.6@sha256:<real-image-digest>  # Replace with the registry's actual digest
         securityContext:
           runAsUser: 1000    # Non-root user
           runAsNonRoot: true
@@ -115,17 +105,17 @@ spec:
 
 ## Comprehensive Security Coverage
 
-Vibe-Guard detects 28 types of vulnerabilities across multiple categories:
+Vibe-Guard detects 30 types of vulnerabilities across multiple categories:
 
 - **Authentication & Authorization**: Missing authentication, broken access control, session management
 - **Input Validation**: SQL injection, XSS, unvalidated input, directory traversal
 - **Data Protection**: Exposed secrets, hardcoded sensitive data, insecure logging
 - **Configuration**: Insecure configuration, missing security headers, CORS issues
-- **Modern Threats**: CSRF protection, AI-generated code validation, prompt injection
-- **Dependencies**: Insecure dependencies, outdated packages, vulnerability assessment
+- **Modern Threats**: AI provider tokens, unsafe LLM prompt construction, prompt injection, MCP security
+- **Dependencies**: Known vulnerable packages, floating versions, and mutable Git references
 - **Container Security**: Kubernetes security, Dockerfile vulnerabilities, container registry issues
 
-## Professional Use Cases
+## Use it in your workflow
 
 **CI/CD Integration:**
 ```yaml
@@ -136,24 +126,7 @@ Vibe-Guard detects 28 types of vulnerabilities across multiple categories:
 
 ## SARIF test reporting
 
-This repository can produce SARIF from the Jest test suite for integration with GitHub Code Scanning.
-Locally you can run:
-
-```bash
-# run tests and produce JSON
-npx jest --json --outputFile=jest-output.json
-
-# convert to SARIF
-node scripts/jest-to-sarif.js jest-output.json test-results.sarif
-```
-
-The `jest-to-sarif` converter supports two optional flags: `--include-passed` (include passed/skipped assertions in SARIF) and `--relative-paths` (output relative file paths instead of file:// URIs). Example:
-
-```bash
-node scripts/jest-to-sarif.js jest-output.json test-results.sarif --include-passed --relative-paths
-```
-
-CI converts Jest JSON to SARIF and uploads the SARIF file when the tests are run in the CI workflow.
+For local Jest test-result reporting, see [TEST_SCANNING.md](docs/TEST_SCANNING.md); that utility is separate from scanning project code.
 
 **Pre-commit Hook:**
 ```bash
@@ -162,17 +135,9 @@ CI converts Jest JSON to SARIF and uploads the SARIF file when the tests are run
 vibe-guard scan . || exit 1
 ```
 
-**Interactive Learning:**
+**Interactive menu:**
 ```bash
-# Start interactive session
 vibe-guard start
-
-# Learn specific security concepts
-vibe-guard learn sql-injection
-vibe-guard learn xss-detection
-
-# Practice with demo files
-vibe-guard demo
 ```
 
 ## Installation Options
@@ -187,59 +152,31 @@ npm install -g vibe-guard
 brew install devjosef/tap/vibe-guard
 ```
 
-**Direct Download:**
-```bash
-
-# macOS
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64 -o vibe-guard
-chmod +x vibe-guard
-
-# Windows
-curl -L https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-windows-x64.exe -o vibe-guard.exe
-```
+Standalone binaries for Linux x64/arm64, macOS x64/arm64, and Windows x64 are built in CI and uploaded as workflow artifacts. They are not currently published as GitHub release downloads.
 
 ## Documentation & Resources
 
 - **[Getting Started](https://devjosef.github.io/vibe-guard/getting-started.html)** - Complete setup and configuration guide
-- **[Security Rules](https://devjosef.github.io/vibe-guard/rules.html)** - Detailed rule explanations and examples
+- **[Security Rules](https://devjosef.github.io/vibe-guard/features.html)** - Rule coverage and descriptions
 - **[Performance Guide](https://devjosef.github.io/vibe-guard/performance.html)** - Optimization and best practices
 - **[API Reference](https://devjosef.github.io/vibe-guard/docs.html)** - Programmatic usage and integration
 
 ## Community & Support
 
-**Join our community of security professionals and developers:**
+**Questions, feedback, or a finding that looks wrong?**
 
-- **Interactive Learning**: `vibe-guard start` - Begin your security journey
-- **Educational Commands**: `vibe-guard learn [topic]` - Master security concepts
-- **Hands-on Practice**: `vibe-guard demo` - Test with example vulnerabilities
-- **Performance Insights**: `vibe-guard stats` - Track your security impact
+- **Interactive menu**: `vibe-guard start` - Scan or view available rules
+- **SARIF export**: `vibe-guard scan . --format sarif --output-file report.sarif`
 - **Community Discussion**: [GitHub Discussions](https://github.com/Devjosef/vibe-guard/discussions)
 - **Issue Reporting**: [GitHub Issues](https://github.com/Devjosef/vibe-guard/issues)
 - **Repository**: [GitHub Repository](https://github.com/Devjosef/vibe-guard)
 
-## Why Choose Vibe-Guard?
+## What to expect
 
-**Built for developers who code fast and need security that keeps up:**
-
-- **Zero Dependencies** - Lightweight, fast, and reliable
-- **28 Security Rules** - Comprehensive coverage of modern threats including container security
-- **Cross-Platform** - Works seamlessly across all operating systems
-- **Educational Focus** - Learn security while you scan
-- **OWASP Aligned** - Industry best practices and standards
-- **Developer-Friendly** - Simple, intuitive CLI interface
-- **Interactive Mode** - Guided learning with `vibe-guard start`
-- **Container Security** - Kubernetes, Dockerfile, and registry security scanning
-
-## Impact & Adoption
-
-Every scan contributes to a more secure web ecosystem:
-
-- **3.1k+ total downloads** on NPM with growing adoption
-- **28 security rules** covering contemporary threat vectors including container security
-- **Cross-platform support** for macOS, and Windows
-- **Zero dependencies** ensuring maximum compatibility
-- **Educational approach** - building security awareness
-- **Container security** - Kubernetes, Dockerfile, and registry vulnerability detection
+- Findings include the rule, severity, file and line, explanation, and suggested remediation.
+- Pattern-based checks can miss issues or flag safe code; review findings in context and do not treat a clean scan as proof that code is secure.
+- `start` is a small interactive menu for scanning and browsing rule descriptions, not a guided course.
+- CI runs the Jest suite on Node.js 20 and 22. Binary builds are CI artifacts until attached to a release.
 
 ## License
 

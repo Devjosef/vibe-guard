@@ -17,6 +17,12 @@ const expectedNames = [
   'vibe-guard-macos-arm64',
   'vibe-guard-windows-x64.exe'
 ];
+const requiredNames = new Set(
+  (process.env.REQUIRED_BINARIES || '')
+    .split(',')
+    .map(name => name.trim())
+    .filter(Boolean)
+);
 
 function sha256(filePath) {
   return new Promise((resolve, reject) => {
@@ -58,6 +64,7 @@ function execWithTimeout(cmd, args, cwd, timeoutMs) {
     const p = path.join(BIN_DIR, name);
     if (!fs.existsSync(p)) {
       console.log('Missing binary (skipping):', name);
+      if (requiredNames.has(name)) failed = true;
       continue;
     }
 

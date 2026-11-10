@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout repository
@@ -45,8 +45,8 @@ jobs:
         if: steps.check-lint.outputs.has-lint == 'true'
         run: npm run lint
 
-      - name: Build (TypeScript)
-        run: npm run build
+      - name: Build and test
+        run: npm test
 
       - name: Run Jest Tests (optional) and produce JSON
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -75,10 +75,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18.x (with npm cache)
+      - name: Use Node.js 22.x (with npm cache)
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '22.x'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 

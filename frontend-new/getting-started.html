@@ -212,8 +212,7 @@
                 <div class="flex gap-0.5 mb-8 border-b border-gray-200 overflow-x-auto">
                     <button class="tab-button active" onclick="showTab('npm')">npm</button>
                     <button class="tab-button" onclick="showTab('homebrew')">Homebrew</button>
-                    <button class="tab-button" onclick="showTab('binary')">Direct Download</button>
-                    <button class="tab-button" onclick="showTab('docker')">Docker</button>
+                    <button class="tab-button" onclick="showTab('binary')">CI Binaries</button>
                 </div>
 
                 <!-- npm Tab -->
@@ -309,28 +308,19 @@
                     </div>
                 </div>
 
-                <!-- Direct Download Tab -->
+                <!-- CI Binary Tab -->
                 <div id="binary" class="tab-content">
                     <div class="space-y-8">
                         <div class="step">
                             <div class="step-number">1</div>
                             <div class="step-content">
                                 <h3>Download Binary</h3>
-                                <p>Download the appropriate binary for your platform from GitHub releases.</p>
+                                <p>Platform binaries are built and checked by CI, but are currently available as workflow artifacts rather than GitHub release downloads. Install through npm until release assets are published.</p>
                                 <div class="code-block">
                                     <div class="code-header">Terminal</div>
                                     <div class="code-content">
-<span class="comment"># macOS (Intel)</span>
-<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-x64
-
-<span class="comment"># macOS (Apple Silicon)</span>
-<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-macos-arm64
-
-<span class="comment"># Linux (x64)</span>
-<span class="keyword">curl</span> -L -o vibe-guard https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-linux-x64
-
-<span class="comment"># Windows</span>
-<span class="keyword">curl</span> -L -o vibe-guard.exe https://github.com/Devjosef/vibe-guard/releases/latest/download/vibe-guard-windows-x64.exe
+<span class="comment"># Install the supported npm distribution</span>
+<span class="keyword">npm</span> install -g vibe-guard
                                     </div>
                                 </div>
                             </div>
@@ -339,8 +329,8 @@
                         <div class="step">
                             <div class="step-number">2</div>
                             <div class="step-content">
-                                <h3>Make Executable & Run</h3>
-                                <p>Make the binary executable and start scanning.</p>
+                                <h3>Run a CI-built Binary</h3>
+                                <p>Download the matching artifact from a successful packaging workflow run, then make it executable on macOS/Linux.</p>
                                 <div class="code-block">
                                     <div class="code-header">Terminal</div>
                                     <div class="code-content">
@@ -350,46 +340,6 @@
 <span class="comment"># Run scan</span>
 ./vibe-guard scan .
 
-<span class="comment"># Or move to PATH</span>
-<span class="keyword">sudo</span> mv vibe-guard /usr/local/bin/
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Docker Tab -->
-                <div id="docker" class="tab-content">
-                    <div class="space-y-8">
-                        <div class="step">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h3>Pull Docker Image</h3>
-                                <p>Pull the official Vibe-Guard Docker image.</p>
-                                <div class="code-block">
-                                    <div class="code-header">Terminal</div>
-                                    <div class="code-content">
-<span class="comment"># Pull latest image</span>
-<span class="keyword">docker</span> pull devjosef/vibe-guard:latest
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="step">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h3>Run Container</h3>
-                                <p>Mount your project directory and run the scan.</p>
-                                <div class="code-block">
-                                    <div class="code-header">Terminal</div>
-                                    <div class="code-content">
-<span class="comment"># Scan current directory</span>
-<span class="keyword">docker</span> run --rm -v <span class="string">$(pwd):/app</span> devjosef/vibe-guard:latest scan /app
-
-<span class="comment"># Or use docker-compose</span>
-<span class="keyword">docker-compose</span> run --rm vibe-guard scan .
                                     </div>
                                 </div>
                             </div>
@@ -418,17 +368,8 @@
                         <div class="code-block">
                             <div class="code-content">
 <span class="keyword">vibe-guard</span> scan src/
-<span class="keyword">vibe-guard</span> scan app.js config.js
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="example-card">
-                        <h3 class="text-xl font-bold">Exclude Files</h3>
-                        <p class="text-base font-medium">Exclude certain files or directories from scanning.</p>
-                        <div class="code-block">
-                            <div class="code-content">
-<span class="keyword">vibe-guard</span> scan . --exclude node_modules,dist
+<span class="keyword">vibe-guard</span> scan app.js
+<span class="keyword">vibe-guard</span> scan config.js
                             </div>
                         </div>
                     </div>
@@ -438,27 +379,27 @@
                         <p class="text-base font-medium">Get results in JSON format for CI/CD integration.</p>
                         <div class="code-block">
                             <div class="code-content">
-<span class="keyword">vibe-guard</span> scan . --format json > results.json
+<span class="keyword">vibe-guard</span> scan . --format json --output-file results.json
                             </div>
                         </div>
                     </div>
 
                     <div class="example-card">
-                        <h3 class="text-xl font-bold">List Rules</h3>
-                        <p class="text-base font-medium">View all available security rules.</p>
+                        <h3 class="text-xl font-bold">Interactive Menu</h3>
+                        <p class="text-base font-medium">Start the menu to scan or view the registered rules.</p>
                         <div class="code-block">
                             <div class="code-content">
-<span class="keyword">vibe-guard</span> rules
+<span class="keyword">vibe-guard</span> start
                             </div>
                         </div>
                     </div>
 
                     <div class="example-card">
-                        <h3 class="text-xl font-bold">Custom Rules</h3>
-                        <p class="text-base font-medium">Use custom rule patterns for specific needs.</p>
+                        <h3 class="text-xl font-bold">SARIF Export</h3>
+                        <p class="text-base font-medium">Write scan findings in SARIF format for security tooling.</p>
                         <div class="code-block">
                             <div class="code-content">
-<span class="keyword">vibe-guard</span> scan . --pattern "password.*=.*['\"]"
+<span class="keyword">vibe-guard</span> scan . --format sarif --output-file report.sarif
                             </div>
                         </div>
                     </div>

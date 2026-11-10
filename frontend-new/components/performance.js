@@ -79,7 +79,7 @@ export function renderPerformance() {
                                 <div class="text-white">$ npm install -g vibe-guard</div>
                                 <div class="text-gray-400">✓ Installation complete (4.2s)</div>
                                 <div class="mt-4 text-green-400"># Step 2: Run security scan</div>
-                                <div class="text-white">$ vibe-guard scan --target ./project</div>
+                                <div class="text-white">$ vibe-guard scan ./project</div>
                                 <div class="text-gray-400">✓ Scanning 47 files...</div>
                                 <div class="text-gray-400">✓ Analysis complete (0.8s)</div>
                                 <div class="mt-4 text-green-400"># Step 3: View results</div>

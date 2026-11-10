@@ -1,7 +1,7 @@
 {
   "name": "vibe-guard",
-  "version": "1.2.1",
-  "description": "██ Vibe-Guard Security Scanner - 28 essential security rules to catch vulnerabilities before they catch you! Zero dependencies, instant setup, works everywhere, optimized performance. Detects SQL injection, XSS, exposed secrets, CSRF, CORS issues, container security, and more.",
+  "version": "2.1.0",
+  "description": "Vibe-Guard Security Scanner - 30 security rules for code, AI integrations, dependencies, and containers.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -19,20 +19,16 @@
     "prepublishOnly": "npm run clean && npm run build",
     "package": "npm run clean && npm run build && npm run package:all",
     "package:all": "npm run package:macos && npm run package:linux && npm run package:windows",
-    "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --target node18-macos-x64 --output binaries/vibe-guard-macos-x64 && pkg dist/bin/vibe-guard.js --target node18-macos-arm64 --output binaries/vibe-guard-macos-arm64",
-    "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --target node18-linux-x64 --output binaries/vibe-guard-linux-x64 && pkg dist/bin/vibe-guard.js --target node18-linux-arm64 --output binaries/vibe-guard-linux-arm64",
-    "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --target node18-win-x64 --output binaries/vibe-guard-windows-x64.exe",
+    "package:macos": "npm run build && pkg dist/bin/vibe-guard.js --target node22-macos-x64 --output binaries/vibe-guard-macos-x64 && pkg dist/bin/vibe-guard.js --target node22-macos-arm64 --output binaries/vibe-guard-macos-arm64",
+    "package:linux": "npm run build && pkg dist/bin/vibe-guard.js --target node22-linux-x64 --output binaries/vibe-guard-linux-x64 && pkg dist/bin/vibe-guard.js --target node22-linux-arm64 --output binaries/vibe-guard-linux-arm64",
+    "package:windows": "npm run build && pkg dist/bin/vibe-guard.js --target node22-win-x64 --output binaries/vibe-guard-windows-x64.exe",
     "dist": "npm run clean && npm run build && npm run package:all",
-    "maintenance:check": "node scripts/maintenance.js check",
-    "maintenance:update": "node scripts/maintenance.js update",
-    "maintenance:full": "node scripts/maintenance.js full",
     "preversion": "npm test",
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
-    "docs:dev": "vite documents --port 3000",
+    "docs:dev": "vite --port 3000",
     "docs:build": "vite build",
     "docs:preview": "vite preview --port 3000",
-    "benchmark": "node scripts/benchmark.js",
     "lint": "eslint 'src/**/*.{ts,js}' --ext .ts,.js"
   },
   "keywords": [
@@ -88,8 +84,7 @@
   "files": [
     "dist/**/*",
     "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+    "LICENSE"
   ],
   "dependencies": {
     "chalk": "^4.1.2",
@@ -104,18 +99,18 @@
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@typescript-eslint/typescript-estree": "^8.56.1",
+    "@yao-pkg/pkg": "^6.25.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^9.1.0",
     "jest": "^29.5.0",
     "minimatch": "^10.1.1",
-    "pkg": "^5.8.1",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.3.3",
     "vite": "^7.1.11"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "os": [
     "darwin",

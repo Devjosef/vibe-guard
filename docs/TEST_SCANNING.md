@@ -1,21 +1,18 @@
 # Test Scanning
 
-Vibe-Guard uses GitHub Actions and SARIF reporting for comprehensive test analysis and security scanning. Our CI pipeline automatically runs tests and uploads results to GitHub's code scanning interface.
+Vibe-Guard uses GitHub Actions to type-check, lint, build, and run Jest tests. Scanner findings can be exported as SARIF with the CLI; Jest result conversion is a separate local utility.
 
 ## CI Pipeline
 
-Tests are automatically run on:
+The test suite runs on Node.js 20 and 22 for:
 - Every push to the `main` branch
 - All pull requests targeting `main`
 
-The workflow:
-1. Runs all Jest tests
-2. Converts test results to SARIF format
-3. Uploads results to GitHub's code scanning interface
+The workflow builds the project and runs the full Jest suite on every push to `main` and pull request targeting `main`.
 
 ## Local Testing
 
-To run tests and generate SARIF locally:
+To convert Jest output to SARIF locally:
 
 ```bash
 # Run tests and generate SARIF
@@ -25,15 +22,4 @@ node scripts/jest-to-sarif.js jest-output.json test-results.sarif
 
 The generated files (`jest-output.json` and `test-results.sarif`) are git-ignored by default.
 
-## Viewing Results
-
-Test results can be viewed in two places:
-1. GitHub Actions tab - Shows test execution and overall status
-2. Security tab > Code scanning alerts - Shows detailed test analysis
-
-## Permissions
-
-The CI pipeline requires the following GitHub permissions:
-- `security-events: write` - For uploading SARIF results
-- `actions: read` - For running the workflow
-- `contents: read` - For checking out code
+Test status is available in the GitHub Actions run. To export source-code findings, run `vibe-guard scan . --format sarif --output-file security-report.sarif`.
